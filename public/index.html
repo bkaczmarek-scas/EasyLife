@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bartosz Kaczmarek - SoftCraft AS - Invoicing</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.46.0/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --surface-0:#ffffff; --surface-1:#f8fafc; --surface-2:#ffffff;
+    --text-primary:#0f172a; --text-secondary:#475569; --text-muted:#94a3b8;
+    --border:#e2e8f0; --radius:8px; --radius-lg:12px; --radius-pill:200px;
+    --accent:#0369a1; --accent-ring:#075985; --accent-contrast:#ffffff; --accent-tint:rgba(3,105,161,0.08); --accent-tint-hover:rgba(3,105,161,0.14);
+    --bg-success:#ecfdf3; --text-success:#15803d;
+    --bg-warning:#fffbeb; --text-warning:#b45309;
+    font-family: "Plus Jakarta Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--surface-0); color:var(--text-primary);}
+  .app{display:block; min-height:100vh;}
+
+  .topnav{position:sticky; top:0; z-index:5; background:var(--surface-0); border-bottom:1px solid var(--border);}
+  .topnav-inner{max-width:1360px; margin:0 auto; display:flex; align-items:center; gap:28px; padding:14px 32px;}
+  .brand{display:flex; align-items:center; gap:10px; flex-shrink:0;}
+  .brand-mark{width:26px; height:26px; border-radius:7px; flex-shrink:0;
+    background:var(--text-primary);
+    display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:11px;}
+  .brand-name{font-weight:800; font-size:14px; letter-spacing:-0.01em; line-height:1.2;}
+  .nav-tabs{display:flex; align-items:center; gap:2px; flex:1;}
+  .navItem{display:flex; align-items:center; gap:8px; text-align:left; font-size:13px; font-weight:500;
+    padding:7px 12px; border:none; border-radius:var(--radius); white-space:nowrap;
+    background:transparent; color:var(--text-secondary); cursor:pointer; font-family:inherit;}
+  .navItem:hover{background:var(--surface-1); color:var(--text-primary);}
+  .navItem.active{background:var(--accent-tint); color:var(--accent); font-weight:700;}
+
+  .main{display:flex; flex-direction:column;}
+  .profile-menu{position:relative; flex-shrink:0;}
+  .profile-trigger{width:34px; height:34px; padding:0; border:1px solid var(--border); border-radius:50%;
+    background:var(--surface-1); color:var(--text-secondary); font-size:17px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .profile-trigger:hover{background:var(--surface-2); color:var(--text-primary);}
+  .profile-dropdown{display:none; position:absolute; top:calc(100% + 8px); right:0; background:var(--surface-2);
+    border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:0 12px 32px rgba(10,10,18,0.12);
+    width:220px; padding:12px; z-index:4;}
+  .profile-dropdown.open{display:block;}
+  .profile-dropdown .profile-name{font-size:13px; font-weight:700;}
+  .profile-dropdown .profile-email{font-size:12px; color:var(--text-secondary); margin-top:2px; word-break:break-all;}
+  .profile-divider{height:1px; background:var(--border); margin:10px 0;}
+  .dropdown-item{display:flex; align-items:center; gap:8px; width:100%; font-size:13px; font-weight:500;
+    color:var(--text-secondary); background:transparent; border:none; padding:8px 6px; border-radius:6px;
+    cursor:pointer; font-family:inherit;}
+  .dropdown-item:hover{background:var(--surface-1); color:var(--text-primary);}
+  .content{padding:32px; max-width:1360px; margin:0 auto; width:100%; display:flex; flex-direction:column; gap:28px; box-sizing:border-box;}
+  .section{display:flex; flex-direction:column; gap:28px; max-width:720px;}
+  #section-income{max-width:1360px;}
+
+  .wizard{gap:0; max-width:640px;}
+  .wizard-step{display:flex; gap:18px; position:relative; padding-bottom:32px;}
+  .wizard-step:last-child{padding-bottom:0;}
+  .wizard-step::before{content:''; position:absolute; left:15px; top:32px; bottom:0; width:2px; background:var(--border);}
+  .wizard-step:last-child::before{display:none;}
+  .step-marker{width:32px; height:32px; border-radius:50%; background:var(--surface-1); border:2px solid var(--border);
+    color:var(--text-secondary); font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; z-index:1; transition:background 150ms, border-color 150ms, color 150ms;}
+  .step-marker.done{background:var(--accent); border-color:var(--accent); color:var(--accent-contrast);}
+  .step-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:12px; padding-top:3px;}
+  .step-title{font-size:15px; font-weight:700; margin:0; color:var(--text-primary);}
+  .step-desc{font-size:13px; color:var(--text-secondary); margin:-6px 0 0;}
+  .block{display:flex; flex-direction:column; gap:10px;}
+  .block-title{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin:0;}
+
+  .period-picker{display:inline-flex; align-items:center; gap:2px; border:1px solid var(--border); border-radius:var(--radius-pill); background:var(--surface-1); padding:4px 6px; width:fit-content;}
+  .period-picker i.ti-calendar{color:var(--text-muted); font-size:14px; margin:0 4px 0 6px;}
+  .period-picker select{border:none; background:transparent; padding:4px 2px; font-weight:600; color:var(--text-primary);}
+  .period-picker select:focus{outline:none;}
+  .period-picker select.arrows-only{appearance:none; -webkit-appearance:none; -moz-appearance:none; pointer-events:none; cursor:default;}
+  .step-btn{width:26px; height:26px; padding:0; border:none; border-radius:50%; background:transparent; color:var(--text-secondary); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px;}
+  .step-btn:hover{background:var(--surface-2); color:var(--text-primary);}
+
+  .icon-btn{width:26px; height:26px; padding:0; border:none; background:transparent; border-radius:6px; color:var(--text-secondary); display:inline-flex; align-items:center; justify-content:center; cursor:pointer;}
+  .icon-btn:hover{background:var(--surface-1); color:var(--text-primary);}
+  .icon-btn.danger:hover{background:#fdecea; color:#c0392b;}
+
+  select{font-size:13px; font-family:inherit; padding:6px 10px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2);}
+  input[type="text"], input[type="date"], input[type="number"]{font-size:13px; font-family:inherit; padding:6px 10px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2); width:100%;}
+  input:focus{outline:none; border-color:var(--accent);}
+  input[type="number"].income-input{width:78px; font-size:12px; padding:4px 6px;}
+  .income-table th, .income-table td{white-space:nowrap; padding-right:16px;}
+  .income-table th:last-child, .income-table td:last-child{padding-right:0;}
+  #bonusesTable th, #bonusesTable td{white-space:nowrap; padding-right:16px;}
+  #bonusesTable th:last-child, #bonusesTable td:last-child{padding-right:0;}
+  .field{display:flex; flex-direction:column; gap:4px;}
+  .field label{font-size:12px; color:var(--text-secondary);}
+  form.bonus-form{display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:end;}
+  form.rate-form{display:grid; grid-template-columns:1fr 1fr auto; gap:10px; align-items:end;}
+  button{font-size:13px; font-weight:500; font-family:inherit; padding:8px 16px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2); cursor:pointer;}
+  button:hover:not(:disabled){background:var(--surface-1);}
+  button:disabled{opacity:0.4; cursor:not-allowed;}
+  .btn-primary{background:var(--accent); border:1px solid var(--accent); color:var(--accent-contrast); font-weight:600;}
+  .btn-primary:hover:not(:disabled){background:var(--accent-ring); border-color:var(--accent-ring);}
+  .btn-light{background:var(--accent-tint); border:1px solid transparent; color:var(--accent); font-weight:600; padding:6px 12px;}
+  .btn-light:hover:not(:disabled){background:var(--accent-tint-hover);}
+  .btn-sm{padding:4px 10px; font-size:12px;}
+
+  table{width:100%; font-size:13px; border-collapse:collapse;}
+  th{text-align:left; font-weight:500; color:var(--text-secondary); padding:6px 0;}
+  td{padding:8px 0; border-top:1px solid var(--border);}
+  tr:first-of-type td{border-top:none;}
+
+  .row-toggle{width:18px; height:18px; padding:0; border:none; background:transparent; color:var(--text-muted);
+    display:inline-flex; align-items:center; justify-content:center; cursor:pointer; border-radius:4px; margin-right:4px; vertical-align:middle;}
+  .row-toggle:hover{background:var(--surface-1); color:var(--text-primary);}
+  .row-toggle i{transition:transform 0.15s; display:block;}
+  .row-toggle.open i{transform:rotate(90deg);}
+  .row-toggle-spacer{display:inline-block; width:22px;}
+  .worklog-detail-row td{border-top:none; padding:0 0 8px 0;}
+  .sub-table{width:calc(100% - 26px); margin-left:26px; font-size:12px; color:var(--text-secondary);}
+  .sub-table td{padding:3px 0; border-top:none;}
+
+  .panel-row{display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:stretch;}
+  .panel-row > .panel{min-width:0;}
+  .panel{border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px; background:var(--surface-2); display:flex; flex-direction:column; gap:10px;}
+  .panel-header{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .empty-state{display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; padding:20px 12px; color:var(--text-secondary);}
+  .empty-state i{font-size:20px; color:var(--text-muted);}
+  .empty-state p{font-size:12px; margin:0;}
+  .preview{display:none;}
+  .preview p.title{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin:0 0 6px;}
+  .doc-row{display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-top:1px solid var(--border); font-size:12px;}
+  .doc-row:first-of-type{border-top:none;}
+  .previewDocBtn{background:var(--accent-tint); border:1px solid transparent; color:var(--accent); font-weight:600;
+    padding:4px; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; font-size:13px;}
+  .previewDocBtn i{margin:0;}
+  .previewDocBtn:hover:not(:disabled){background:var(--accent-tint-hover);}
+  .badge{font-size:11px; font-weight:500; padding:3px 10px; border-radius:var(--radius-pill);}
+  .badge.success{background:var(--bg-success); color:var(--text-success);}
+  .badge.warning{background:var(--bg-warning); color:var(--text-warning);}
+  .badge.danger{background:#fdecea; color:#c0392b;}
+  .status-line{font-size:12px; color:var(--text-secondary); display:flex; align-items:center; gap:6px;}
+  canvas{max-height:180px;}
+  .stat-tile{background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px;}
+  .stat-tile .stat-label{font-size:12px; color:var(--text-secondary);}
+  .stat-tile .stat-value{font-size:28px; font-weight:900; letter-spacing:-0.02em; margin-top:4px; color:var(--accent);}
+
+  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(10,10,18,0.45); align-items:center; justify-content:center; z-index:10; padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface-2); border-radius:var(--radius-lg); padding:20px; width:340px; max-width:100%; box-shadow:0 24px 48px rgba(10,10,18,0.18);}
+  .modal h3{font-size:14px; font-weight:700; margin:0 0 8px;}
+  .modal p{font-size:13px; color:var(--text-secondary); margin:0 0 20px; line-height:1.5;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:8px;}
+  .btn-danger{background:#fdecea; border:1px solid transparent; color:#c0392b; font-weight:600;}
+  .btn-danger:hover:not(:disabled){background:#fbdad6;}
+  .icon-circle{width:36px; height:36px; border-radius:50%; background:var(--bg-success); color:var(--text-success); display:flex; align-items:center; justify-content:center; font-size:17px; margin-bottom:12px;}
+
+  .form-error{display:none; background:var(--bg-warning); color:var(--text-warning); font-size:12px; padding:8px 12px; border-radius:var(--radius); grid-column:1 / -1;}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="topnav">
+    <div class="topnav-inner">
+      <div class="brand">
+        <div class="brand-mark">BK</div>
+        <div class="brand-name">Bartosz Kaczmarek</div>
+      </div>
+      <nav class="nav-tabs">
+        <button class="navItem active" data-section="invoicing">Invoicing</button>
+        <button class="navItem" data-section="hours">Hours &amp; vacations</button>
+        <button class="navItem" data-section="rates">Rates</button>
+        <button class="navItem" data-section="income">Income</button>
+      </nav>
+      <div class="profile-menu">
+        <button type="button" class="profile-trigger" id="profileTrigger" aria-label="Account menu"><i class="ti ti-user"></i></button>
+        <div class="profile-dropdown" id="profileDropdown">
+          <div class="profile-name">Bartosz Kaczmarek</div>
+          <div class="profile-email" id="profileEmail">–</div>
+          <div id="connectionStatus"></div>
+          <div class="profile-divider"></div>
+          <button type="button" class="dropdown-item" id="logoutBtn"><i class="ti ti-logout"></i> Log out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <div class="content">
+
+      <section id="section-invoicing" class="section wizard">
+
+        <div class="wizard-step" data-step="1">
+          <div class="step-marker done"><span>1</span></div>
+          <div class="step-body">
+            <p class="step-title">Choose the period</p>
+            <div class="period-picker">
+              <button type="button" class="step-btn" id="periodPrev" aria-label="Previous month"><i class="ti ti-chevron-left"></i></button>
+              <i class="ti ti-calendar"></i>
+              <select id="month">
+                <option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option selected>August</option><option>September</option><option>October</option><option>November</option><option>December</option>
+              </select>
+              <select id="year"><option>2025</option><option selected>2026</option></select>
+              <button type="button" class="step-btn" id="periodNext" aria-label="Next month"><i class="ti ti-chevron-right"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="wizard-step" data-step="2">
+          <div class="step-marker" id="stepMarker2"><span>2</span></div>
+          <div class="step-body">
+            <p class="step-title">Fetch worklogs</p>
+            <div class="panel">
+              <div class="panel-header">
+                <p class="block-title">Worklogs</p>
+                <button id="fetchBtn" class="btn-light"><i class="ti ti-refresh"></i> Fetch</button>
+              </div>
+              <p id="tableStatus" style="display:none; font-size:12px; color:var(--text-secondary); margin:0;"><i class="ti ti-refresh"></i> Loading data…</p>
+              <div id="tableEmpty" class="empty-state">
+                <i class="ti ti-table"></i>
+                <p>No data yet. Click "Fetch" to see worklogs for the selected period.</p>
+              </div>
+              <table id="worklogsTable" style="display:none;">
+                <tr><th>Project</th><th style="text-align:right;">Hours</th></tr>
+                <tbody id="tableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="wizard-step" data-step="3">
+          <div class="step-marker" id="stepMarker3"><span>3</span></div>
+          <div class="step-body">
+            <p class="step-title">Generate &amp; export to Taxxxo</p>
+            <div class="panel">
+              <div class="panel-header">
+                <p class="block-title">Protocols</p>
+                <button id="genBtn" class="btn-light" disabled><i class="ti ti-file-text"></i> Generate</button>
+              </div>
+              <div id="protocolsEmpty" class="empty-state">
+                <i class="ti ti-file-text"></i>
+                <p id="protocolsEmptyText">No documents yet. Fetch worklogs, then click "Generate" to preview the PDFs.</p>
+              </div>
+              <div id="previewWrap" class="preview">
+                <p class="title" id="previewTitle">Documents ready for review</p>
+                <div class="doc-row">
+                  <span><i class="ti ti-file-text"></i> Order protocol</span>
+                  <button class="previewDocBtn" data-doc="zamowienie" aria-label="Preview"><i class="ti ti-eye"></i></button>
+                </div>
+                <div class="doc-row">
+                  <span><i class="ti ti-file-text"></i> Acceptance protocol</span>
+                  <button class="previewDocBtn" data-doc="odbiorczy" aria-label="Preview"><i class="ti ti-eye"></i></button>
+                </div>
+                <button id="exportBtn" class="btn-primary" style="margin-top:8px; width:100%;"><i class="ti ti-download"></i> Export documents</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <section id="section-hours" class="section" style="display:none;">
+
+        <div class="block">
+          <p class="block-title">Year</p>
+          <div class="period-picker">
+            <button type="button" class="step-btn" id="hoursYearPrev" aria-label="Previous year"><i class="ti ti-chevron-left"></i></button>
+            <i class="ti ti-calendar"></i>
+            <select id="hoursYear" class="arrows-only" tabindex="-1"><option>2025</option><option selected>2026</option></select>
+            <button type="button" class="step-btn" id="hoursYearNext" aria-label="Next year"><i class="ti ti-chevron-right"></i></button>
+          </div>
+        </div>
+
+        <div class="block">
+          <p class="block-title">Vacations</p>
+          <div class="stat-tile">
+            <div class="stat-label" id="unloggedLabel">Days off in 2026</div>
+            <div class="stat-value" id="unloggedValue">–</div>
+          </div>
+        </div>
+
+        <div class="block">
+          <p class="block-title" id="hoursChartLabel">Hours logged — 2026</p>
+          <div style="position:relative; height:180px;">
+            <canvas id="hoursChart"></canvas>
+          </div>
+        </div>
+
+      </section>
+
+      <section id="section-rates" class="section" style="display:none;">
+
+        <div class="block">
+          <p class="block-title">Current rate</p>
+          <div class="stat-tile">
+            <div class="stat-label" id="currentRateSub">–</div>
+            <div class="stat-value" id="currentRateValue">–</div>
+            <span class="badge success" id="rateChangeBadge" style="display:none; margin-top:8px;"></span>
+          </div>
+        </div>
+
+        <div class="block">
+          <p class="block-title">Add rate</p>
+          <form id="rateForm" class="panel rate-form" novalidate>
+            <input type="hidden" id="rateEditId" value="">
+            <p id="rateFormError" class="form-error"></p>
+            <div class="field">
+              <label for="rateFrom">Effective from</label>
+              <input type="date" id="rateFrom">
+            </div>
+            <div class="field">
+              <label for="rateValue">Rate (zł/h)</label>
+              <input type="number" id="rateValue" min="0" step="0.01" placeholder="0.00">
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button type="submit" id="addRateBtn" class="btn-light"><i class="ti ti-plus"></i> Add</button>
+              <button type="button" id="cancelRateEditBtn" style="display:none;">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="block">
+          <p class="block-title">Rate history</p>
+          <div class="panel">
+            <table>
+              <tr><th>Period</th><th style="text-align:right;">Rate</th><th></th></tr>
+              <tbody id="rateHistoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="block">
+          <p class="block-title">Rate growth over time</p>
+          <div style="position:relative; height:180px;">
+            <canvas id="rateChart"></canvas>
+          </div>
+        </div>
+
+      </section>
+
+      <section id="section-income" class="section" style="display:none;">
+
+        <div class="block">
+          <p class="block-title">Year</p>
+          <div class="period-picker">
+            <button type="button" class="step-btn" id="incomeYearPrev" aria-label="Previous year"><i class="ti ti-chevron-left"></i></button>
+            <i class="ti ti-calendar"></i>
+            <select id="incomeYear" class="arrows-only" tabindex="-1"><option>2025</option><option selected>2026</option></select>
+            <button type="button" class="step-btn" id="incomeYearNext" aria-label="Next year"><i class="ti ti-chevron-right"></i></button>
+          </div>
+        </div>
+
+        <div class="block">
+          <p class="block-title">Overview</p>
+          <div class="stat-tile">
+            <div class="stat-label">Net income + Bonuses in <span id="incomeOverviewYearLabel">2026</span></div>
+            <div class="stat-value" id="incomeOverviewValue">–</div>
+          </div>
+        </div>
+
+        <div class="panel-row">
+
+          <div class="panel income-column">
+            <p class="block-title">Salary — <span id="incomeYearLabel">2026</span></p>
+            <div class="stat-tile">
+              <div class="stat-label">After ZUS, tax &amp; accounting</div>
+              <div class="stat-value" id="netIncomeValue">–</div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="income-table">
+                <tr>
+                  <th>Month</th>
+                  <th style="text-align:right;">Gross</th>
+                  <th>ZUS</th>
+                  <th>Tax</th>
+                  <th>Accounting</th>
+                  <th style="text-align:right;">Net</th>
+                </tr>
+                <tbody id="incomeBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel income-column">
+            <p class="block-title">Bonuses — <span id="bonusesYearLabel">2026</span></p>
+            <div class="stat-tile">
+              <div class="stat-label">Total bonuses this year</div>
+              <div class="stat-value" id="totalBonusesValue">–</div>
+            </div>
+            <form id="bonusForm" class="bonus-form" novalidate>
+              <input type="hidden" id="bonusEditId" value="">
+              <p id="bonusFormError" class="form-error"></p>
+              <div class="field" style="grid-column:1 / -1;">
+                <label for="bonusName">Name</label>
+                <input type="text" id="bonusName" placeholder="e.g. Dividend">
+              </div>
+              <div class="field">
+                <label for="bonusDate">Date</label>
+                <input type="date" id="bonusDate">
+              </div>
+              <div class="field">
+                <label for="bonusAmount">Amount (zł)</label>
+                <input type="number" id="bonusAmount" min="0" step="0.01" placeholder="0.00">
+              </div>
+              <div style="display:flex; gap:6px; grid-column:1 / -1;">
+                <button type="submit" id="addBonusBtn" class="btn-light"><i class="ti ti-plus"></i> Add</button>
+                <button type="button" id="cancelEditBtn" style="display:none;">Cancel</button>
+              </div>
+            </form>
+            <div style="overflow-x:auto;">
+              <div id="bonusesEmpty" class="empty-state" style="display:none;">
+                <i class="ti ti-gift"></i>
+                <p id="bonusesEmptyText">No bonuses recorded yet.</p>
+              </div>
+              <table id="bonusesTable" style="display:none;">
+                <tr><th>Name</th><th>Date</th><th style="text-align:right;">Amount</th><th></th></tr>
+                <tbody id="bonusesBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal">
+    <h3 id="confirmTitle">Are you sure?</h3>
+    <p id="confirmMessage"></p>
+    <div class="modal-actions">
+      <button type="button" id="confirmCancelBtn">Cancel</button>
+      <button type="button" id="confirmOkBtn" class="btn-danger">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="exportModalOverlay">
+  <div class="modal">
+    <div class="icon-circle"><i class="ti ti-check"></i></div>
+    <h3>Documents exported</h3>
+    <p>Both protocols have been downloaded. The invoice is now ready to be issued in Taxxxo.</p>
+    <div class="modal-actions">
+      <button type="button" id="exportModalCloseBtn">Close</button>
+      <button type="button" id="exportModalOpenBtn" class="btn-primary">Open Taxxxo</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function confirmDialog(message, { okLabel = 'Delete', title = 'Are you sure?' } = {}) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('confirmOverlay');
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    const okBtn = document.getElementById('confirmOkBtn');
+    const cancelBtn = document.getElementById('confirmCancelBtn');
+    okBtn.textContent = okLabel;
+
+    function cleanup(result) {
+      overlay.classList.remove('open');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      overlay.removeEventListener('click', onOverlay);
+      document.removeEventListener('keydown', onKey);
+      resolve(result);
+    }
+    function onOk() { cleanup(true); }
+    function onCancel() { cleanup(false); }
+    function onOverlay(e) { if (e.target === overlay) cleanup(false); }
+    function onKey(e) { if (e.key === 'Escape') cleanup(false); }
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    overlay.addEventListener('click', onOverlay);
+    document.addEventListener('keydown', onKey);
+    overlay.classList.add('open');
+  });
+}
+let PDF_CACHE = null;
+let TAXXXO_URL = 'https://platforma2.taxxo.pl/';
+const PROTOCOLS_EMPTY_DEFAULT_TEXT = 'No documents yet. Fetch worklogs, then click "Generate" to preview the PDFs.';
+
+function currentPeriod() {
+  const month = document.getElementById('month').selectedIndex + 1;
+  const year = parseInt(document.getElementById('year').value, 10);
+  return { month, year };
+}
+
+document.querySelectorAll('.navItem').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.navItem').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+    document.getElementById(`section-${btn.dataset.section}`).style.display = 'flex';
+    if (btn.dataset.section === 'hours' && hoursChartInstance) {
+      hoursChartInstance.resize();
+    }
+    if (btn.dataset.section === 'rates' && rateChartInstance) {
+      rateChartInstance.resize();
+    }
+  });
+});
+
+async function loadStatus() {
+  try {
+    const res = await fetch('/api/status');
+    const status = await res.json();
+    TAXXXO_URL = status.taxxxoUrl;
+    document.getElementById('profileEmail').textContent = status.email || '';
+    const connected = status.jiraConfigured && status.tempoConfigured;
+    const wrap = document.getElementById('connectionStatus');
+    wrap.innerHTML = `
+      <div class="status-line">Connection status: <span class="badge ${connected ? 'success' : 'danger'}">${connected ? 'connected' : 'disconnected'}</span></div>
+    `;
+  } catch (e) {
+    console.warn('Failed to fetch /api/status', e);
+  }
+}
+
+function setStepDone(n, done) {
+  const marker = document.getElementById(`stepMarker${n}`);
+  if (marker) marker.classList.toggle('done', done);
+}
+
+function resetDownstream() {
+  document.getElementById('previewWrap').style.display = 'none';
+  document.getElementById('protocolsEmpty').style.display = 'flex';
+  document.getElementById('protocolsEmptyText').textContent = PROTOCOLS_EMPTY_DEFAULT_TEXT;
+  PDF_CACHE = null;
+  setStepDone(2, false);
+  setStepDone(3, false);
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+
+function buildWorklogRows(projects, totalHours) {
+  let rows = '';
+  projects.forEach((p, i) => {
+    const items = p.items || [];
+    const hasBreakdown = items.length > 1;
+    rows += `
+      <tr class="worklog-row">
+        <td>${hasBreakdown
+          ? `<button type="button" class="row-toggle" data-target="${i}" aria-label="Expand"><i class="ti ti-chevron-right"></i></button>`
+          : `<span class="row-toggle-spacer"></span>`}${escapeHtml(p.name)}</td>
+        <td style="text-align:right;">${p.hours.toFixed(1)}</td>
+      </tr>
+    `;
+    if (hasBreakdown) {
+      rows += `
+        <tr class="worklog-detail-row" data-detail="${i}" style="display:none;">
+          <td colspan="2">
+            <table class="sub-table">
+              ${items.map(it => `<tr><td>${escapeHtml(it.key)}${it.summary ? ' — ' + escapeHtml(it.summary) : ''}</td><td style="text-align:right;">${it.hours.toFixed(1)}</td></tr>`).join('')}
+            </table>
+          </td>
+        </tr>
+      `;
+    }
+  });
+  rows += `<tr style="font-weight:600;"><td>Total</td><td style="text-align:right;">${totalHours.toFixed(1)}</td></tr>`;
+  return rows;
+}
+
+document.getElementById('tableBody').addEventListener('click', (e) => {
+  const toggle = e.target.closest('.row-toggle');
+  if (!toggle) return;
+  const target = toggle.dataset.target;
+  const detailRow = document.querySelector(`.worklog-detail-row[data-detail="${target}"]`);
+  const isOpen = detailRow.style.display !== 'none';
+  detailRow.style.display = isOpen ? 'none' : 'table-row';
+  toggle.classList.toggle('open', !isOpen);
+});
+
+async function fetchWorklogs() {
+  const tableStatus = document.getElementById('tableStatus');
+  const tableEmpty = document.getElementById('tableEmpty');
+  const worklogsTable = document.getElementById('worklogsTable');
+  worklogsTable.style.display = 'none';
+  tableEmpty.style.display = 'none';
+  tableStatus.style.display = 'block';
+  document.getElementById('genBtn').disabled = true;
+  resetDownstream();
+
+  const { month, year } = currentPeriod();
+  try {
+    const res = await fetch(`/api/worklogs?month=${month}&year=${year}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error fetching data');
+
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = buildWorklogRows(data.projects, data.totalHours);
+    tbody.dataset.projects = JSON.stringify(data.projects);
+    tbody.dataset.totalHours = data.totalHours;
+
+    tableStatus.style.display = 'none';
+    worklogsTable.style.display = 'table';
+    const hasHours = data.totalHours > 0;
+    document.getElementById('genBtn').disabled = !hasHours;
+    setStepDone(2, hasHours);
+    if (!hasHours) {
+      document.getElementById('protocolsEmptyText').textContent =
+        'No hours logged for this period, so there’s nothing to generate protocols from.';
+    }
+  } catch (err) {
+    tableStatus.innerHTML = `<i class="ti ti-alert-triangle"></i> ${err.message}`;
+    tableEmpty.style.display = 'flex';
+  }
+}
+
+document.getElementById('fetchBtn').addEventListener('click', fetchWorklogs);
+
+document.getElementById('month').addEventListener('change', onPeriodChange);
+document.getElementById('year').addEventListener('change', onPeriodChange);
+
+function stepMonth(delta) {
+  const monthSel = document.getElementById('month');
+  const yearSel = document.getElementById('year');
+  let idx = monthSel.selectedIndex + delta;
+  let yearIdx = yearSel.selectedIndex;
+  if (idx < 0) {
+    if (yearIdx > 0) { yearIdx -= 1; idx = 11; } else { idx = 0; }
+  } else if (idx > 11) {
+    if (yearIdx < yearSel.options.length - 1) { yearIdx += 1; idx = 0; } else { idx = 11; }
+  }
+  monthSel.selectedIndex = idx;
+  yearSel.selectedIndex = yearIdx;
+  onPeriodChange();
+}
+document.getElementById('periodPrev').addEventListener('click', () => stepMonth(-1));
+document.getElementById('periodNext').addEventListener('click', () => stepMonth(1));
+
+function onPeriodChange() {
+  resetDownstream();
+  const worklogsTable = document.getElementById('worklogsTable');
+  const wasLoaded = worklogsTable.style.display === 'table';
+  document.getElementById('genBtn').disabled = true;
+  if (wasLoaded) {
+    fetchWorklogs();
+  } else {
+    worklogsTable.style.display = 'none';
+    document.getElementById('tableEmpty').style.display = 'flex';
+  }
+}
+
+function blobUrlFromBase64(base64) {
+  const bin = atob(base64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return URL.createObjectURL(new Blob([arr], { type: 'application/pdf' }));
+}
+
+document.getElementById('genBtn').addEventListener('click', async () => {
+  const genBtn = document.getElementById('genBtn');
+  genBtn.disabled = true;
+  genBtn.innerHTML = '<i class="ti ti-refresh"></i> Generating…';
+
+  const { month, year } = currentPeriod();
+  const tbody = document.getElementById('tableBody');
+  const projects = JSON.parse(tbody.dataset.projects || '[]');
+  const totalHours = parseFloat(tbody.dataset.totalHours || '0');
+
+  try {
+    const res = await fetch('/api/protocols/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ month, year, projects, totalHours })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error generating protocols');
+
+    PDF_CACHE = data;
+    document.getElementById('previewTitle').textContent = `Documents ready for review — ${MONTH_NAMES[month - 1]} ${year}`;
+    document.getElementById('protocolsEmpty').style.display = 'none';
+    document.getElementById('previewWrap').style.display = 'block';
+    setStepDone(3, true);
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    genBtn.disabled = false;
+    genBtn.innerHTML = '<i class="ti ti-file-text"></i> Generate';
+  }
+});
+
+document.querySelectorAll('.previewDocBtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!PDF_CACHE) return;
+    const doc = PDF_CACHE[btn.dataset.doc];
+    window.open(blobUrlFromBase64(doc.base64), '_blank');
+  });
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  if (!PDF_CACHE) return;
+  ['zamowienie', 'odbiorczy'].forEach(kind => {
+    const doc = PDF_CACHE[kind];
+    const a = document.createElement('a');
+    a.href = blobUrlFromBase64(doc.base64);
+    a.download = doc.filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  });
+  document.getElementById('previewWrap').style.display = 'none';
+  document.getElementById('protocolsEmpty').style.display = 'flex';
+  document.getElementById('exportModalOverlay').classList.add('open');
+});
+
+document.getElementById('exportModalCloseBtn').addEventListener('click', () => {
+  document.getElementById('exportModalOverlay').classList.remove('open');
+});
+document.getElementById('exportModalOpenBtn').addEventListener('click', () => {
+  window.open(TAXXXO_URL, '_blank');
+  document.getElementById('exportModalOverlay').classList.remove('open');
+});
+document.getElementById('exportModalOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+
+// Working hours per Poland's official 2026 working-day calendar (working days x 8h)
+const WORKING_HOURS_BY_MONTH = { 1: 160, 2: 160, 3: 176, 4: 168, 5: 160, 6: 168, 7: 184, 8: 160, 9: 176, 10: 176, 11: 160, 12: 160 };
+
+function monthlyCapacity(year, month) {
+  return (WORKING_HOURS_BY_MONTH[month]) || 168;
+}
+
+let CHART_CAPACITY = [];
+let hoursChartInstance = null;
+
+const barValueLabels = {
+  id: 'barValueLabels',
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    chart.getDatasetMeta(0).data.forEach((bar, i) => {
+      const value = chart.data.datasets[0].data[i];
+      const capacity = CHART_CAPACITY[i];
+      ctx.font = '700 11px "Plus Jakarta Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif';
+      ctx.fillStyle = '#0f172a';
+      ctx.fillText(value, bar.x, bar.y - 16);
+      ctx.font = '10px "Plus Jakarta Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif';
+      ctx.fillStyle = '#475569';
+      ctx.fillText(`of ${capacity}h`, bar.x, bar.y - 4);
+    });
+    ctx.restore();
+  }
+};
+
+async function loadHoursChart() {
+  const year = parseInt(document.getElementById('hoursYear').value, 10);
+  document.getElementById('unloggedLabel').textContent = `Days off in ${year}`;
+  document.getElementById('hoursChartLabel').textContent = `Hours logged — ${year}`;
+
+  const points = [];
+  for (let m = 1; m <= 12; m++) {
+    points.push({ month: m, year });
+  }
+
+  const results = await Promise.all(points.map(p =>
+    fetch(`/api/worklogs?month=${p.month}&year=${p.year}`)
+      .then(res => res.json())
+      .then(d => d.totalHours || 0)
+      .catch(() => 0)
+  ));
+
+  const labels = points.map(p => MONTH_NAMES[p.month - 1]);
+  CHART_CAPACITY = points.map(p => monthlyCapacity(p.year, p.month));
+
+  const today = new Date();
+  const currentMonth = today.getMonth() + 1;
+  const currentYear = today.getFullYear();
+
+  // Only count fully completed months — the current (in-progress) month is excluded,
+  // so in August the period considered is January 1 through July 31.
+  let statCapacity = 0;
+  let statLogged = 0;
+  points.forEach((p, i) => {
+    if (p.year > currentYear || (p.year === currentYear && p.month >= currentMonth)) return;
+    statCapacity += CHART_CAPACITY[i];
+    statLogged += results[i];
+  });
+  const unlogged = Math.max(0, statCapacity - statLogged);
+  const daysOff = unlogged / 8;
+  document.getElementById('unloggedValue').textContent = `${daysOff.toFixed(1)} days`;
+
+  if (hoursChartInstance) {
+    hoursChartInstance.data.labels = labels;
+    hoursChartInstance.data.datasets[0].data = results;
+    hoursChartInstance.update();
+    return;
+  }
+
+  hoursChartInstance = new Chart(document.getElementById('hoursChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: results,
+        backgroundColor: '#0369a1',
+        borderRadius: 6,
+        maxBarThickness: 36
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 28 } },
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { display: false }, grid: { color: '#e2e8f0' } },
+        x: { ticks: { font: { size: 11, family: 'Plus Jakarta Sans' } }, grid: { display: false } }
+      }
+    },
+    plugins: [barValueLabels]
+  });
+}
+
+document.getElementById('hoursYear').addEventListener('change', loadHoursChart);
+document.getElementById('hoursYearPrev').addEventListener('click', () => {
+  const sel = document.getElementById('hoursYear');
+  sel.selectedIndex = Math.max(0, sel.selectedIndex - 1);
+  loadHoursChart();
+});
+document.getElementById('hoursYearNext').addEventListener('click', () => {
+  const sel = document.getElementById('hoursYear');
+  sel.selectedIndex = Math.min(sel.options.length - 1, sel.selectedIndex + 1);
+  loadHoursChart();
+});
+
+// Hourly rate history, fetched from /api/rates — the same source protocol PDFs use to
+// compute their amounts, so the app and the generated documents never drift apart.
+let RATE_HISTORY = [];
+
+async function loadRates() {
+  try {
+    const res = await fetch('/api/rates');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error fetching rates');
+    RATE_HISTORY = data.history;
+  } catch (err) {
+    console.warn('Failed to load rate history', err);
+    RATE_HISTORY = [{ from: '2025-01', rate: 0 }];
+  }
+  renderRateHistory();
+  loadRateChart();
+}
+
+function formatMonthYear(key) {
+  const [y, m] = key.split('-').map(Number);
+  return `${MONTH_NAMES[m - 1]} ${y}`;
+}
+
+function formatFromMonthYear(key) {
+  const [y, m] = key.split('-').map(Number);
+  return `since ${MONTH_NAMES[m - 1]} ${y}`;
+}
+
+function rateForMonth(key) {
+  let applicable = RATE_HISTORY[0].rate;
+  for (const entry of RATE_HISTORY) {
+    if (entry.from <= key) applicable = entry.rate; else break;
+  }
+  return applicable;
+}
+
+function renderRateHistory() {
+  const sorted = [...RATE_HISTORY].sort((a, b) => a.from.localeCompare(b.from));
+
+  const rows = sorted.map((entry, i) => {
+    const next = sorted[i + 1];
+    let period;
+    if (next) {
+      const [ny, nm] = next.from.split('-').map(Number);
+      const endM = nm === 1 ? 12 : nm - 1;
+      const endY = nm === 1 ? ny - 1 : ny;
+      period = `${formatMonthYear(entry.from)} – ${formatMonthYear(`${endY}-${String(endM).padStart(2, '0')}`)}`;
+    } else {
+      period = formatFromMonthYear(entry.from).replace(/^since /, 'Since ');
+    }
+    return `
+      <tr>
+        <td>${period}</td>
+        <td style="text-align:right; font-weight:600;">${entry.rate} zł/h</td>
+        <td style="text-align:right; white-space:nowrap;">
+          <button type="button" class="icon-btn rate-edit" data-id="${entry.id}" aria-label="Edit"><i class="ti ti-pencil"></i></button>
+          <button type="button" class="icon-btn danger rate-delete" data-id="${entry.id}" aria-label="Delete"><i class="ti ti-trash"></i></button>
+        </td>
+      </tr>`;
+  }).reverse();
+
+  document.getElementById('rateHistoryBody').innerHTML = rows.join('');
+
+  // "Current" means effective as of today — a rate scheduled for a future month
+  // (e.g. added ahead of time) shouldn't be shown as current until it actually starts.
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  let currentIndex = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i].from <= todayKey) currentIndex = i; else break;
+  }
+  const current = sorted[currentIndex];
+  const previous = currentIndex > 0 ? sorted[currentIndex - 1] : null;
+  document.getElementById('currentRateValue').textContent = `${current.rate} zł/h`;
+  document.getElementById('currentRateSub').textContent = formatFromMonthYear(current.from);
+
+  const badge = document.getElementById('rateChangeBadge');
+  if (previous) {
+    const pct = ((current.rate - previous.rate) / previous.rate) * 100;
+    badge.textContent = `+${pct.toFixed(1)}% vs ${previous.rate} zł/h`;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function showRateFormError(message) {
+  const el = document.getElementById('rateFormError');
+  el.textContent = message;
+  el.style.display = 'block';
+}
+
+function clearRateFormError() {
+  document.getElementById('rateFormError').style.display = 'none';
+}
+
+function enterRateEditMode(entry) {
+  clearRateFormError();
+  document.getElementById('rateEditId').value = entry.id;
+  document.getElementById('rateFrom').value = `${entry.from}-01`;
+  document.getElementById('rateValue').value = entry.rate;
+  document.getElementById('addRateBtn').innerHTML = '<i class="ti ti-check"></i> Save';
+  document.getElementById('cancelRateEditBtn').style.display = 'inline-flex';
+  document.getElementById('rateFrom').focus();
+}
+
+function exitRateEditMode() {
+  clearRateFormError();
+  document.getElementById('rateForm').reset();
+  document.getElementById('rateEditId').value = '';
+  document.getElementById('addRateBtn').innerHTML = '<i class="ti ti-plus"></i> Add';
+  document.getElementById('cancelRateEditBtn').style.display = 'none';
+}
+
+document.getElementById('cancelRateEditBtn').addEventListener('click', exitRateEditMode);
+
+document.getElementById('rateHistoryBody').addEventListener('click', (e) => {
+  const editBtn = e.target.closest('.rate-edit');
+  const deleteBtn = e.target.closest('.rate-delete');
+
+  if (editBtn) {
+    const entry = RATE_HISTORY.find(r => r.id === editBtn.dataset.id);
+    if (entry) enterRateEditMode(entry);
+    return;
+  }
+
+  if (deleteBtn) {
+    const entry = RATE_HISTORY.find(r => r.id === deleteBtn.dataset.id);
+    if (!entry) return;
+    confirmDialog(`Delete the ${entry.rate} zł/h rate (${formatFromMonthYear(entry.from)})? This can't be undone.`, { title: 'Delete rate?' })
+      .then(confirmed => {
+        if (!confirmed) return;
+        return fetch(`/api/rates/${deleteBtn.dataset.id}`, { method: 'DELETE' })
+          .then(res => res.json().then(data => ({ ok: res.ok, data })))
+          .then(({ ok, data }) => {
+            if (!ok) throw new Error(data.error || 'Error deleting rate');
+            if (document.getElementById('rateEditId').value === deleteBtn.dataset.id) exitRateEditMode();
+            loadRates();
+          });
+      })
+      .catch(err => alert(err.message));
+  }
+});
+
+document.getElementById('rateForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearRateFormError();
+
+  const dateValue = document.getElementById('rateFrom').value;
+  const from = dateValue.slice(0, 7);
+  const rateRaw = document.getElementById('rateValue').value;
+  const rate = parseFloat(rateRaw);
+
+  if (!dateValue) return showRateFormError('Please choose an effective date.');
+  if (rateRaw === '' || Number.isNaN(rate) || rate < 0) return showRateFormError('Please enter a valid rate.');
+
+  const editId = document.getElementById('rateEditId').value;
+  const btn = document.getElementById('addRateBtn');
+  btn.disabled = true;
+  try {
+    const res = await fetch(editId ? `/api/rates/${editId}` : '/api/rates', {
+      method: editId ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from, rate })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error saving rate');
+
+    exitRateEditMode();
+    loadRates();
+  } catch (err) {
+    showRateFormError(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+let rateChartInstance = null;
+
+const ratePointLabels = {
+  id: 'ratePointLabels',
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    ctx.save();
+    ctx.font = '700 11px "Plus Jakarta Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#0f172a';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    chart.getDatasetMeta(0).data.forEach((point, i) => {
+      const value = chart.data.datasets[0].data[i];
+      ctx.fillText(`${value} zł/h`, point.x, point.y - 12);
+    });
+    ctx.restore();
+  }
+};
+
+function loadRateChart() {
+  const sorted = [...RATE_HISTORY].sort((a, b) => a.from.localeCompare(b.from));
+
+  const labels = sorted.map(r => formatMonthYear(r.from));
+  const periods = sorted.map(r => formatFromMonthYear(r.from));
+  const values = sorted.map(r => r.rate);
+
+  const minVal = Math.min(...values);
+  const maxVal = Math.max(...values);
+  const pad = Math.max(5, (maxVal - minVal) || 10);
+
+  if (rateChartInstance) {
+    rateChartInstance.data.labels = labels;
+    rateChartInstance.data.datasets[0].data = values;
+    rateChartInstance.data.datasets[0].periods = periods;
+    rateChartInstance.options.scales.y.suggestedMin = minVal - pad;
+    rateChartInstance.options.scales.y.suggestedMax = maxVal + pad;
+    rateChartInstance.update();
+    return;
+  }
+
+  rateChartInstance = new Chart(document.getElementById('rateChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        periods,
+        borderColor: '#0369a1',
+        borderWidth: 2,
+        backgroundColor: '#0369a1',
+        pointBackgroundColor: '#0369a1',
+        pointBorderColor: '#0369a1',
+        pointRadius: 6,
+        pointHoverRadius: 7,
+        tension: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 24 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => items[0].dataset.periods[items[0].dataIndex],
+            label: (item) => `${item.formattedValue} zł/h`
+          }
+        }
+      },
+      scales: {
+        y: { ticks: { display: false }, grid: { color: '#e2e8f0' }, suggestedMin: minVal - pad, suggestedMax: maxVal + pad },
+        x: { ticks: { font: { size: 11, family: 'Plus Jakarta Sans' } }, grid: { display: false } }
+      }
+    },
+    plugins: [ratePointLabels]
+  });
+}
+
+function formatZl2(n) {
+  return `${Number(n).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`;
+}
+
+// Ksiegowa: stala oplata obowiazujaca od 2026 — domyslnie wypelniana dla miesiecy bez
+// zapisanego jeszcze kosztu, zeby nie trzeba bylo wpisywac jej recznie co miesiac.
+const ACCOUNTING_FEE = 270.6;
+const ACCOUNTING_FEE_SINCE = '2026-01';
+
+async function calculateYearlyIncome(year) {
+  // Don't count months that haven't happened yet.
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  const maxMonth = year === currentYear ? currentMonth : (year < currentYear ? 12 : 0);
+  const months = Array.from({ length: maxMonth }, (_, i) => i + 1);
+
+  const [hoursByMonth, costsData] = await Promise.all([
+    Promise.all(months.map(m =>
+      fetch(`/api/worklogs?month=${m}&year=${year}`)
+        .then(res => res.json())
+        .then(d => d.totalHours || 0)
+        .catch(() => 0)
+    )),
+    fetch('/api/costs').then(res => res.json()).then(d => d.costs || []).catch(() => [])
+  ]);
+
+  const totals = { gross: 0, zus: 0, tax: 0, accounting: 0, net: 0 };
+  const rowsData = months.map((m, i) => {
+    const monthKey = `${year}-${String(m).padStart(2, '0')}`;
+    const hours = hoursByMonth[i];
+    const rate = rateForMonth(monthKey);
+    const gross = Math.round(hours * rate);
+    const saved = costsData.find(c => c.month === monthKey);
+    const zus = saved ? saved.zus : 0;
+    const tax = saved ? saved.tax : 0;
+    const accounting = saved ? saved.accounting : (monthKey >= ACCOUNTING_FEE_SINCE ? ACCOUNTING_FEE : 0);
+    const net = gross - zus - tax - accounting;
+
+    totals.gross += gross;
+    totals.zus += zus;
+    totals.tax += tax;
+    totals.accounting += accounting;
+    totals.net += net;
+
+    return { monthKey, m, gross, zus, tax, accounting, net };
+  });
+
+  return { rowsData, totals };
+}
+
+async function loadIncome() {
+  const year = parseInt(document.getElementById('incomeYear').value, 10);
+  document.getElementById('incomeYearLabel').textContent = String(year);
+
+  const { rowsData, totals } = await calculateYearlyIncome(year);
+
+  const rows = [...rowsData].reverse().map(r => `
+    <tr data-month="${r.monthKey}">
+      <td>${MONTH_NAMES[r.m - 1]}</td>
+      <td style="text-align:right; font-weight:600;">${formatZl2(r.gross)}</td>
+      <td><input type="number" class="income-input cost-zus" min="0" step="0.01" value="${r.zus || ''}" placeholder="0.00"></td>
+      <td><input type="number" class="income-input cost-tax" min="0" step="0.01" value="${r.tax || ''}" placeholder="0.00"></td>
+      <td><input type="number" class="income-input cost-accounting" min="0" step="0.01" value="${r.accounting || ''}" placeholder="0.00"></td>
+      <td style="text-align:right; font-weight:600;">${formatZl2(r.net)}</td>
+    </tr>
+  `);
+
+  rows.push(`
+    <tr style="font-weight:700;">
+      <td>Total</td>
+      <td style="text-align:right;">${formatZl2(totals.gross)}</td>
+      <td style="text-align:right;">${formatZl2(totals.zus)}</td>
+      <td style="text-align:right;">${formatZl2(totals.tax)}</td>
+      <td style="text-align:right;">${formatZl2(totals.accounting)}</td>
+      <td style="text-align:right;">${formatZl2(totals.net)}</td>
+    </tr>
+  `);
+
+  document.getElementById('incomeBody').innerHTML = rows.join('');
+  document.getElementById('netIncomeValue').textContent = formatZl2(totals.net);
+}
+
+async function loadIncomeOverview() {
+  const year = parseInt(document.getElementById('incomeYear').value, 10);
+  document.getElementById('incomeOverviewYearLabel').textContent = String(year);
+
+  const [{ totals }, bonusesRes] = await Promise.all([
+    calculateYearlyIncome(year),
+    fetch('/api/bonuses').then(res => res.json()).catch(() => ({ bonuses: [] }))
+  ]);
+
+  const bonuses = bonusesRes.bonuses || [];
+  const bonusesTotal = bonuses
+    .filter(b => b.date.startsWith(`${year}-`))
+    .reduce((sum, b) => sum + Number(b.amount), 0);
+
+  document.getElementById('incomeOverviewValue').textContent = formatZl2(totals.net + bonusesTotal);
+}
+
+document.getElementById('incomeBody').addEventListener('focusout', (e) => {
+  const input = e.target.closest('.income-input');
+  if (!input) return;
+  const row = input.closest('tr');
+  const monthKey = row.dataset.month;
+  if (!monthKey) return;
+
+  const zus = parseFloat(row.querySelector('.cost-zus').value) || 0;
+  const tax = parseFloat(row.querySelector('.cost-tax').value) || 0;
+  const accounting = parseFloat(row.querySelector('.cost-accounting').value) || 0;
+
+  fetch(`/api/costs/${monthKey}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ zus, tax, accounting })
+  })
+    .then(() => {
+      loadIncome();
+      loadIncomeOverview();
+    })
+    .catch(err => console.warn('Failed to save costs', err));
+});
+
+function refreshIncomeSection() {
+  loadIncome();
+  loadIncomeOverview();
+  loadBonuses();
+}
+
+document.getElementById('incomeYear').addEventListener('change', refreshIncomeSection);
+document.getElementById('incomeYearPrev').addEventListener('click', () => {
+  const sel = document.getElementById('incomeYear');
+  sel.selectedIndex = Math.max(0, sel.selectedIndex - 1);
+  refreshIncomeSection();
+});
+document.getElementById('incomeYearNext').addEventListener('click', () => {
+  const sel = document.getElementById('incomeYear');
+  sel.selectedIndex = Math.min(sel.options.length - 1, sel.selectedIndex + 1);
+  refreshIncomeSection();
+});
+
+function formatBonusDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return `${MONTH_NAMES[m - 1]} ${d}, ${y}`;
+}
+
+function formatZl(n) {
+  return `${Number(n).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`;
+}
+
+let BONUSES_CACHE = [];
+
+async function loadBonuses() {
+  const empty = document.getElementById('bonusesEmpty');
+  const table = document.getElementById('bonusesTable');
+  const year = document.getElementById('incomeYear').value;
+  document.getElementById('bonusesYearLabel').textContent = year;
+
+  try {
+    const res = await fetch('/api/bonuses');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error fetching bonuses');
+
+    const bonuses = data.bonuses || [];
+    BONUSES_CACHE = bonuses;
+
+    const yearBonuses = bonuses.filter(b => b.date.startsWith(`${year}-`));
+    const yearTotal = yearBonuses.reduce((sum, b) => sum + Number(b.amount), 0);
+    document.getElementById('totalBonusesValue').textContent = formatZl(yearTotal);
+
+    if (!yearBonuses.length) {
+      table.style.display = 'none';
+      document.getElementById('bonusesEmptyText').textContent = `No bonuses in ${year}.`;
+      empty.style.display = 'flex';
+      return;
+    }
+
+    const rows = yearBonuses.map(b => `
+      <tr>
+        <td>${b.name}</td>
+        <td>${formatBonusDate(b.date)}</td>
+        <td style="text-align:right;">${formatZl(b.amount)}</td>
+        <td style="text-align:right; white-space:nowrap;">
+          <button type="button" class="icon-btn bonus-edit" data-id="${b.id}" aria-label="Edit"><i class="ti ti-pencil"></i></button>
+          <button type="button" class="icon-btn danger bonus-delete" data-id="${b.id}" aria-label="Delete"><i class="ti ti-trash"></i></button>
+        </td>
+      </tr>
+    `).join('');
+    document.getElementById('bonusesBody').innerHTML =
+      rows + `<tr style="font-weight:600;"><td>Total</td><td></td><td style="text-align:right;">${formatZl(yearTotal)}</td><td></td></tr>`;
+
+    empty.style.display = 'none';
+    table.style.display = 'table';
+  } catch (err) {
+    console.warn('Failed to load bonuses', err);
+  }
+}
+
+function enterBonusEditMode(bonus) {
+  clearBonusFormError();
+  document.getElementById('bonusEditId').value = bonus.id;
+  document.getElementById('bonusName').value = bonus.name;
+  document.getElementById('bonusDate').value = bonus.date;
+  document.getElementById('bonusAmount').value = bonus.amount;
+  document.getElementById('addBonusBtn').innerHTML = '<i class="ti ti-check"></i> Save';
+  document.getElementById('cancelEditBtn').style.display = 'inline-flex';
+  document.getElementById('bonusName').focus();
+}
+
+function exitBonusEditMode() {
+  clearBonusFormError();
+  document.getElementById('bonusForm').reset();
+  document.getElementById('bonusEditId').value = '';
+  document.getElementById('addBonusBtn').innerHTML = '<i class="ti ti-plus"></i> Add';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+}
+
+document.getElementById('cancelEditBtn').addEventListener('click', exitBonusEditMode);
+
+document.getElementById('bonusesBody').addEventListener('click', (e) => {
+  const editBtn = e.target.closest('.bonus-edit');
+  const deleteBtn = e.target.closest('.bonus-delete');
+
+  if (editBtn) {
+    const bonus = BONUSES_CACHE.find(b => b.id === editBtn.dataset.id);
+    if (bonus) enterBonusEditMode(bonus);
+    return;
+  }
+
+  if (deleteBtn) {
+    const bonus = BONUSES_CACHE.find(b => b.id === deleteBtn.dataset.id);
+    if (!bonus) return;
+    confirmDialog(`Delete "${bonus.name}" (${formatZl(bonus.amount)})? This can't be undone.`, { title: 'Delete bonus?' })
+      .then(confirmed => {
+        if (!confirmed) return;
+        return fetch(`/api/bonuses/${deleteBtn.dataset.id}`, { method: 'DELETE' })
+          .then(res => res.json().then(data => ({ ok: res.ok, data })))
+          .then(({ ok, data }) => {
+            if (!ok) throw new Error(data.error || 'Error deleting bonus');
+            if (document.getElementById('bonusEditId').value === deleteBtn.dataset.id) exitBonusEditMode();
+            loadBonuses();
+            loadIncomeOverview();
+          });
+      })
+      .catch(err => alert(err.message));
+  }
+});
+
+function showBonusFormError(message) {
+  const errorEl = document.getElementById('bonusFormError');
+  errorEl.textContent = message;
+  errorEl.style.display = 'block';
+}
+
+function clearBonusFormError() {
+  document.getElementById('bonusFormError').style.display = 'none';
+}
+
+document.getElementById('bonusForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearBonusFormError();
+
+  const name = document.getElementById('bonusName').value.trim();
+  const date = document.getElementById('bonusDate').value;
+  const amountRaw = document.getElementById('bonusAmount').value;
+  const amount = parseFloat(amountRaw);
+
+  if (!name) return showBonusFormError('Please enter a name.');
+  if (!date) return showBonusFormError('Please choose a date.');
+  if (amountRaw === '' || Number.isNaN(amount) || amount < 0) return showBonusFormError('Please enter a valid amount.');
+
+  const editId = document.getElementById('bonusEditId').value;
+  const btn = document.getElementById('addBonusBtn');
+  btn.disabled = true;
+  try {
+    const res = await fetch(editId ? `/api/bonuses/${editId}` : '/api/bonuses', {
+      method: editId ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, date, amount })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error saving bonus');
+
+    exitBonusEditMode();
+    loadBonuses();
+    loadIncomeOverview();
+  } catch (err) {
+    showBonusFormError(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/login';
+});
+
+const profileTrigger = document.getElementById('profileTrigger');
+const profileDropdown = document.getElementById('profileDropdown');
+
+profileTrigger.addEventListener('click', (e) => {
+  e.stopPropagation();
+  profileDropdown.classList.toggle('open');
+});
+
+document.addEventListener('click', (e) => {
+  if (!profileDropdown.classList.contains('open')) return;
+  if (!profileDropdown.contains(e.target) && e.target !== profileTrigger) {
+    profileDropdown.classList.remove('open');
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') profileDropdown.classList.remove('open');
+});
+
+loadStatus();
+loadHoursChart();
+loadRates().then(() => {
+  loadIncome();
+  loadIncomeOverview();
+});
+loadBonuses();
+</script>
+
+</body>
+</html>

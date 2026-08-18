@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sign in - Bartosz Kaczmarek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --surface-0:#f8fafc; --surface-2:#ffffff;
+    --text-primary:#0f172a; --text-secondary:#475569;
+    --border:#e2e8f0; --radius:8px; --radius-lg:12px;
+    --accent:#0369a1; --accent-ring:#075985; --accent-contrast:#ffffff;
+    --bg-warning:#fef2f2; --text-warning:#b91c1c;
+    font-family: "Plus Jakarta Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--surface-0); color:var(--text-primary); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;}
+  .card{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:32px; width:340px; max-width:100%; box-shadow:0 24px 48px rgba(15,23,42,0.08);}
+  .brand{display:flex; align-items:center; gap:10px; margin-bottom:24px;}
+  .brand-mark{width:32px; height:32px; border-radius:9px; flex-shrink:0;
+    background:var(--text-primary);
+    color:#fff; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center;}
+  .brand-name{font-weight:800; font-size:15px;}
+  h1{font-size:16px; font-weight:700; margin:0 0 4px;}
+  p.sub{font-size:13px; color:var(--text-secondary); margin:0 0 24px;}
+  .field{display:flex; flex-direction:column; gap:4px; margin-bottom:14px;}
+  .field label{font-size:12px; color:var(--text-secondary);}
+  input{font-size:13px; font-family:inherit; padding:9px 12px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2); width:100%;}
+  input:focus{outline:none; border-color:var(--accent);}
+  button{width:100%; margin-top:6px; font-size:13px; font-weight:600; font-family:inherit; padding:10px 16px; border:1px solid var(--accent); border-radius:var(--radius); background:var(--accent); color:var(--accent-contrast); cursor:pointer;}
+  button:hover:not(:disabled){background:var(--accent-ring); border-color:var(--accent-ring);}
+  button:disabled{opacity:0.5; cursor:not-allowed;}
+  .error{display:none; background:var(--bg-warning); color:var(--text-warning); font-size:12px; padding:8px 12px; border-radius:var(--radius); margin-bottom:14px;}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="brand">
+    <div class="brand-mark">BK</div>
+    <div class="brand-name">Bartosz Kaczmarek</div>
+  </div>
+  <h1>Sign in</h1>
+  <p class="sub">Access your invoicing workspace.</p>
+  <p class="error" id="loginError"></p>
+  <form id="loginForm" novalidate>
+    <div class="field">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="current-password">
+    </div>
+    <button type="submit" id="loginBtn">Log in</button>
+  </form>
+</div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const errorEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  errorEl.style.display = 'none';
+
+  if (!email) { errorEl.textContent = 'Please enter your email.'; errorEl.style.display = 'block'; return; }
+  if (!password) { errorEl.textContent = 'Please enter your password.'; errorEl.style.display = 'block'; return; }
+
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    window.location.href = '/';
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+
+</body>
+</html>
