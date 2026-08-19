@@ -2368,12 +2368,31 @@ function daysUntil(dateStr) {
   return Math.round((target - today) / 86400000);
 }
 
+// Calendar-aware month count (not days/30) - "1 month" from Jan 31 lands on Mar 3, since January
+// itself is 31 days, so the same day-count means a different number of months depending on which
+// months it actually spans.
+function monthsUntil(dateStr) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const target = new Date(`${dateStr}T00:00:00`);
+  let months = (target.getFullYear() - today.getFullYear()) * 12 + (target.getMonth() - today.getMonth());
+  if (target.getDate() < today.getDate()) months--;
+  return months;
+}
+
+// 0-13 days -> days, 14-30 days -> weeks (rounded), 31+ days -> calendar months.
+function formatDaysLeft(days, dateStr) {
+  if (days < 0) return 'Overdue';
+  if (days < 14) return `${days}d left`;
+  if (days <= 30) return `${Math.round(days / 7)}w left`;
+  const months = Math.max(1, monthsUntil(dateStr));
+  return `${months} month${months === 1 ? '' : 's'} left`;
+}
+
 function nextServiceBadge(dateStr) {
   const days = daysUntil(dateStr);
   if (days === null) return '<span class="badge neutral">No date set</span>';
-  if (days < 7) return `<span class="badge danger">${days < 0 ? 'Overdue' : days + 'd left'}</span>`;
-  if (days <= 30) return `<span class="badge warning">${days}d left</span>`;
-  return `<span class="badge success">${days}d left</span>`;
+  const colorClass = days < 7 ? 'danger' : days <= 30 ? 'warning' : 'success';
+  return `<span class="badge ${colorClass}">${formatDaysLeft(days, dateStr)}</span>`;
 }
 
 function vehicleCardHtml(v) {
