@@ -12,11 +12,6 @@ jobs:
   check-and-sync:
     name: Sprawdź aplikację i dodaj wpis do Notion
     runs-on: ubuntu-latest
-    if: ${{ secrets.NOTION_API_TOKEN != '' && secrets.NOTION_RELEASE_LOG_DATABASE_ID != '' }}
-    env:
-      NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
-      NOTION_RELEASE_LOG_DATABASE_ID: ${{ secrets.NOTION_RELEASE_LOG_DATABASE_ID }}
-      COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
     steps:
       - uses: actions/checkout@v4
 
@@ -43,10 +38,16 @@ jobs:
 
       - name: Dodaj wpis do Release logu w Notion
         env:
+          NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          NOTION_RELEASE_LOG_DATABASE_ID: ${{ secrets.NOTION_RELEASE_LOG_DATABASE_ID }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
           COMMIT_SHA: ${{ github.sha }}
           REPOSITORY: ${{ github.repository }}
           SERVER_URL: ${{ github.server_url }}
         run: |
+          test -n "$NOTION_API_TOKEN"
+          test -n "$NOTION_RELEASE_LOG_DATABASE_ID"
+
           short_sha="${COMMIT_SHA:0:7}"
           message="${COMMIT_MESSAGE:-Zmiana dodana ręcznie}"
           title="main • $short_sha"
