@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="color-scheme" content="light dark">
-<title>EasyMoney - SoftCraft AS - Invoicing</title>
+<title>EasyLife - SoftCraft AS</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.46.0/tabler-icons.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,28 +44,34 @@
   }
   *{box-sizing:border-box;}
   body{margin:0; background:var(--surface-0); color:var(--text-primary); transition:background-color 150ms, color 150ms;}
-  .app{display:block; min-height:100vh;}
+  .app{display:flex; min-height:100vh;}
 
-  .topnav{position:sticky; top:0; z-index:5; background:var(--surface-0); border-bottom:1px solid var(--border);}
-  .topnav-inner{max-width:1360px; margin:0 auto; display:flex; align-items:center; gap:28px; padding:14px 32px;}
-  .brand{display:flex; align-items:center; gap:10px; flex-shrink:0;}
+  .sidebar{width:236px; flex-shrink:0; background:var(--surface-1); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; position:sticky; top:0; height:100vh;}
+  .sidebar-brand{padding:20px 20px 12px; flex-shrink:0;}
   .brand-name{font-weight:800; font-size:16px; letter-spacing:-0.01em; line-height:1.2;}
-  .nav-tabs{display:flex; align-items:center; gap:2px; flex:1;}
-  .navItem{display:flex; align-items:center; gap:8px; text-align:left; font-size:13px; font-weight:500;
-    padding:7px 12px; border:none; border-radius:var(--radius); white-space:nowrap;
+  .sidebar-nav{flex:1; min-height:0; overflow-y:auto; padding:4px 12px 12px; display:flex; flex-direction:column; gap:22px;}
+  .nav-group{display:flex; flex-direction:column; gap:2px;}
+  .nav-group-title{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin:0 10px 6px;}
+  .navItem{display:flex; align-items:center; gap:10px; text-align:left; font-size:13px; font-weight:500; width:100%;
+    padding:8px 10px; border:none; border-radius:var(--radius); white-space:nowrap;
     background:transparent; color:var(--text-secondary); cursor:pointer; font-family:inherit;}
-  .navItem:hover{background:var(--surface-1); color:var(--text-primary);}
+  .navItem i{font-size:16px; width:16px; text-align:center; flex-shrink:0;}
+  .navItem:hover{background:var(--surface-2); color:var(--text-primary);}
   .navItem.active{background:var(--accent-tint); color:var(--accent); font-weight:700;}
 
-  .main{display:flex; flex-direction:column;}
-  .profile-menu{position:relative; flex-shrink:0;}
-  .profile-trigger{width:34px; height:34px; padding:0; border:1px solid var(--border); border-radius:50%;
-    background:var(--surface-1); color:var(--text-secondary); font-size:17px;
-    display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .main{display:flex; flex-direction:column; flex:1; min-width:0;}
+  .sidebar-footer{flex-shrink:0; padding:12px; border-top:1px solid var(--border);}
+  .profile-menu{position:relative;}
+  .profile-trigger{width:100%; display:flex; align-items:center; gap:10px; padding:6px; border:none; border-radius:var(--radius);
+    background:transparent; color:var(--text-secondary); cursor:pointer; text-align:left;}
   .profile-trigger:hover{background:var(--surface-2); color:var(--text-primary);}
-  .profile-dropdown{display:none; position:absolute; top:calc(100% + 8px); right:0; background:var(--surface-2);
+  .profile-trigger-icon{width:28px; height:28px; flex-shrink:0; border:1px solid var(--border); border-radius:50%;
+    background:var(--surface-2); font-size:15px; display:flex; align-items:center; justify-content:center;}
+  .profile-trigger-name{font-size:12px; font-weight:600; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .profile-dropdown{display:none; position:absolute; bottom:calc(100% + 8px); left:0; right:0; background:var(--surface-2);
     border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:0 12px 32px rgba(10,10,18,0.12);
-    width:220px; padding:12px; z-index:4;}
+    padding:12px; z-index:4;}
   .profile-dropdown.open{display:block;}
   .profile-dropdown .profile-name{font-size:13px; font-weight:700;}
   .profile-dropdown .profile-email{font-size:12px; color:var(--text-secondary); margin-top:2px; word-break:break-all;}
@@ -74,7 +80,7 @@
     color:var(--text-secondary); background:transparent; border:none; padding:8px 6px; border-radius:6px;
     cursor:pointer; font-family:inherit;}
   .dropdown-item:hover{background:var(--surface-1); color:var(--text-primary);}
-  .content{padding:32px; max-width:1360px; margin:0 auto; width:100%; display:flex; flex-direction:column; gap:28px; box-sizing:border-box;}
+  .content{padding:32px; max-width:1360px; width:100%; display:flex; flex-direction:column; gap:28px; box-sizing:border-box;}
   .section{display:flex; flex-direction:column; gap:28px; max-width:720px;}
   #section-income{max-width:1360px;}
 
@@ -167,7 +173,7 @@
   .stat-tile .stat-label{font-size:12px; color:var(--text-secondary);}
   .stat-tile .stat-value{font-size:28px; font-weight:900; letter-spacing:-0.02em; margin-top:4px; color:var(--accent);}
 
-  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(10,10,18,0.45); align-items:center; justify-content:center; z-index:10; padding:20px;}
+  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(10,10,18,0.45); align-items:center; justify-content:center; z-index:20; padding:20px;}
   .modal-overlay.open{display:flex;}
   .modal{background:var(--surface-2); border-radius:var(--radius-lg); padding:20px; width:340px; max-width:100%; box-shadow:0 24px 48px rgba(10,10,18,0.18);}
   .modal h3{font-size:14px; font-weight:700; margin:0 0 8px;}
@@ -178,26 +184,109 @@
   .icon-circle{width:36px; height:36px; border-radius:50%; background:var(--bg-success); color:var(--text-success); display:flex; align-items:center; justify-content:center; font-size:17px; margin-bottom:12px;}
 
   .form-error{display:none; background:var(--bg-warning); color:var(--text-warning); font-size:12px; padding:8px 12px; border-radius:var(--radius); grid-column:1 / -1;}
+
+  /* --- Garage & Properties (carousels, cards, drawer, timeline) --- */
+  .carousel{display:flex; gap:14px; overflow-x:auto; padding-bottom:6px; scroll-snap-type:x proximity;}
+  .carousel::-webkit-scrollbar{height:6px;}
+  .carousel::-webkit-scrollbar-thumb{background:var(--border); border-radius:var(--radius-pill);}
+  .vehicle-card{flex:0 0 240px; scroll-snap-align:start; border:1px solid var(--border); border-radius:var(--radius-lg);
+    background:var(--surface-2); padding:16px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:border-color 150ms;}
+  .vehicle-card:hover{border-color:var(--accent);}
+  .vehicle-card.selected{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
+  .vehicle-card-icon{width:40px; height:40px; border-radius:var(--radius); background:var(--surface-1); color:var(--accent);
+    display:flex; align-items:center; justify-content:center; font-size:19px;}
+  .vehicle-card-name{font-size:14px; font-weight:700; margin:0;}
+  .vehicle-card-meta{font-size:12px; color:var(--text-secondary); display:flex; flex-direction:column; gap:2px;}
+  .vehicle-card-actions{display:flex; justify-content:flex-end; gap:4px; margin-top:-4px;}
+
+  .timeline{display:flex; flex-direction:column;}
+  .timeline-item{display:flex; gap:14px; position:relative; padding-bottom:20px;}
+  .timeline-item:last-child{padding-bottom:0;}
+  .timeline-dot{width:10px; height:10px; border-radius:50%; background:var(--accent); margin-top:5px; flex-shrink:0; position:relative; z-index:1;}
+  .timeline-item::before{content:''; position:absolute; left:4px; top:14px; bottom:0; width:2px; background:var(--border);}
+  .timeline-item:last-child::before{display:none;}
+  .timeline-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
+  .timeline-header{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .timeline-title{font-size:13px; font-weight:600;}
+  .timeline-desc{font-size:12px; color:var(--text-secondary); margin:0;}
+  .timeline-date{font-size:11px; color:var(--text-muted);}
+
+  .property-group-title{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin:0;}
+  .property-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;}
+  .property-card{border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface-2); padding:16px;
+    display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:border-color 150ms;}
+  .property-card:hover{border-color:var(--accent);}
+  .property-card-name{font-size:14px; font-weight:700; margin:0;}
+  .property-card-address{font-size:12px; color:var(--text-secondary); margin:0;}
+  .property-card-footer{display:flex; justify-content:space-between; align-items:center; margin-top:4px;}
+
+  .stats-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;}
+  .action-item{cursor:pointer;}
+
+  .drawer-overlay{display:none; position:fixed; inset:0; background:rgba(10,10,18,0.45); z-index:10;}
+  .drawer-overlay.open{display:block;}
+  .drawer{position:fixed; top:0; right:0; bottom:0; width:360px; max-width:100%; background:var(--surface-2);
+    border-left:1px solid var(--border); padding:24px; box-shadow:-24px 0 48px rgba(10,10,18,0.18);
+    display:flex; flex-direction:column; gap:16px; transform:translateX(100%); transition:transform 200ms ease;}
+  .drawer-overlay.open .drawer{transform:translateX(0);}
+  .drawer-header{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-shrink:0;}
+  .drawer-header h3{font-size:16px; font-weight:800; margin:0;}
+  .drawer-close{width:28px; height:28px; padding:0; border:none; background:transparent; border-radius:6px; color:var(--text-secondary); cursor:pointer;}
+  .drawer-close:hover{background:var(--surface-1); color:var(--text-primary);}
+  .drawer-body{flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:16px; margin:0 -4px; padding:0 4px;}
+  .drawer-field{display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:8px 0; border-top:1px solid var(--border);}
+  .drawer-field:first-of-type{border-top:none;}
+  .drawer-field span:first-child{color:var(--text-secondary);}
+  .drawer-field span:last-child{font-weight:600; text-align:right;}
+  .contact-actions{display:flex; gap:8px; margin-top:4px;}
+  .contact-actions a{flex:1; display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none;
+    font-size:13px; font-weight:600; color:var(--accent); background:var(--accent-tint); border-radius:var(--radius); padding:9px 8px;}
+
+  .drawer-comments{display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border); padding-top:16px;}
+  .drawer-comments textarea{font-size:13px; font-family:inherit; padding:8px 10px; border:1px solid var(--border); border-radius:var(--radius);
+    background:var(--surface-1); width:100%; resize:vertical; min-height:44px;}
+  .drawer-comments textarea:focus{outline:none; border-color:var(--accent);}
+  #commentForm{display:flex; flex-direction:column; gap:8px; align-items:flex-end;}
+  .comments-list{display:flex; flex-direction:column; gap:8px;}
+  .comment-item{background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius); padding:10px; display:flex; flex-direction:column; gap:4px;}
+  .comment-item-header{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .comment-date{font-size:11px; color:var(--text-muted);}
+  .comment-text{font-size:12px; color:var(--text-primary); margin:0; white-space:pre-wrap; word-break:break-word;}
+  .contact-actions a:hover{background:var(--accent-tint-hover);}
 </style>
 </head>
 <body>
 
 <div class="app">
 
-  <header class="topnav">
-    <div class="topnav-inner">
-      <div class="brand">
-        <div class="brand-name">EasyMoney</div>
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-name">EasyLife</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <button class="navItem active" data-section="overview"><i class="ti ti-layout-dashboard"></i> Overview</button>
       </div>
-      <nav class="nav-tabs">
-        <button class="navItem active" data-section="invoicing">Invoicing</button>
-        <button class="navItem" data-section="hours">Hours &amp; vacations</button>
-        <button class="navItem" data-section="rates">Rates</button>
-        <button class="navItem" data-section="income">Income</button>
-        <button class="navItem" data-section="history">History</button>
-      </nav>
+      <div class="nav-group">
+        <p class="nav-group-title">Career</p>
+        <button class="navItem" data-section="invoicing"><i class="ti ti-file-invoice"></i> Invoicing</button>
+        <button class="navItem" data-section="hours"><i class="ti ti-clock"></i> Hours &amp; vacations</button>
+        <button class="navItem" data-section="rates"><i class="ti ti-currency-dollar"></i> Rates</button>
+        <button class="navItem" data-section="income"><i class="ti ti-report-money"></i> Income</button>
+        <button class="navItem" data-section="history"><i class="ti ti-history"></i> History</button>
+      </div>
+      <div class="nav-group">
+        <p class="nav-group-title">Home</p>
+        <button class="navItem" data-section="garage"><i class="ti ti-car"></i> Garage</button>
+        <button class="navItem" data-section="properties"><i class="ti ti-building-estate"></i> Properties</button>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
       <div class="profile-menu">
-        <button type="button" class="profile-trigger" id="profileTrigger" aria-label="Account menu"><i class="ti ti-user"></i></button>
+        <button type="button" class="profile-trigger" id="profileTrigger" aria-label="Account menu">
+          <span class="profile-trigger-icon"><i class="ti ti-user"></i></span>
+          <span class="profile-trigger-name">Bartosz Kaczmarek</span>
+        </button>
         <div class="profile-dropdown" id="profileDropdown">
           <div class="profile-name">Bartosz Kaczmarek</div>
           <div class="profile-email" id="profileEmail">–</div>
@@ -208,13 +297,31 @@
         </div>
       </div>
     </div>
-  </header>
+  </aside>
 
   <div class="main">
 
     <div class="content">
 
-      <section id="section-invoicing" class="section wizard">
+      <section id="section-overview" class="section" style="max-width:960px;">
+
+        <div class="block">
+          <p class="block-title">Action required</p>
+          <div id="actionRequiredEmpty" class="empty-state" style="display:none;">
+            <i class="ti ti-check"></i>
+            <p>Nothing needs attention right now.</p>
+          </div>
+          <div class="carousel" id="actionRequiredCarousel"></div>
+        </div>
+
+        <div class="block">
+          <p class="block-title">Quick glance</p>
+          <div class="stats-grid" id="quickGlanceGrid"></div>
+        </div>
+
+      </section>
+
+      <section id="section-invoicing" class="section wizard" style="display:none;">
 
         <div class="wizard-step" data-step="1">
           <div class="step-marker done"><span>1</span></div>
@@ -452,6 +559,124 @@
 
       </section>
 
+      <section id="section-garage" class="section" style="display:none; max-width:960px;">
+
+        <div class="block">
+          <div class="panel-header">
+            <p class="block-title">Vehicles</p>
+            <button type="button" id="addVehicleBtn" class="btn-light"><i class="ti ti-plus"></i> Add vehicle</button>
+          </div>
+          <div id="vehiclesEmpty" class="empty-state" style="display:none;">
+            <i class="ti ti-car"></i>
+            <p>No vehicles yet. Add one to start tracking service history.</p>
+          </div>
+          <div class="carousel" id="vehiclesCarousel"></div>
+        </div>
+
+        <form id="vehicleForm" class="panel" style="display:none; grid-template-columns:1fr 1fr; gap:10px;" novalidate>
+          <input type="hidden" id="vehicleEditId" value="">
+          <p id="vehicleFormError" class="form-error"></p>
+          <div class="field"><label for="vehicleName">Name</label><input type="text" id="vehicleName" placeholder="e.g. Škoda Octavia"></div>
+          <div class="field"><label for="vehiclePlate">License plate</label><input type="text" id="vehiclePlate" placeholder="PO 12345"></div>
+          <div class="field"><label for="vehicleVin">VIN</label><input type="text" id="vehicleVin" placeholder="17-character VIN"></div>
+          <div class="field"><label for="vehicleMileage">Mileage (km)</label><input type="number" id="vehicleMileage" min="0"></div>
+          <div class="field"><label for="vehicleNextService">Next service date</label><input type="date" id="vehicleNextService"></div>
+          <div style="display:flex; gap:6px; align-items:end; grid-column:1 / -1;">
+            <button type="submit" id="saveVehicleBtn" class="btn-light"><i class="ti ti-check"></i> Save</button>
+            <button type="button" id="cancelVehicleBtn">Cancel</button>
+          </div>
+        </form>
+
+        <div class="block" id="serviceLogBlock" style="display:none;">
+          <div class="panel-header">
+            <p class="block-title">Service history — <span id="serviceLogVehicleName"></span></p>
+            <button type="button" id="addServiceEntryBtn" class="btn-light"><i class="ti ti-plus"></i> Log service</button>
+          </div>
+
+          <form id="serviceEntryForm" class="panel" style="display:none; grid-template-columns:1fr 1fr; gap:10px;" novalidate>
+            <p id="serviceEntryFormError" class="form-error"></p>
+            <div class="field"><label for="serviceDate">Date</label><input type="date" id="serviceDate"></div>
+            <div class="field">
+              <label for="serviceType">Type</label>
+              <select id="serviceType">
+                <option>Oil change</option><option>Inspection</option><option>Repair</option><option>Tires</option><option>Other</option>
+              </select>
+            </div>
+            <div class="field" style="grid-column:1 / -1;"><label for="serviceDescription">Description</label><input type="text" id="serviceDescription" placeholder="What was done"></div>
+            <div class="field"><label for="serviceCost">Cost (zł)</label><input type="number" id="serviceCost" min="0" step="0.01"></div>
+            <div style="display:flex; gap:6px; align-items:end;">
+              <button type="submit" id="saveServiceEntryBtn" class="btn-light"><i class="ti ti-check"></i> Save</button>
+              <button type="button" id="cancelServiceEntryBtn">Cancel</button>
+            </div>
+          </form>
+
+          <div id="serviceLogEmpty" class="empty-state" style="display:none;">
+            <i class="ti ti-history"></i>
+            <p>No service history logged for this vehicle yet.</p>
+          </div>
+          <div class="panel" id="serviceLogPanel" style="display:none;">
+            <div class="timeline" id="serviceTimeline"></div>
+          </div>
+        </div>
+
+      </section>
+
+      <section id="section-properties" class="section" style="display:none; max-width:960px;">
+
+        <div class="block">
+          <div class="panel-header">
+            <p class="block-title">Primary residence</p>
+            <button type="button" id="addPropertyBtn" class="btn-light"><i class="ti ti-plus"></i> Add property</button>
+          </div>
+          <div id="primaryPropertiesEmpty" class="empty-state" style="display:none;">
+            <i class="ti ti-home"></i>
+            <p>No primary residence added yet.</p>
+          </div>
+          <div class="property-grid" id="primaryPropertiesGrid"></div>
+        </div>
+
+        <div class="block">
+          <p class="property-group-title">Rental units</p>
+          <div id="rentalPropertiesEmpty" class="empty-state" style="display:none;">
+            <i class="ti ti-building"></i>
+            <p>No rental units added yet.</p>
+          </div>
+          <div class="property-grid" id="rentalPropertiesGrid"></div>
+        </div>
+
+        <form id="propertyForm" class="panel" style="display:none; grid-template-columns:1fr 1fr; gap:10px;" novalidate>
+          <input type="hidden" id="propertyEditId" value="">
+          <p id="propertyFormError" class="form-error"></p>
+          <div class="field"><label for="propertyName">Name</label><input type="text" id="propertyName" placeholder="e.g. Apartament Grunwald"></div>
+          <div class="field">
+            <label for="propertyType">Type</label>
+            <select id="propertyType">
+              <option value="primary">Primary residence</option>
+              <option value="rental">Rental unit</option>
+            </select>
+          </div>
+          <div class="field" style="grid-column:1 / -1;"><label for="propertyAddress">Address</label><input type="text" id="propertyAddress" placeholder="Street, city"></div>
+
+          <div id="tenantFields" style="display:none; grid-column:1 / -1; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="field" style="grid-column:1 / -1;"><label for="tenantName">Tenant name</label><input type="text" id="tenantName" placeholder="Full name"></div>
+            <div class="field"><label for="tenantPhone">Phone</label><input type="text" id="tenantPhone" placeholder="+48 ..."></div>
+            <div class="field">
+              <label for="tenantRentStatus">Rent status</label>
+              <select id="tenantRentStatus"><option value="paid">Paid</option><option value="pending">Pending</option></select>
+            </div>
+            <div class="field"><label for="tenantLeaseStart">Lease start</label><input type="date" id="tenantLeaseStart"></div>
+            <div class="field"><label for="tenantLeaseEnd">Lease end</label><input type="date" id="tenantLeaseEnd"></div>
+            <div class="field"><label for="tenantRentAmount">Rent (zł/month)</label><input type="number" id="tenantRentAmount" min="0" step="0.01"></div>
+          </div>
+
+          <div style="display:flex; gap:6px; align-items:end; grid-column:1 / -1;">
+            <button type="submit" id="savePropertyBtn" class="btn-light"><i class="ti ti-check"></i> Save</button>
+            <button type="button" id="cancelPropertyBtn">Cancel</button>
+          </div>
+        </form>
+
+      </section>
+
       <section id="section-history" class="section" style="display:none; max-width:960px;">
 
         <div class="block">
@@ -532,6 +757,38 @@
     <div id="deleteProtocolList"></div>
     <div class="modal-actions">
       <button type="button" id="deleteProtocolCancelBtn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="drawer-overlay" id="tenantDrawerOverlay">
+  <div class="drawer">
+    <div class="drawer-header">
+      <div>
+        <h3 id="tenantDrawerName">–</h3>
+        <span class="badge" id="tenantDrawerStatus"></span>
+      </div>
+      <button type="button" class="drawer-close" id="tenantDrawerClose" aria-label="Close"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="drawer-body">
+      <div id="tenantDrawerFields"></div>
+      <div class="contact-actions" id="tenantDrawerContacts"></div>
+
+      <div class="drawer-comments">
+        <p class="nav-group-title" style="margin:0;">Comments</p>
+        <form id="commentForm" novalidate>
+          <textarea id="commentText" rows="2" placeholder="e.g. Tenant did not pay for August on time"></textarea>
+          <button type="submit" id="addCommentBtn" class="btn-sm btn-light"><i class="ti ti-plus"></i> Add comment</button>
+        </form>
+        <div id="commentsEmpty" class="empty-state" style="display:none; padding:8px 0;">
+          <p>No comments yet.</p>
+        </div>
+        <div id="commentsList" class="comments-list"></div>
+      </div>
+    </div>
+    <div style="display:flex; gap:6px; margin-top:auto;">
+      <button type="button" id="tenantDrawerEditBtn" class="btn-light" style="flex:1;"><i class="ti ti-pencil"></i> Edit property</button>
+      <button type="button" id="tenantDrawerDeleteBtn" class="icon-btn danger" aria-label="Delete property"><i class="ti ti-trash"></i></button>
     </div>
   </div>
 </div>
@@ -642,22 +899,32 @@ function currentPeriod() {
   return { month, year };
 }
 
+function switchSection(section) {
+  document.querySelectorAll('.navItem').forEach(b => b.classList.toggle('active', b.dataset.section === section));
+  document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+  document.getElementById(`section-${section}`).style.display = 'flex';
+  if (section === 'hours' && hoursChartInstance) {
+    hoursChartInstance.resize();
+  }
+  if (section === 'rates' && rateChartInstance) {
+    rateChartInstance.resize();
+  }
+  if (section === 'history') {
+    loadHistory();
+  }
+  if (section === 'garage') {
+    loadVehicles();
+  }
+  if (section === 'properties') {
+    loadProperties();
+  }
+  if (section === 'overview') {
+    loadOverviewDashboard();
+  }
+}
+
 document.querySelectorAll('.navItem').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.navItem').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-    document.getElementById(`section-${btn.dataset.section}`).style.display = 'flex';
-    if (btn.dataset.section === 'hours' && hoursChartInstance) {
-      hoursChartInstance.resize();
-    }
-    if (btn.dataset.section === 'rates' && rateChartInstance) {
-      rateChartInstance.resize();
-    }
-    if (btn.dataset.section === 'history') {
-      loadHistory();
-    }
-  });
+  btn.addEventListener('click', () => switchSection(btn.dataset.section));
 });
 
 async function loadStatus() {
@@ -1879,6 +2146,678 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') profileDropdown.classList.remove('open');
 });
 
+// --- Garage: vehicles + service history ---
+let VEHICLES = [];
+let SELECTED_VEHICLE_ID = null;
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const target = new Date(`${dateStr}T00:00:00`);
+  return Math.round((target - today) / 86400000);
+}
+
+function nextServiceBadge(dateStr) {
+  const days = daysUntil(dateStr);
+  if (days === null) return '<span class="badge neutral">No date set</span>';
+  if (days < 7) return `<span class="badge danger">${days < 0 ? 'Overdue' : days + 'd left'}</span>`;
+  if (days <= 30) return `<span class="badge warning">${days}d left</span>`;
+  return `<span class="badge success">${days}d left</span>`;
+}
+
+function vehicleCardHtml(v) {
+  const selected = v.id === SELECTED_VEHICLE_ID ? ' selected' : '';
+  return `
+    <div class="vehicle-card${selected}" data-id="${v.id}">
+      <div class="vehicle-card-icon"><i class="ti ti-car"></i></div>
+      <p class="vehicle-card-name">${escapeHtml(v.name)}</p>
+      <div class="vehicle-card-meta">
+        <span>VIN: ${escapeHtml(v.vin || '–')}</span>
+        <span>Plate: ${escapeHtml(v.plate || '–')}</span>
+        <span>${v.mileage.toLocaleString()} km</span>
+      </div>
+      ${nextServiceBadge(v.nextServiceDate)}
+      <div class="vehicle-card-actions">
+        <button type="button" class="icon-btn vehicle-edit" data-id="${v.id}" aria-label="Edit"><i class="ti ti-pencil"></i></button>
+        <button type="button" class="icon-btn danger vehicle-delete" data-id="${v.id}" aria-label="Delete"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`;
+}
+
+function renderVehicles() {
+  document.getElementById('vehiclesEmpty').style.display = VEHICLES.length ? 'none' : 'flex';
+  document.getElementById('vehiclesCarousel').innerHTML = VEHICLES.map(vehicleCardHtml).join('');
+}
+
+function selectVehicle(id) {
+  SELECTED_VEHICLE_ID = id;
+  document.querySelectorAll('.vehicle-card').forEach(c => c.classList.toggle('selected', c.dataset.id === id));
+  const v = VEHICLES.find(x => x.id === id);
+  const block = document.getElementById('serviceLogBlock');
+  if (!v) { block.style.display = 'none'; return; }
+  block.style.display = 'flex';
+  document.getElementById('serviceLogVehicleName').textContent = v.name;
+  document.getElementById('serviceEntryForm').style.display = 'none';
+  loadServiceLog(id);
+}
+
+async function loadVehicles() {
+  try {
+    const res = await fetch('/api/vehicles');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error fetching vehicles');
+    VEHICLES = data.vehicles;
+  } catch (err) {
+    console.warn('Failed to load vehicles', err);
+    VEHICLES = [];
+  }
+  renderVehicles();
+  if (!VEHICLES.length) {
+    SELECTED_VEHICLE_ID = null;
+    document.getElementById('serviceLogBlock').style.display = 'none';
+  } else if (!VEHICLES.some(v => v.id === SELECTED_VEHICLE_ID)) {
+    selectVehicle(VEHICLES[0].id);
+  } else {
+    selectVehicle(SELECTED_VEHICLE_ID);
+  }
+}
+
+function serviceItemHtml(entry) {
+  return `
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-body">
+        <div class="timeline-header">
+          <span class="timeline-title">${escapeHtml(entry.type)}</span>
+          <span style="display:flex; align-items:center; gap:8px;">
+            <span style="font-weight:600; font-size:12px;">${entry.cost.toLocaleString()} zł</span>
+            <button type="button" class="icon-btn danger service-delete" data-id="${entry.id}" aria-label="Delete"><i class="ti ti-trash"></i></button>
+          </span>
+        </div>
+        ${entry.description ? `<p class="timeline-desc">${escapeHtml(entry.description)}</p>` : ''}
+        <span class="timeline-date">${entry.date}</span>
+      </div>
+    </div>`;
+}
+
+function renderServiceTimeline(entries) {
+  document.getElementById('serviceLogEmpty').style.display = entries.length ? 'none' : 'flex';
+  document.getElementById('serviceLogPanel').style.display = entries.length ? 'flex' : 'none';
+  document.getElementById('serviceTimeline').innerHTML = entries.map(serviceItemHtml).join('');
+}
+
+async function loadServiceLog(vehicleId) {
+  try {
+    const res = await fetch(`/api/service-log?vehicleId=${encodeURIComponent(vehicleId)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error fetching service history');
+    renderServiceTimeline(data.entries);
+  } catch (err) {
+    console.warn('Failed to load service history', err);
+    renderServiceTimeline([]);
+  }
+}
+
+function showVehicleFormError(msg) {
+  const el = document.getElementById('vehicleFormError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function resetVehicleForm() {
+  document.getElementById('vehicleForm').reset();
+  document.getElementById('vehicleEditId').value = '';
+  document.getElementById('vehicleFormError').style.display = 'none';
+}
+
+document.getElementById('addVehicleBtn').addEventListener('click', () => {
+  resetVehicleForm();
+  document.getElementById('vehicleForm').style.display = 'grid';
+  document.getElementById('vehicleName').focus();
+});
+
+document.getElementById('cancelVehicleBtn').addEventListener('click', () => {
+  document.getElementById('vehicleForm').style.display = 'none';
+  resetVehicleForm();
+});
+
+function enterVehicleEditMode(v) {
+  document.getElementById('vehicleFormError').style.display = 'none';
+  document.getElementById('vehicleEditId').value = v.id;
+  document.getElementById('vehicleName').value = v.name;
+  document.getElementById('vehiclePlate').value = v.plate || '';
+  document.getElementById('vehicleVin').value = v.vin || '';
+  document.getElementById('vehicleMileage').value = v.mileage || '';
+  document.getElementById('vehicleNextService').value = v.nextServiceDate || '';
+  document.getElementById('vehicleForm').style.display = 'grid';
+  document.getElementById('vehicleName').focus();
+}
+
+document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  document.getElementById('vehicleFormError').style.display = 'none';
+  const id = document.getElementById('vehicleEditId').value;
+  const name = document.getElementById('vehicleName').value.trim();
+  if (!name) return showVehicleFormError('Please enter a vehicle name.');
+  const body = {
+    name,
+    plate: document.getElementById('vehiclePlate').value.trim(),
+    vin: document.getElementById('vehicleVin').value.trim(),
+    mileage: parseFloat(document.getElementById('vehicleMileage').value) || 0,
+    nextServiceDate: document.getElementById('vehicleNextService').value || null
+  };
+  const btn = document.getElementById('saveVehicleBtn');
+  btn.disabled = true;
+  try {
+    const res = await fetch(id ? `/api/vehicles/${id}` : '/api/vehicles', {
+      method: id ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error saving vehicle');
+    document.getElementById('vehicleForm').style.display = 'none';
+    resetVehicleForm();
+    loadVehicles();
+  } catch (err) {
+    showVehicleFormError(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('vehiclesCarousel').addEventListener('click', (e) => {
+  const editBtn = e.target.closest('.vehicle-edit');
+  const deleteBtn = e.target.closest('.vehicle-delete');
+  const card = e.target.closest('.vehicle-card');
+
+  if (editBtn) {
+    const v = VEHICLES.find(x => x.id === editBtn.dataset.id);
+    if (v) enterVehicleEditMode(v);
+    return;
+  }
+  if (deleteBtn) {
+    const v = VEHICLES.find(x => x.id === deleteBtn.dataset.id);
+    if (!v) return;
+    confirmDialog(`Delete "${v.name}" and its service history? This can't be undone.`, { title: 'Delete vehicle?' })
+      .then(confirmed => {
+        if (!confirmed) return;
+        return fetch(`/api/vehicles/${v.id}`, { method: 'DELETE' })
+          .then(res => res.json().then(data => ({ ok: res.ok, data })))
+          .then(({ ok, data }) => {
+            if (!ok) throw new Error(data.error || 'Error deleting vehicle');
+            if (SELECTED_VEHICLE_ID === v.id) SELECTED_VEHICLE_ID = null;
+            loadVehicles();
+          });
+      })
+      .catch(err => alert(err.message));
+    return;
+  }
+  if (card) selectVehicle(card.dataset.id);
+});
+
+document.getElementById('addServiceEntryBtn').addEventListener('click', () => {
+  if (!SELECTED_VEHICLE_ID) return;
+  document.getElementById('serviceEntryForm').reset();
+  document.getElementById('serviceEntryFormError').style.display = 'none';
+  document.getElementById('serviceDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('serviceEntryForm').style.display = 'grid';
+  document.getElementById('serviceDate').focus();
+});
+
+document.getElementById('cancelServiceEntryBtn').addEventListener('click', () => {
+  document.getElementById('serviceEntryForm').style.display = 'none';
+});
+
+document.getElementById('serviceEntryForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errEl = document.getElementById('serviceEntryFormError');
+  errEl.style.display = 'none';
+  const date = document.getElementById('serviceDate').value;
+  if (!date) { errEl.textContent = 'Please choose a date.'; errEl.style.display = 'block'; return; }
+  const body = {
+    vehicleId: SELECTED_VEHICLE_ID,
+    date,
+    type: document.getElementById('serviceType').value,
+    description: document.getElementById('serviceDescription').value.trim(),
+    cost: parseFloat(document.getElementById('serviceCost').value) || 0
+  };
+  const btn = document.getElementById('saveServiceEntryBtn');
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/service-log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error saving service entry');
+    document.getElementById('serviceEntryForm').style.display = 'none';
+    loadServiceLog(SELECTED_VEHICLE_ID);
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('serviceTimeline').addEventListener('click', (e) => {
+  const deleteBtn = e.target.closest('.service-delete');
+  if (!deleteBtn) return;
+  confirmDialog("Delete this service history entry? This can't be undone.", { title: 'Delete entry?' })
+    .then(confirmed => {
+      if (!confirmed) return;
+      return fetch(`/api/service-log/${deleteBtn.dataset.id}`, { method: 'DELETE' })
+        .then(res => res.json().then(data => ({ ok: res.ok, data })))
+        .then(({ ok, data }) => {
+          if (!ok) throw new Error(data.error || 'Error deleting entry');
+          loadServiceLog(SELECTED_VEHICLE_ID);
+        });
+    })
+    .catch(err => alert(err.message));
+});
+
+// --- Properties: property cards + tenant drawer ---
+let PROPERTIES = [];
+let CURRENT_DRAWER_PROPERTY_ID = null;
+
+function propertyCardHtml(p) {
+  let badge = '<span class="badge neutral">Primary</span>';
+  if (p.type === 'rental') {
+    badge = p.tenant
+      ? `<span class="badge ${p.tenant.rentStatus === 'paid' ? 'success' : 'warning'}">${p.tenant.rentStatus === 'paid' ? 'Paid' : 'Pending'}</span>`
+      : '<span class="badge neutral">Vacant</span>';
+  }
+  return `
+    <div class="property-card" data-id="${p.id}">
+      <p class="property-card-name">${escapeHtml(p.name)}</p>
+      <p class="property-card-address">${escapeHtml(p.address)}</p>
+      <div class="property-card-footer">
+        ${badge}
+        ${p.type === 'rental' && p.tenant ? `<span style="font-size:12px; color:var(--text-secondary);">${escapeHtml(p.tenant.name)}</span>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderProperties() {
+  const primary = PROPERTIES.filter(p => p.type === 'primary');
+  const rental = PROPERTIES.filter(p => p.type === 'rental');
+  document.getElementById('primaryPropertiesEmpty').style.display = primary.length ? 'none' : 'flex';
+  document.getElementById('primaryPropertiesGrid').innerHTML = primary.map(propertyCardHtml).join('');
+  document.getElementById('rentalPropertiesEmpty').style.display = rental.length ? 'none' : 'flex';
+  document.getElementById('rentalPropertiesGrid').innerHTML = rental.map(propertyCardHtml).join('');
+}
+
+async function loadProperties() {
+  try {
+    const res = await fetch('/api/properties');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error fetching properties');
+    PROPERTIES = data.properties;
+  } catch (err) {
+    console.warn('Failed to load properties', err);
+    PROPERTIES = [];
+  }
+  renderProperties();
+}
+
+function openPropertyDrawer(id) {
+  const p = PROPERTIES.find(x => x.id === id);
+  if (!p) return;
+
+  document.getElementById('tenantDrawerName').textContent = p.name;
+  const statusEl = document.getElementById('tenantDrawerStatus');
+  if (p.type === 'rental' && p.tenant) {
+    statusEl.className = `badge ${p.tenant.rentStatus === 'paid' ? 'success' : 'warning'}`;
+    statusEl.textContent = p.tenant.rentStatus === 'paid' ? 'Rent paid' : 'Rent pending';
+  } else if (p.type === 'rental') {
+    statusEl.className = 'badge neutral';
+    statusEl.textContent = 'Vacant';
+  } else {
+    statusEl.className = 'badge neutral';
+    statusEl.textContent = 'Primary residence';
+  }
+
+  let fields = `<div class="drawer-field"><span>Address</span><span>${escapeHtml(p.address)}</span></div>`;
+  if (p.type === 'rental' && p.tenant) {
+    fields += `
+      <div class="drawer-field"><span>Tenant</span><span>${escapeHtml(p.tenant.name)}</span></div>
+      <div class="drawer-field"><span>Phone</span><span>${escapeHtml(p.tenant.phone || '–')}</span></div>
+      <div class="drawer-field"><span>Lease start</span><span>${p.tenant.leaseStart || '–'}</span></div>
+      <div class="drawer-field"><span>Lease end</span><span>${p.tenant.leaseEnd || '–'}</span></div>
+      <div class="drawer-field"><span>Rent</span><span>${p.tenant.rentAmount.toLocaleString()} zł/mo</span></div>`;
+  }
+  document.getElementById('tenantDrawerFields').innerHTML = fields;
+
+  const contactsEl = document.getElementById('tenantDrawerContacts');
+  if (p.type === 'rental' && p.tenant && p.tenant.phone) {
+    const telHref = p.tenant.phone.replace(/[^\d+]/g, '');
+    const waDigits = p.tenant.phone.replace(/\D/g, '');
+    contactsEl.innerHTML = `
+      <a href="tel:${telHref}"><i class="ti ti-phone"></i> Call</a>
+      <a href="sms:${telHref}"><i class="ti ti-message"></i> SMS</a>
+      <a href="https://wa.me/${waDigits}" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp"></i> WhatsApp</a>`;
+    contactsEl.style.display = 'flex';
+  } else {
+    contactsEl.innerHTML = '';
+    contactsEl.style.display = 'none';
+  }
+
+  document.getElementById('tenantDrawerEditBtn').dataset.id = p.id;
+  document.getElementById('tenantDrawerDeleteBtn').dataset.id = p.id;
+  CURRENT_DRAWER_PROPERTY_ID = p.id;
+  document.getElementById('commentText').value = '';
+  renderComments(p);
+  document.getElementById('tenantDrawerOverlay').classList.add('open');
+}
+
+function closePropertyDrawer() {
+  document.getElementById('tenantDrawerOverlay').classList.remove('open');
+}
+
+function commentItemHtml(c) {
+  const date = new Date(c.createdAt);
+  const formatted = isNaN(date) ? '' : date.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return `
+    <div class="comment-item">
+      <div class="comment-item-header">
+        <span class="comment-date">${formatted}</span>
+        <button type="button" class="icon-btn danger comment-delete" data-id="${c.id}" aria-label="Delete comment"><i class="ti ti-trash"></i></button>
+      </div>
+      <p class="comment-text">${escapeHtml(c.text)}</p>
+    </div>`;
+}
+
+function renderComments(p) {
+  const comments = (p.comments || []).slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  document.getElementById('commentsEmpty').style.display = comments.length ? 'none' : 'flex';
+  document.getElementById('commentsList').innerHTML = comments.map(commentItemHtml).join('');
+}
+
+document.getElementById('commentForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const textEl = document.getElementById('commentText');
+  const text = textEl.value.trim();
+  if (!text || !CURRENT_DRAWER_PROPERTY_ID) return;
+  const btn = document.getElementById('addCommentBtn');
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/api/properties/${CURRENT_DRAWER_PROPERTY_ID}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error adding comment');
+    textEl.value = '';
+    const idx = PROPERTIES.findIndex(x => x.id === CURRENT_DRAWER_PROPERTY_ID);
+    if (idx !== -1) PROPERTIES[idx] = data.property;
+    renderComments(data.property);
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('commentsList').addEventListener('click', (e) => {
+  const deleteBtn = e.target.closest('.comment-delete');
+  if (!deleteBtn || !CURRENT_DRAWER_PROPERTY_ID) return;
+  confirmDialog("Delete this comment? This can't be undone.", { title: 'Delete comment?' })
+    .then(confirmed => {
+      if (!confirmed) return;
+      return fetch(`/api/properties/${CURRENT_DRAWER_PROPERTY_ID}/comments/${deleteBtn.dataset.id}`, { method: 'DELETE' })
+        .then(res => res.json().then(data => ({ ok: res.ok, data })))
+        .then(({ ok, data }) => {
+          if (!ok) throw new Error(data.error || 'Error deleting comment');
+          const idx = PROPERTIES.findIndex(x => x.id === CURRENT_DRAWER_PROPERTY_ID);
+          if (idx !== -1) PROPERTIES[idx] = data.property;
+          renderComments(data.property);
+        });
+    })
+    .catch(err => alert(err.message));
+});
+
+['primaryPropertiesGrid', 'rentalPropertiesGrid'].forEach(gridId => {
+  document.getElementById(gridId).addEventListener('click', (e) => {
+    const card = e.target.closest('.property-card');
+    if (card) openPropertyDrawer(card.dataset.id);
+  });
+});
+
+document.getElementById('tenantDrawerClose').addEventListener('click', closePropertyDrawer);
+document.getElementById('tenantDrawerOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('tenantDrawerOverlay')) closePropertyDrawer();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closePropertyDrawer();
+});
+
+function toggleTenantFields() {
+  const isRental = document.getElementById('propertyType').value === 'rental';
+  document.getElementById('tenantFields').style.display = isRental ? 'grid' : 'none';
+}
+document.getElementById('propertyType').addEventListener('change', toggleTenantFields);
+
+function showPropertyFormError(msg) {
+  const el = document.getElementById('propertyFormError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function resetPropertyForm() {
+  document.getElementById('propertyForm').reset();
+  document.getElementById('propertyEditId').value = '';
+  document.getElementById('propertyFormError').style.display = 'none';
+  toggleTenantFields();
+}
+
+document.getElementById('addPropertyBtn').addEventListener('click', () => {
+  resetPropertyForm();
+  document.getElementById('propertyForm').style.display = 'grid';
+  document.getElementById('propertyName').focus();
+});
+
+document.getElementById('cancelPropertyBtn').addEventListener('click', () => {
+  document.getElementById('propertyForm').style.display = 'none';
+  resetPropertyForm();
+});
+
+function enterPropertyEditMode(id) {
+  const p = PROPERTIES.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('propertyFormError').style.display = 'none';
+  document.getElementById('propertyEditId').value = p.id;
+  document.getElementById('propertyName').value = p.name;
+  document.getElementById('propertyType').value = p.type;
+  document.getElementById('propertyAddress').value = p.address;
+  toggleTenantFields();
+  const tenantIds = ['tenantName', 'tenantPhone', 'tenantLeaseStart', 'tenantLeaseEnd', 'tenantRentAmount'];
+  if (p.tenant) {
+    document.getElementById('tenantName').value = p.tenant.name || '';
+    document.getElementById('tenantPhone').value = p.tenant.phone || '';
+    document.getElementById('tenantRentStatus').value = p.tenant.rentStatus || 'pending';
+    document.getElementById('tenantLeaseStart').value = p.tenant.leaseStart || '';
+    document.getElementById('tenantLeaseEnd').value = p.tenant.leaseEnd || '';
+    document.getElementById('tenantRentAmount').value = p.tenant.rentAmount || '';
+  } else {
+    tenantIds.forEach(fid => { document.getElementById(fid).value = ''; });
+    document.getElementById('tenantRentStatus').value = 'pending';
+  }
+  document.getElementById('propertyForm').style.display = 'grid';
+  document.getElementById('propertyName').focus();
+}
+
+document.getElementById('tenantDrawerEditBtn').addEventListener('click', () => {
+  const id = document.getElementById('tenantDrawerEditBtn').dataset.id;
+  closePropertyDrawer();
+  enterPropertyEditMode(id);
+});
+
+document.getElementById('tenantDrawerDeleteBtn').addEventListener('click', () => {
+  const id = document.getElementById('tenantDrawerDeleteBtn').dataset.id;
+  const p = PROPERTIES.find(x => x.id === id);
+  confirmDialog(`Delete "${p ? p.name : 'this property'}"? This can't be undone.`, { title: 'Delete property?' })
+    .then(confirmed => {
+      if (!confirmed) return;
+      return fetch(`/api/properties/${id}`, { method: 'DELETE' })
+        .then(res => res.json().then(data => ({ ok: res.ok, data })))
+        .then(({ ok, data }) => {
+          if (!ok) throw new Error(data.error || 'Error deleting property');
+          closePropertyDrawer();
+          loadProperties();
+        });
+    })
+    .catch(err => alert(err.message));
+});
+
+document.getElementById('propertyForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  document.getElementById('propertyFormError').style.display = 'none';
+  const id = document.getElementById('propertyEditId').value;
+  const name = document.getElementById('propertyName').value.trim();
+  const type = document.getElementById('propertyType').value;
+  const address = document.getElementById('propertyAddress').value.trim();
+  if (!name || !address) return showPropertyFormError('Please fill in name and address.');
+
+  let tenant = null;
+  if (type === 'rental') {
+    const tenantName = document.getElementById('tenantName').value.trim();
+    if (tenantName) {
+      tenant = {
+        name: tenantName,
+        phone: document.getElementById('tenantPhone').value.trim(),
+        rentStatus: document.getElementById('tenantRentStatus').value,
+        leaseStart: document.getElementById('tenantLeaseStart').value || null,
+        leaseEnd: document.getElementById('tenantLeaseEnd').value || null,
+        rentAmount: parseFloat(document.getElementById('tenantRentAmount').value) || 0
+      };
+    }
+  }
+
+  const btn = document.getElementById('savePropertyBtn');
+  btn.disabled = true;
+  try {
+    const res = await fetch(id ? `/api/properties/${id}` : '/api/properties', {
+      method: id ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, type, address, tenant })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error saving property');
+    document.getElementById('propertyForm').style.display = 'none';
+    resetPropertyForm();
+    loadProperties();
+  } catch (err) {
+    showPropertyFormError(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// --- Overview dashboard ---
+function actionRequiredItems() {
+  const items = [];
+  VEHICLES.forEach(v => {
+    if (v.nextServiceDate) {
+      items.push({ icon: 'ti-car', title: v.name, subtitle: 'Next service', dateStr: v.nextServiceDate, section: 'garage', vehicleId: v.id });
+    }
+  });
+  PROPERTIES.forEach(p => {
+    if (p.type === 'rental' && p.tenant && p.tenant.leaseEnd) {
+      items.push({ icon: 'ti-building-estate', title: p.name, subtitle: 'Lease ends', dateStr: p.tenant.leaseEnd, section: 'properties', propertyId: p.id });
+    }
+  });
+  items.sort((a, b) => (daysUntil(a.dateStr) ?? Infinity) - (daysUntil(b.dateStr) ?? Infinity));
+  return items;
+}
+
+function actionItemHtml(item) {
+  return `
+    <div class="vehicle-card action-item" data-section="${item.section}" data-vehicle-id="${item.vehicleId || ''}" data-property-id="${item.propertyId || ''}">
+      <div class="vehicle-card-icon"><i class="ti ${item.icon}"></i></div>
+      <p class="vehicle-card-name">${escapeHtml(item.title)}</p>
+      <div class="vehicle-card-meta"><span>${item.subtitle}: ${item.dateStr}</span></div>
+      ${nextServiceBadge(item.dateStr)}
+    </div>`;
+}
+
+function renderActionRequired() {
+  const items = actionRequiredItems();
+  document.getElementById('actionRequiredEmpty').style.display = items.length ? 'none' : 'flex';
+  document.getElementById('actionRequiredCarousel').innerHTML = items.map(actionItemHtml).join('');
+}
+
+document.getElementById('actionRequiredCarousel').addEventListener('click', (e) => {
+  const card = e.target.closest('.action-item');
+  if (!card) return;
+  switchSection(card.dataset.section);
+  if (card.dataset.section === 'garage' && card.dataset.vehicleId) {
+    selectVehicle(card.dataset.vehicleId);
+  }
+  if (card.dataset.section === 'properties' && card.dataset.propertyId) {
+    openPropertyDrawer(card.dataset.propertyId);
+  }
+});
+
+async function renderQuickGlance() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth() + 1;
+
+  const pendingProps = PROPERTIES.filter(p => p.type === 'rental' && p.tenant && p.tenant.rentStatus === 'pending');
+  const pendingTotal = pendingProps.reduce((sum, p) => sum + (p.tenant.rentAmount || 0), 0);
+
+  const dueVehicles = VEHICLES.filter(v => {
+    const d = daysUntil(v.nextServiceDate);
+    return d !== null && d <= 30;
+  });
+
+  let netThisMonth = null;
+  try {
+    const { rowsData } = await calculateYearlyIncome(year);
+    const row = rowsData.find(r => r.m === month);
+    netThisMonth = row ? row.net : null;
+  } catch (err) {
+    console.warn('Failed to compute income for overview', err);
+  }
+
+  const periodId = `${year}-${String(month).padStart(2, '0')}`;
+  const historyEntry = HISTORY_CACHE.find(h => h.id === periodId);
+  let protocolBadge;
+  if (!historyEntry) protocolBadge = '<span class="badge danger">Not generated</span>';
+  else if (!historyEntry.generatedAt) protocolBadge = '<span class="badge neutral">Manual upload</span>';
+  else protocolBadge = `<span class="badge ${historyEntry.exported ? 'success' : 'warning'}">${historyEntry.exported ? 'Exported' : 'Generated'}</span>`;
+
+  document.getElementById('quickGlanceGrid').innerHTML = `
+    <div class="stat-tile">
+      <div class="stat-label">Pending rent</div>
+      <div class="stat-value">${pendingProps.length}</div>
+      ${pendingProps.length ? `<span class="badge warning" style="margin-top:8px;">${pendingTotal.toLocaleString()} zł</span>` : ''}
+    </div>
+    <div class="stat-tile">
+      <div class="stat-label">Vehicles due for service</div>
+      <div class="stat-value">${dueVehicles.length}</div>
+      <span class="badge neutral" style="margin-top:8px;">within 30 days</span>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-label">Net income — ${MONTH_NAMES[month - 1]}</div>
+      <div class="stat-value">${netThisMonth !== null ? formatZl2(netThisMonth) : '–'}</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-label">Protocols — ${MONTH_NAMES[month - 1]}</div>
+      <div style="margin-top:8px;">${protocolBadge}</div>
+    </div>
+  `;
+}
+
+async function loadOverviewDashboard() {
+  await Promise.all([loadVehicles(), loadProperties(), loadHistory()]);
+  renderActionRequired();
+  renderQuickGlance();
+}
+
 loadStatus();
 loadHoursChart();
 loadRates().then(() => {
@@ -1887,6 +2826,7 @@ loadRates().then(() => {
 });
 loadBonuses();
 loadHistory();
+loadOverviewDashboard();
 </script>
 
 </body>

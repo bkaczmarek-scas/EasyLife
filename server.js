@@ -10,6 +10,8 @@ const authService = require('./src/services/authService');
 const ratesService = require('./src/services/ratesService');
 const costsService = require('./src/services/costsService');
 const protocolsHistoryService = require('./src/services/protocolsHistoryService');
+const vehiclesService = require('./src/services/vehiclesService');
+const propertiesService = require('./src/services/propertiesService');
 
 const app = express();
 // Default 100kb JSON body limit is too small for base64-encoded PDF uploads (manual invoice
@@ -300,6 +302,145 @@ app.put('/api/costs/:month', (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/vehicles', (req, res) => {
+  try {
+    res.json({ vehicles: vehiclesService.getVehicles() });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/vehicles', (req, res) => {
+  try {
+    const { name, plate, vin, mileage, nextServiceDate } = req.body;
+    if (!name) return res.status(400).json({ error: 'Required: name' });
+    const entry = vehiclesService.addVehicle({ name, plate, vin, mileage, nextServiceDate });
+    res.json({ vehicle: entry });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/vehicles/:id', (req, res) => {
+  try {
+    const { name, plate, vin, mileage, nextServiceDate } = req.body;
+    if (!name) return res.status(400).json({ error: 'Required: name' });
+    const entry = vehiclesService.updateVehicle(req.params.id, { name, plate, vin, mileage, nextServiceDate });
+    res.json({ vehicle: entry });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.delete('/api/vehicles/:id', (req, res) => {
+  try {
+    vehiclesService.removeVehicle(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.get('/api/service-log', (req, res) => {
+  try {
+    res.json({ entries: vehiclesService.getServiceLog(req.query.vehicleId) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/service-log', (req, res) => {
+  try {
+    const { vehicleId, date, type, description, cost } = req.body;
+    if (!vehicleId || !date || !type) return res.status(400).json({ error: 'Required: vehicleId, date, type' });
+    const entry = vehiclesService.addServiceEntry({ vehicleId, date, type, description, cost });
+    res.json({ entry });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/service-log/:id', (req, res) => {
+  try {
+    vehiclesService.removeServiceEntry(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.get('/api/properties', (req, res) => {
+  try {
+    res.json({ properties: propertiesService.getAll() });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/properties', (req, res) => {
+  try {
+    const { name, type, address, tenant } = req.body;
+    if (!name || !address) return res.status(400).json({ error: 'Required: name, address' });
+    const entry = propertiesService.add({ name, type, address, tenant });
+    res.json({ property: entry });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/properties/:id', (req, res) => {
+  try {
+    const { name, type, address, tenant } = req.body;
+    if (!name || !address) return res.status(400).json({ error: 'Required: name, address' });
+    const entry = propertiesService.update(req.params.id, { name, type, address, tenant });
+    res.json({ property: entry });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.delete('/api/properties/:id', (req, res) => {
+  try {
+    propertiesService.remove(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.post('/api/properties/:id/comments', (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || !text.trim()) return res.status(400).json({ error: 'Required: text' });
+    const property = propertiesService.addComment(req.params.id, text.trim());
+    res.json({ property });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.delete('/api/properties/:id/comments/:commentId', (req, res) => {
+  try {
+    const property = propertiesService.removeComment(req.params.id, req.params.commentId);
+    res.json({ property });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
   }
 });
 
