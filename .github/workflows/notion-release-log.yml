@@ -1,62 +1,36 @@
-name: Zapis zmian do Notion
+name: Zapis wdrożeń Railway do Notion
 
 on:
-  push:
-    branches: [main]
+  deployment_status:
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  check-and-sync:
-    name: Sprawdź aplikację i dodaj wpis do Notion
+  sync-release:
+    name: Zapisz udane wdrożenie w Notion
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success' }}
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Zainstaluj zależności
-        run: npm ci
-
-      - name: Sprawdź uruchamianie aplikacji
-        run: |
-          timeout 10s npm start &
-          APP_PID=$!
-          trap 'kill $APP_PID 2>/dev/null || true' EXIT
-          for attempt in {1..10}; do
-            if curl --fail --silent -o /dev/null http://127.0.0.1:3000/; then
-              exit 0
-            fi
-            sleep 1
-          done
-          exit 1
-
       - name: Dodaj wpis do Release logu w Notion
         env:
           NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           NOTION_RELEASE_LOG_DATABASE_ID: ${{ secrets.NOTION_RELEASE_LOG_DATABASE_ID }}
-          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
-          COMMIT_SHA: ${{ github.sha }}
+          DEPLOYMENT_SHA: ${{ github.event.deployment.sha || github.sha }}
           REPOSITORY: ${{ github.repository }}
           SERVER_URL: ${{ github.server_url }}
         run: |
           test -n "$NOTION_API_TOKEN"
           test -n "$NOTION_RELEASE_LOG_DATABASE_ID"
 
-          short_sha="${COMMIT_SHA:0:7}"
-          message="${COMMIT_MESSAGE:-Zmiana dodana ręcznie}"
-          title="main • $short_sha"
-          commit_url="$SERVER_URL/$REPOSITORY/commit/$COMMIT_SHA"
+          short_sha="${DEPLOYMENT_SHA:0:7}"
+          title="Railway • $short_sha"
+          commit_url="$SERVER_URL/$REPOSITORY/commit/$DEPLOYMENT_SHA"
           now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
           payload="$(jq -n \
             --arg title "$title" \
-            --arg message "$message" \
             --arg commit_url "$commit_url" \
             --arg now "$now" \
             '{
@@ -64,8 +38,9 @@ jobs:
               properties: {
                 "Wersja": {title: [{text: {content: $title}}]},
                 "Data wdrożenia": {date: {start: $now}},
-                "Status": {select: {name: "Zmiana w main"}},
-                "Opis zmiany": {rich_text: [{text: {content: $message}}]},
+                "Środowisko": {select: {name: "Production"}},
+                "Status": {select: {name: "Wdrożone"}},
+                "Opis zmiany": {rich_text: [{text: {content: "Udane wdrożenie na Railway"}}]},
                 "Link do PR/release": {url: $commit_url},
                 "Automatyczne": {checkbox: true}
               }
