@@ -15,6 +15,11 @@ Trzy główne przepływy:
 Rozmowy z właścicielem projektu (Bartek) prowadzone są po polsku — trzymaj się polskiego w UI,
 treściach dokumentów i commit messages jeśli o nie poprosi.
 
+**Na tym repo równolegle działa też inny agent (ChatGPT Codex)**, pushujący bezpośrednio na
+`main` niezależnie od tej sesji — nie ma między nimi żadnej integracji/komunikacji w czasie
+rzeczywistym (to osobne produkty, brak wspólnego API). Zawsze `git fetch` + sprawdź
+`git log origin/main` przed pushem, żeby nie nadpisać czyichś zmian; nigdy force-push.
+
 ## Stan obecny
 
 - Backend: Express (`server.js`) + serwisy w `src/services/`.
