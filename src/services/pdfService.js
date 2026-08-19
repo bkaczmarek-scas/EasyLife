@@ -33,9 +33,11 @@ function buildPeriodData(month, year, worklogs) {
     terminWykonania: `${month}/${lastDay}/${year}`,
     dataPodpisania: `${month}/${lastDay}/${year}`,
     contractor: {
-      name: process.env.CONTRACTOR_NAME || 'BKACZ Bartosz Kaczmarek',
-      address: process.env.CONTRACTOR_ADDRESS || 'ul. Sosnowa 17, 55-120 Wilczyn',
-      nip: process.env.CONTRACTOR_NIP || ''
+      // Placeholder fallback only - real values always come from .env. Never hardcode real
+      // contractor PII here, since this file (unlike .env) is committed to git.
+      name: process.env.CONTRACTOR_NAME || 'Jan Kowalski',
+      address: process.env.CONTRACTOR_ADDRESS || 'ul. Przykładowa 1, 00-000 Warszawa',
+      nip: process.env.CONTRACTOR_NIP || '0000000000'
     }
   };
 }

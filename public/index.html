@@ -285,10 +285,10 @@
       <div class="profile-menu">
         <button type="button" class="profile-trigger" id="profileTrigger" aria-label="Account menu">
           <span class="profile-trigger-icon"><i class="ti ti-user"></i></span>
-          <span class="profile-trigger-name">Bartosz Kaczmarek</span>
+          <span class="profile-trigger-name" id="profileTriggerName">Account</span>
         </button>
         <div class="profile-dropdown" id="profileDropdown">
-          <div class="profile-name">Bartosz Kaczmarek</div>
+          <div class="profile-name" id="profileName">Account</div>
           <div class="profile-email" id="profileEmail">–</div>
           <div id="connectionStatus"></div>
           <div class="profile-divider"></div>
@@ -933,6 +933,14 @@ async function loadStatus() {
     const status = await res.json();
     TAXXXO_URL = status.taxxxoUrl;
     document.getElementById('profileEmail').textContent = status.email || '';
+    // Display name derived from the logged-in email (e.g. "b.kaczmarek" -> "B Kaczmarek") -
+    // never hardcode a real name in the HTML, since this file is committed to git.
+    const localPart = (status.email || '').split('@')[0];
+    const displayName = localPart
+      ? localPart.split(/[._-]/).filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(' ')
+      : 'Account';
+    document.getElementById('profileName').textContent = displayName;
+    document.getElementById('profileTriggerName').textContent = displayName;
     const connected = status.jiraConfigured && status.tempoConfigured;
     const wrap = document.getElementById('connectionStatus');
     wrap.innerHTML = `

@@ -1,7 +1,22 @@
 require('dotenv').config();
+
+// DEMO_MODE is a belt-and-suspenders guard for public/demo deployments: even if real secrets
+// or contractor PII end up set in the host's env panel by mistake, this neutralizes them at
+// boot so a demo deployment can never call real Jira/Tempo or render real contractor data.
+if (process.env.DEMO_MODE === 'true') {
+  delete process.env.JIRA_API_TOKEN;
+  delete process.env.TEMPO_API_TOKEN;
+  delete process.env.CONTRACTOR_JIRA_ACCOUNT_ID;
+  process.env.CONTRACTOR_NAME = 'Jan Kowalski';
+  process.env.CONTRACTOR_ADDRESS = 'ul. Przykładowa 1, 00-000 Warszawa';
+  process.env.CONTRACTOR_NIP = '0000000000';
+}
+
 const path = require('path');
 const express = require('express');
 const session = require('express-session');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const tempoService = require('./src/services/tempoService');
 const pdfService = require('./src/services/pdfService');
 const jiraService = require('./src/services/jiraService');
@@ -14,6 +29,26 @@ const vehiclesService = require('./src/services/vehiclesService');
 const propertiesService = require('./src/services/propertiesService');
 
 const app = express();
+// Needed for secure cookies to work behind a TLS-terminating reverse proxy (Railway, Render,
+// Fly.io etc. all forward plain HTTP internally) - without this express-session can't tell the
+// request was actually made over HTTPS and will refuse to set the cookie.
+app.set('trust proxy', 1);
+// Default CSP assumes external JS/CSS bundles and no inline script/style - this app is a single
+// inline-script HTML file by design (see CLAUDE.md), so the policy below allowlists exactly the
+// CDNs it actually loads (cdnjs for Tabler icons + Chart.js, Google Fonts) instead of disabling
+// CSP outright.
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdnjs.cloudflare.com'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://cdnjs.cloudflare.com', 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdnjs.cloudflare.com'],
+      imgSrc: ["'self'", 'data:'],
+      connectSrc: ["'self'"]
+    }
+  }
+}));
 // Default 100kb JSON body limit is too small for base64-encoded PDF uploads (manual invoice
 // upload in the History tab) - a few MB of scanned PDF becomes ~33% larger as base64.
 app.use(express.json({ limit: '15mb' }));
@@ -21,7 +56,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
   resave: false,
   saveUninitialized: false,
-  cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 7 }
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 1000 * 60 * 60 * 24 * 7
+  }
 }));
 
 app.get('/login', (req, res) => {
@@ -29,7 +69,17 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-app.post('/api/login', (req, res) => {
+// Brute-force guard on login - bcrypt already makes password guessing slow, this stops an
+// attacker from just hammering the endpoint over the network.
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Please try again later.' }
+});
+
+app.post('/api/login', loginLimiter, (req, res) => {
   const { email, password } = req.body || {};
   if (!authService.isConfigured()) {
     return res.status(500).json({ error: 'Login is not set up yet. Run: node scripts/set-password.js' });

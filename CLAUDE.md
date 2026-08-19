@@ -62,6 +62,27 @@ treściach dokumentów i commit messages jeśli o nie poprosi.
 - Wszystkie daty w formacie zgodnym z oryginalnymi wzorami PDF (np. `8/31/2026` bez zera wiodącego
   w miesiącu dla dat granicznych, `2026-08-01` dla daty zamówienia).
 
+## Bezpieczeństwo / wdrożenie demo
+
+- `DEMO_MODE=true` w env wymusza placeholder danych kontrahenta (`Jan Kowalski` itd.) i kasuje
+  `JIRA_API_TOKEN`/`TEMPO_API_TOKEN`/`CONTRACTOR_JIRA_ACCOUNT_ID` z `process.env` przy starcie
+  (`server.js`) — zabezpieczenie na wypadek pomyłkowego ustawienia prawdziwych sekretów na
+  hostingu do publicznego demo. Ustawiać wyłącznie na środowisku demo, nigdy lokalnie/prod.
+- `NODE_ENV=production` włącza `secure: true` na cieście sesji (wymaga `app.set('trust proxy', 1)`,
+  już ustawione — potrzebne za reverse proxy typu Railway/Render/Fly, które terminują TLS).
+- Nigdy nie hardkodować prawdziwych danych osobowych (imię, adres, NIP) jako fallback w kodzie —
+  `pdfService.buildPeriodData` i sidebar (`profileName`/`profileTriggerName`, wyliczane z e-maila
+  sesji) celowo tego unikają, bo pliki źródłowe (w przeciwieństwie do `.env`) trafiają do gita.
+- `helmet()` ma ręcznie skonfigurowane CSP (allowlist na cdnjs.cloudflare.com + Google Fonts) —
+  domyślna polityka blokowałaby inline `<script>`/`style=""`, na których cała ta apka się opiera.
+- Rate-limit (20/15min) na `/api/login` przez `express-rate-limit`.
+
+Wdrożenie demo na Railway: `engines.node` w `package.json` (Nixpacks), `PORT` już czytany z env
+(`server.js`). Zmienne do ustawienia w panelu Railway (wartości — patrz historia czatu, nigdy nie
+wrzucać ich do repo): `NODE_ENV=production`, `DEMO_MODE=true`, świeży `SESSION_SECRET`, osobne
+`AUTH_EMAIL`/`AUTH_PASSWORD_HASH` na konto demo. `JIRA_*`/`TEMPO_API_TOKEN` celowo nieustawione —
+apka sama wchodzi w tryb demo worklogów (`tempoService.demoWorklogs`).
+
 ## Priorytety dalszego rozwoju (w kolejności)
 
 1. Eksport CSV/XLSX do Taxxxo — nowy endpoint `/api/export/taxxxo`.
