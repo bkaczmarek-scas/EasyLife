@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { isPdfBase64, isMonth, isYear, isNonEmptyString } = require('../validation');
 
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
 const DATA_FILE = path.join(DATA_DIR, 'protocols.json');
@@ -38,30 +39,14 @@ function getById(id) {
 
 function blankEntry(month, year) {
   return {
-    id: periodId(month, year),
-    month,
-    year,
-    orderNumber: null,
-    totalHours: null,
-    amount: null,
-    generatedAt: null,
-    exported: false,
-    exportedAt: null,
-    files: {},
-    manualFiles: []
+    id: periodId(month, year), month, year, orderNumber: null, totalHours: null,
+    amount: null, generatedAt: null, exported: false, exportedAt: null, files: {}, manualFiles: []
   };
 }
 
-// Zapisuje PDF-y wygenerowanego okresu na dysku i zapisuje/aktualizuje metadane w protocols.json.
-// Ponowne wygenerowanie dla tego samego okresu nadpisuje pliki i resetuje status eksportu — dane
-// mogly sie zmienic (np. inna stawka), wiec stary status "wyeksportowano" bylby mylacy. Rozne
-// pliki wgrane recznie (manualFiles) sa zachowywane - regeneracja protokolow ich nie dotyczy.
-// Wywolujacy powinien wczesniej sprawdzic getById() i ostrzec uzytkownika, jesli wpis juz
-// istnieje - ta funkcja zawsze nadpisuje bez pytania (patrz endpoint /api/protocols/generate).
 function recordGenerated(month, year, data, files) {
   ensureFile();
   const id = periodId(month, year);
-
   const zamowieniePath = path.join(FILES_DIR, `${id}-zamowienie.pdf`);
   const odbiorczyPath = path.join(FILES_DIR, `${id}-odbiorczy.pdf`);
   fs.writeFileSync(zamowieniePath, Buffer.from(files.zamowienie.bytes));
@@ -71,15 +56,8 @@ function recordGenerated(month, year, data, files) {
   const idx = list.findIndex(p => p.id === id);
   const existingManualFiles = idx !== -1 ? (list[idx].manualFiles || []) : [];
   const entry = {
-    id,
-    month,
-    year,
-    orderNumber: data.numerZamowienia,
-    totalHours: data.totalHours,
-    amount: data.kwota,
-    generatedAt: new Date().toISOString(),
-    exported: false,
-    exportedAt: null,
+    id, month, year, orderNumber: data.numerZamowienia, totalHours: data.totalHours,
+    amount: data.kwota, generatedAt: new Date().toISOString(), exported: false, exportedAt: null,
     files: {
       zamowienie: { filename: files.zamowienie.filename, path: zamowieniePath },
       odbiorczy: { filename: files.odbiorczy.filename, path: odbiorczyPath }
@@ -110,11 +88,12 @@ function getFileBytes(id, kind) {
   return { bytes: fs.readFileSync(file.path), filename: file.filename };
 }
 
-// Reczne wgranie pliku (np. faktury zewnetrznej) dla danego okresu. Jesli wpis dla tego okresu
-// jeszcze nie istnieje (bo protokoly nie byly generowane w aplikacji), tworzy pusty wpis - historia
-// dziala wtedy jako archiwum dokumentow, nie tylko log generowania.
 function addManualFile(month, year, { filename, base64 }) {
   ensureFile();
+  if (!isMonth(month) || !isYear(year)) throw new Error('Invalid period');
+  if (!isNonEmptyString(filename) || !/\.pdf$/i.test(filename)) throw new Error('Only PDF files are supported');
+  if (!isPdfBase64(base64)) throw new Error('Uploaded file is not a valid PDF');
+
   const id = periodId(month, year);
   const list = readAll();
   let idx = list.findIndex(p => p.id === id);
@@ -127,7 +106,7 @@ function addManualFile(month, year, { filename, base64 }) {
   const fileId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const filePath = path.join(FILES_DIR, `${id}-manual-${fileId}.pdf`);
   fs.writeFileSync(filePath, Buffer.from(base64, 'base64'));
-  list[idx].manualFiles.push({ id: fileId, filename, path: filePath, uploadedAt: new Date().toISOString() });
+  list[idx].manualFiles.push({ id: fileId, filename: filename.trim(), path: filePath, uploadedAt: new Date().toISOString() });
 
   writeAll(list);
   return list[idx];
@@ -145,7 +124,6 @@ function safeUnlink(filePath) {
   try { fs.unlinkSync(filePath); } catch (e) { /* already gone - fine */ }
 }
 
-// Usuwa caly wpis: oba wygenerowane protokoly, wszystkie pliki wgrane recznie, oraz sam rekord.
 function removeEntry(id) {
   const list = readAll();
   const idx = list.findIndex(p => p.id === id);
@@ -158,11 +136,6 @@ function removeEntry(id) {
   writeAll(list);
 }
 
-// Usuwa pojedynczy plik z wpisu: 'zamowienie'/'odbiorczy' albo id pliku recznie wgranego.
-// Jesli po usunieciu nie zostaje zaden plik, caly wpis znika (nie ma sensu trzymac pustego
-// wiersza samych myslnikow). Jesli usunieto jeden z dwoch wygenerowanych protokolow, metadane
-// generowania (numer zamowienia, kwota, status eksportu) sa czyszczone tylko gdy OBA znikna -
-// pojedynczy brakujacy dokument to nadal ten sam "komplet", po prostu niepelny.
 function removeFile(id, target) {
   const list = readAll();
   const idx = list.findIndex(p => p.id === id);
@@ -175,12 +148,8 @@ function removeFile(id, target) {
     safeUnlink(file.path);
     delete entry.files[target];
     if (!entry.files.zamowienie && !entry.files.odbiorczy) {
-      entry.orderNumber = null;
-      entry.totalHours = null;
-      entry.amount = null;
-      entry.generatedAt = null;
-      entry.exported = false;
-      entry.exportedAt = null;
+      entry.orderNumber = null; entry.totalHours = null; entry.amount = null;
+      entry.generatedAt = null; entry.exported = false; entry.exportedAt = null;
     }
   } else {
     const manualIdx = (entry.manualFiles || []).findIndex(f => f.id === target);
