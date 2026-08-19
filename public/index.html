@@ -197,6 +197,14 @@
     display:flex; align-items:center; justify-content:center; font-size:19px;}
   .vehicle-card-name{font-size:14px; font-weight:700; margin:0;}
   .vehicle-card-meta{font-size:12px; color:var(--text-secondary); display:flex; flex-direction:column; gap:2px;}
+  .vin-link{cursor:pointer; color:var(--accent); text-decoration:underline dotted; text-underline-offset:2px; width:fit-content;}
+  .vin-link:hover{color:var(--accent-ring);}
+  .vehicle-card-mileage-row{display:flex; align-items:center; gap:4px;}
+  .vehicle-card-mileage-row .icon-btn{width:20px; height:20px; opacity:0; transition:opacity 100ms;}
+  .vehicle-card:hover .vehicle-card-mileage-row .icon-btn{opacity:1;}
+  .vehicle-card-mileage-updated{font-size:11px; color:var(--text-muted);}
+  .mileage-edit-row{display:flex; align-items:center; gap:4px;}
+  .mileage-edit-input{width:90px; font-size:12px; padding:3px 6px;}
   .vehicle-card-badges{display:flex; flex-direction:column; gap:6px;}
   .vehicle-card-badge-row{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-muted);}
   .vehicle-card-actions{display:flex; justify-content:flex-end; gap:4px; margin-top:-4px;}
@@ -611,9 +619,15 @@
         <form id="vehicleForm" class="panel" style="display:none; grid-template-columns:1fr 1fr; gap:10px;" novalidate>
           <input type="hidden" id="vehicleEditId" value="">
           <p id="vehicleFormError" class="form-error"></p>
+          <div class="field" style="grid-column:1 / -1;">
+            <label for="vehicleVin">VIN</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="text" id="vehicleVin" placeholder="17-character VIN — paste to auto-fill" maxlength="17" style="flex:1;">
+              <span id="vehicleVinStatus" style="font-size:12px; white-space:nowrap;"></span>
+            </div>
+          </div>
           <div class="field"><label for="vehicleName">Name</label><input type="text" id="vehicleName" placeholder="e.g. Škoda Octavia"></div>
           <div class="field"><label for="vehiclePlate">License plate</label><input type="text" id="vehiclePlate" placeholder="PO 12345"></div>
-          <div class="field"><label for="vehicleVin">VIN</label><input type="text" id="vehicleVin" placeholder="17-character VIN"></div>
           <div class="field"><label for="vehicleMileage">Mileage (km)</label><input type="number" id="vehicleMileage" min="0"></div>
           <div class="field"><label for="vehicleNextService">Next service date</label><input type="date" id="vehicleNextService"></div>
           <div class="field"><label for="vehicleInsuranceExpiry">Insurance expiry date</label><input type="date" id="vehicleInsuranceExpiry"></div>
@@ -891,6 +905,29 @@
     <div id="deleteProtocolList"></div>
     <div class="modal-actions">
       <button type="button" id="deleteProtocolCancelBtn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="drawer-overlay" id="vinDrawerOverlay">
+  <div class="drawer">
+    <div class="drawer-header">
+      <div>
+        <h3 id="vinDrawerTitle">–</h3>
+        <span class="insight-row-sub" id="vinDrawerVin"></span>
+      </div>
+      <button type="button" class="drawer-close" id="vinDrawerClose" aria-label="Close"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="drawer-body">
+      <div id="vinDrawerLoading" class="empty-state" style="display:none;">
+        <i class="ti ti-loader-2"></i>
+        <p>Decoding VIN…</p>
+      </div>
+      <div id="vinDrawerError" class="empty-state" style="display:none;">
+        <i class="ti ti-alert-triangle"></i>
+        <p id="vinDrawerErrorText">Couldn't decode this VIN.</p>
+      </div>
+      <div id="vinDrawerFields"></div>
     </div>
   </div>
 </div>
@@ -2312,6 +2349,17 @@ document.addEventListener('keydown', (e) => {
 // --- Garage: vehicles + service history ---
 let VEHICLES = [];
 let SELECTED_VEHICLE_ID = null;
+let MILEAGE_EDIT_ID = null;
+
+function formatRelativeDate(isoStr) {
+  if (!isoStr) return null;
+  const dateOnly = isoStr.slice(0, 10);
+  const days = Math.floor((Date.now() - new Date(`${dateOnly}T00:00:00`).getTime()) / 86400000);
+  if (days <= 0) return 'today';
+  if (days === 1) return '1 day ago';
+  if (days < 30) return `${days} days ago`;
+  return formatShortDate(dateOnly);
+}
 
 function daysUntil(dateStr) {
   if (!dateStr) return null;
@@ -2330,14 +2378,26 @@ function nextServiceBadge(dateStr) {
 
 function vehicleCardHtml(v) {
   const selected = v.id === SELECTED_VEHICLE_ID ? ' selected' : '';
+  const updatedLabel = formatRelativeDate(v.mileageUpdatedAt);
+  const mileageRow = v.id === MILEAGE_EDIT_ID
+    ? `<div class="mileage-edit-row">
+         <input type="number" min="0" class="mileage-edit-input" id="mileageEditInput" value="${v.mileage}">
+         <button type="button" class="icon-btn mileage-save" data-id="${v.id}" aria-label="Save mileage"><i class="ti ti-check"></i></button>
+         <button type="button" class="icon-btn mileage-cancel" aria-label="Cancel"><i class="ti ti-x"></i></button>
+       </div>`
+    : `<div class="vehicle-card-mileage-row">
+         <span>${v.mileage.toLocaleString()} km</span>
+         <button type="button" class="icon-btn mileage-edit-btn" data-id="${v.id}" aria-label="Update mileage"><i class="ti ti-pencil"></i></button>
+       </div>`;
   return `
     <div class="vehicle-card${selected}" data-id="${v.id}">
       <div class="vehicle-card-icon"><i class="ti ti-car"></i></div>
       <p class="vehicle-card-name">${escapeHtml(v.name)}</p>
       <div class="vehicle-card-meta">
-        <span>VIN: ${escapeHtml(v.vin || '–')}</span>
+        ${v.vin ? `<span class="vin-link" data-id="${v.id}">VIN: ${escapeHtml(v.vin)}</span>` : `<span>VIN: –</span>`}
         <span>Plate: ${escapeHtml(v.plate || '–')}</span>
-        <span>${v.mileage.toLocaleString()} km</span>
+        ${mileageRow}
+        ${updatedLabel ? `<span class="vehicle-card-mileage-updated">Updated ${updatedLabel}</span>` : ''}
       </div>
       <div class="vehicle-card-badges">
         <div class="vehicle-card-badge-row"><i class="ti ti-engine" title="Next service"></i> ${nextServiceBadge(v.nextServiceDate)}</div>
@@ -2434,12 +2494,46 @@ function resetVehicleForm() {
   document.getElementById('vehicleForm').reset();
   document.getElementById('vehicleEditId').value = '';
   document.getElementById('vehicleFormError').style.display = 'none';
+  document.getElementById('vehicleVinStatus').textContent = '';
 }
 
 document.getElementById('addVehicleBtn').addEventListener('click', () => {
   resetVehicleForm();
   document.getElementById('vehicleForm').style.display = 'grid';
-  document.getElementById('vehicleName').focus();
+  document.getElementById('vehicleVin').focus();
+});
+
+// Auto-fill from VIN (NHTSA vPIC, free/no key) once a full 17-character VIN is entered - only
+// fills Name, since that's the only form field VIN data actually maps to (plate/mileage/dates
+// aren't vehicle-identity data). Full decoded details stay available via the VIN drawer.
+document.getElementById('vehicleVin').addEventListener('input', () => {
+  const vin = document.getElementById('vehicleVin').value.trim().toUpperCase();
+  const statusEl = document.getElementById('vehicleVinStatus');
+  if (vin.length !== 17) { statusEl.textContent = ''; return; }
+
+  statusEl.textContent = 'Looking up…';
+  statusEl.style.color = 'var(--text-muted)';
+  fetch(`/api/vehicles/vin/${encodeURIComponent(vin)}`)
+    .then(res => res.json().then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+      if (document.getElementById('vehicleVin').value.trim().toUpperCase() !== vin) return; // VIN changed since this lookup started
+      if (!ok) throw new Error(data.error || 'Lookup failed');
+      const info = data.info || {};
+      const nameParts = [info['Model Year'], info['Make'], info['Model']].filter(Boolean);
+      if (!nameParts.length) {
+        statusEl.textContent = 'No data found for this VIN';
+        statusEl.style.color = 'var(--text-muted)';
+        return;
+      }
+      const nameEl = document.getElementById('vehicleName');
+      if (!nameEl.value.trim()) nameEl.value = nameParts.join(' ');
+      statusEl.textContent = `✓ ${nameParts.join(' ')}`;
+      statusEl.style.color = 'var(--text-success)';
+    })
+    .catch(() => {
+      statusEl.textContent = 'Lookup failed';
+      statusEl.style.color = 'var(--text-muted)';
+    });
 });
 
 document.getElementById('cancelVehicleBtn').addEventListener('click', () => {
@@ -2497,8 +2591,49 @@ document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
 document.getElementById('vehiclesCarousel').addEventListener('click', (e) => {
   const editBtn = e.target.closest('.vehicle-edit');
   const deleteBtn = e.target.closest('.vehicle-delete');
+  const vinLink = e.target.closest('.vin-link');
+  const mileageEditBtn = e.target.closest('.mileage-edit-btn');
+  const mileageSaveBtn = e.target.closest('.mileage-save');
+  const mileageCancelBtn = e.target.closest('.mileage-cancel');
+  const mileageEditRow = e.target.closest('.mileage-edit-row');
   const card = e.target.closest('.vehicle-card');
 
+  if (vinLink) {
+    openVinDrawer(vinLink.dataset.id);
+    return;
+  }
+  if (mileageEditBtn) {
+    MILEAGE_EDIT_ID = mileageEditBtn.dataset.id;
+    renderVehicles();
+    const input = document.getElementById('mileageEditInput');
+    if (input) { input.focus(); input.select(); }
+    return;
+  }
+  if (mileageCancelBtn) {
+    MILEAGE_EDIT_ID = null;
+    renderVehicles();
+    return;
+  }
+  if (mileageSaveBtn) {
+    const id = mileageSaveBtn.dataset.id;
+    const input = document.getElementById('mileageEditInput');
+    const newMileage = parseFloat(input.value);
+    if (isNaN(newMileage) || newMileage < 0) { alert('Please enter a valid mileage.'); return; }
+    fetch(`/api/vehicles/${id}/mileage`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mileage: newMileage })
+    })
+      .then(res => res.json().then(data => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        if (!ok) throw new Error(data.error || 'Error updating mileage');
+        MILEAGE_EDIT_ID = null;
+        loadVehicles();
+      })
+      .catch(err => alert(err.message));
+    return;
+  }
+  if (mileageEditRow) return;
   if (editBtn) {
     const v = VEHICLES.find(x => x.id === editBtn.dataset.id);
     if (v) enterVehicleEditMode(v);
@@ -2522,6 +2657,12 @@ document.getElementById('vehiclesCarousel').addEventListener('click', (e) => {
     return;
   }
   if (card) selectVehicle(card.dataset.id);
+});
+
+document.getElementById('vehiclesCarousel').addEventListener('keydown', (e) => {
+  if (e.target.id !== 'mileageEditInput') return;
+  if (e.key === 'Enter') { e.preventDefault(); document.querySelector('.mileage-save')?.click(); }
+  if (e.key === 'Escape') { document.querySelector('.mileage-cancel')?.click(); }
 });
 
 document.getElementById('addServiceEntryBtn').addEventListener('click', () => {
@@ -2589,6 +2730,60 @@ document.getElementById('serviceTimeline').addEventListener('click', (e) => {
         });
     })
     .catch(err => alert(err.message));
+});
+
+// --- Garage: VIN lookup drawer (NHTSA vPIC - free, no key, US-market focused) ---
+const VIN_FIELD_LABELS = {
+  'Make': 'Make', 'Model': 'Model', 'Model Year': 'Model year',
+  'Manufacturer Name': 'Manufacturer', 'Vehicle Type': 'Vehicle type', 'Body Class': 'Body style',
+  'Doors': 'Doors', 'Engine Number of Cylinders': 'Cylinders', 'Displacement (L)': 'Engine size (L)',
+  'Fuel Type - Primary': 'Fuel type', 'Drive Type': 'Drive type', 'Transmission Style': 'Transmission',
+  'Plant Country': 'Plant country', 'Plant City': 'Plant city'
+};
+
+async function openVinDrawer(vehicleId) {
+  const v = VEHICLES.find(x => x.id === vehicleId);
+  if (!v || !v.vin) return;
+
+  document.getElementById('vinDrawerTitle').textContent = v.name;
+  document.getElementById('vinDrawerVin').textContent = v.vin;
+  document.getElementById('vinDrawerFields').innerHTML = '';
+  document.getElementById('vinDrawerError').style.display = 'none';
+  document.getElementById('vinDrawerLoading').style.display = 'flex';
+  document.getElementById('vinDrawerOverlay').classList.add('open');
+
+  try {
+    const res = await fetch(`/api/vehicles/vin/${encodeURIComponent(v.vin)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to decode VIN');
+    document.getElementById('vinDrawerLoading').style.display = 'none';
+
+    const entries = Object.entries(data.info || {});
+    if (!entries.length) {
+      document.getElementById('vinDrawerErrorText').textContent = 'No data found for this VIN. NHTSA\'s database mainly covers vehicles sold in the US market.';
+      document.getElementById('vinDrawerError').style.display = 'flex';
+      return;
+    }
+    document.getElementById('vinDrawerFields').innerHTML = entries.map(([key, value]) => `
+      <div class="drawer-field"><span>${escapeHtml(VIN_FIELD_LABELS[key] || key)}</span><span>${escapeHtml(value)}</span></div>
+    `).join('');
+  } catch (err) {
+    document.getElementById('vinDrawerLoading').style.display = 'none';
+    document.getElementById('vinDrawerErrorText').textContent = err.message;
+    document.getElementById('vinDrawerError').style.display = 'flex';
+  }
+}
+
+function closeVinDrawer() {
+  document.getElementById('vinDrawerOverlay').classList.remove('open');
+}
+
+document.getElementById('vinDrawerClose').addEventListener('click', closeVinDrawer);
+document.getElementById('vinDrawerOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('vinDrawerOverlay')) closeVinDrawer();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeVinDrawer();
 });
 
 // --- Properties: property cards + tenant drawer ---
