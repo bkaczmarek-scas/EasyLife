@@ -8,9 +8,10 @@ const DATA_DIR = path.join(__dirname, '..', '..', 'data');
 const DATA_FILE = path.join(DATA_DIR, 'chores.json');
 
 const SEED_CHORES = [
-  { id: 'seed-ch1', name: 'Replace HVAC filter', frequency: 'monthly', notes: '', completions: [] },
-  { id: 'seed-ch2', name: 'Water plants', frequency: 'weekly', notes: '', completions: [] },
-  { id: 'seed-ch3', name: 'Take out recycling', frequency: 'weekly', notes: '', completions: [] }
+  { id: 'seed-ch1', name: 'Replace HVAC filter', frequency: 'monthly', notes: '', completions: [], weatherDependent: false },
+  { id: 'seed-ch2', name: 'Water plants', frequency: 'weekly', notes: '', completions: [], weatherDependent: false },
+  { id: 'seed-ch3', name: 'Take out recycling', frequency: 'weekly', notes: '', completions: [], weatherDependent: false },
+  { id: 'seed-ch4', name: 'Mow the lawn', frequency: 'weekly', notes: '', completions: [], weatherDependent: true }
 ];
 
 function ensureFile() {
@@ -79,19 +80,25 @@ function getAll() {
   return readAll().sort((a, b) => a.name.localeCompare(b.name)).map(decorate);
 }
 
-function add({ name, frequency, notes }) {
+function add({ name, frequency, notes, weatherDependent }) {
   const list = readAll();
-  const entry = { id: newId(), name, frequency: ['daily', 'weekly', 'monthly'].includes(frequency) ? frequency : 'weekly', notes: notes || '', completions: [] };
+  const entry = {
+    id: newId(), name, frequency: ['daily', 'weekly', 'monthly'].includes(frequency) ? frequency : 'weekly',
+    notes: notes || '', completions: [], weatherDependent: Boolean(weatherDependent)
+  };
   list.push(entry);
   writeAll(list);
   return decorate(entry);
 }
 
-function update(id, { name, frequency, notes }) {
+function update(id, { name, frequency, notes, weatherDependent }) {
   const list = readAll();
   const idx = list.findIndex(c => c.id === id);
   if (idx === -1) throw new Error(`Chore not found: ${id}`);
-  list[idx] = { ...list[idx], name, frequency: ['daily', 'weekly', 'monthly'].includes(frequency) ? frequency : 'weekly', notes: notes || '' };
+  list[idx] = {
+    ...list[idx], name, frequency: ['daily', 'weekly', 'monthly'].includes(frequency) ? frequency : 'weekly',
+    notes: notes || '', weatherDependent: Boolean(weatherDependent)
+  };
   writeAll(list);
   return decorate(list[idx]);
 }

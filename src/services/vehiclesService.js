@@ -8,8 +8,8 @@ const VEHICLES_FILE = path.join(DATA_DIR, 'vehicles.json');
 const SERVICE_LOG_FILE = path.join(DATA_DIR, 'serviceLog.json');
 
 const SEED_VEHICLES = [
-  { id: 'seed-v1', name: 'Škoda Octavia', plate: 'PO 12345', vin: 'TMBJJ7NE0N0123456', mileage: 68200, nextServiceDate: '2026-09-02' },
-  { id: 'seed-v2', name: 'VW Transporter', plate: 'PO 98765', vin: 'WV1ZZZ7HZKH123456', mileage: 142500, nextServiceDate: '2026-10-15' }
+  { id: 'seed-v1', name: 'Škoda Octavia', plate: 'PO 12345', vin: 'TMBJJ7NE0N0123456', mileage: 68200, nextServiceDate: '2026-09-02', insuranceExpiryDate: '2027-01-10' },
+  { id: 'seed-v2', name: 'VW Transporter', plate: 'PO 98765', vin: 'WV1ZZZ7HZKH123456', mileage: 142500, nextServiceDate: '2026-10-15', insuranceExpiryDate: '2026-09-03' }
 ];
 
 const SEED_SERVICE_LOG = [
@@ -40,19 +40,19 @@ function getVehicles() {
   return readAll(VEHICLES_FILE, SEED_VEHICLES).sort((a, b) => a.name.localeCompare(b.name));
 }
 
-function addVehicle({ name, plate, vin, mileage, nextServiceDate }) {
+function addVehicle({ name, plate, vin, mileage, nextServiceDate, insuranceExpiryDate }) {
   const list = readAll(VEHICLES_FILE, SEED_VEHICLES);
-  const entry = { id: newId(), name, plate, vin, mileage: Number(mileage) || 0, nextServiceDate: nextServiceDate || null };
+  const entry = { id: newId(), name, plate, vin, mileage: Number(mileage) || 0, nextServiceDate: nextServiceDate || null, insuranceExpiryDate: insuranceExpiryDate || null };
   list.push(entry);
   writeAll(VEHICLES_FILE, list);
   return entry;
 }
 
-function updateVehicle(id, { name, plate, vin, mileage, nextServiceDate }) {
+function updateVehicle(id, { name, plate, vin, mileage, nextServiceDate, insuranceExpiryDate }) {
   const list = readAll(VEHICLES_FILE, SEED_VEHICLES);
   const idx = list.findIndex(v => v.id === id);
   if (idx === -1) throw new Error(`Vehicle not found: ${id}`);
-  list[idx] = { ...list[idx], name, plate, vin, mileage: Number(mileage) || 0, nextServiceDate: nextServiceDate || null };
+  list[idx] = { ...list[idx], name, plate, vin, mileage: Number(mileage) || 0, nextServiceDate: nextServiceDate || null, insuranceExpiryDate: insuranceExpiryDate || null };
   writeAll(VEHICLES_FILE, list);
   return list[idx];
 }

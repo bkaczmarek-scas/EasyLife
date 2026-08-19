@@ -197,6 +197,8 @@
     display:flex; align-items:center; justify-content:center; font-size:19px;}
   .vehicle-card-name{font-size:14px; font-weight:700; margin:0;}
   .vehicle-card-meta{font-size:12px; color:var(--text-secondary); display:flex; flex-direction:column; gap:2px;}
+  .vehicle-card-badges{display:flex; flex-direction:column; gap:6px;}
+  .vehicle-card-badge-row{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-muted);}
   .vehicle-card-actions{display:flex; justify-content:flex-end; gap:4px; margin-top:-4px;}
 
   .timeline{display:flex; flex-direction:column;}
@@ -221,8 +223,19 @@
   .property-card-footer{display:flex; justify-content:space-between; align-items:center; margin-top:4px;}
 
   .stats-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;}
-  .action-item{cursor:pointer;}
 
+  .insights-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px; align-items:start;}
+  .insight-category{border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface-2); padding:16px; display:flex; flex-direction:column; gap:10px;}
+  .insight-category-header{display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--text-primary);}
+  .insight-category-header i{color:var(--accent); font-size:16px;}
+  .insight-list{display:flex; flex-direction:column; gap:4px;}
+  .insight-row{display:flex; align-items:flex-start; gap:10px; padding:8px; border-radius:var(--radius); cursor:pointer;}
+  .insight-row:hover{background:var(--surface-1);}
+  .insight-row-icon{width:28px; height:28px; border-radius:var(--radius); background:var(--surface-1); color:var(--accent);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:14px;}
+  .insight-row-body{flex:1; min-width:0;}
+  .insight-row-message{font-size:13px; font-weight:600; margin:0; color:var(--text-primary); line-height:1.4;}
+  .insight-row-sub{font-size:11px; color:var(--text-muted);}
   .view-toggle{display:inline-flex; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;}
   .view-toggle-btn{border:none; border-radius:0; padding:6px 9px; background:var(--surface-2); color:var(--text-secondary); display:flex; align-items:center; cursor:pointer;}
   .view-toggle-btn + .view-toggle-btn{border-left:1px solid var(--border);}
@@ -328,12 +341,12 @@
       <section id="section-overview" class="section" style="max-width:960px;">
 
         <div class="block">
-          <p class="block-title">Action required</p>
-          <div id="actionRequiredEmpty" class="empty-state" style="display:none;">
+          <p class="block-title">What needs attention</p>
+          <div id="insightsEmpty" class="empty-state" style="display:none;">
             <i class="ti ti-check"></i>
             <p>Nothing needs attention right now.</p>
           </div>
-          <div class="carousel" id="actionRequiredCarousel"></div>
+          <div class="insights-grid" id="insightsGrid"></div>
         </div>
 
         <div class="block">
@@ -603,6 +616,7 @@
           <div class="field"><label for="vehicleVin">VIN</label><input type="text" id="vehicleVin" placeholder="17-character VIN"></div>
           <div class="field"><label for="vehicleMileage">Mileage (km)</label><input type="number" id="vehicleMileage" min="0"></div>
           <div class="field"><label for="vehicleNextService">Next service date</label><input type="date" id="vehicleNextService"></div>
+          <div class="field"><label for="vehicleInsuranceExpiry">Insurance expiry date</label><input type="date" id="vehicleInsuranceExpiry"></div>
           <div style="display:flex; gap:6px; align-items:end; grid-column:1 / -1;">
             <button type="submit" id="saveVehicleBtn" class="btn-light"><i class="ti ti-check"></i> Save</button>
             <button type="button" id="cancelVehicleBtn">Cancel</button>
@@ -678,6 +692,8 @@
             </select>
           </div>
           <div class="field" style="grid-column:1 / -1;"><label for="propertyAddress">Address</label><input type="text" id="propertyAddress" placeholder="Street, city"></div>
+          <div class="field" style="grid-column:1 / -1;"><label for="propertyMaintenanceNote">Planned maintenance (optional)</label><input type="text" id="propertyMaintenanceNote" placeholder="e.g. Bathroom renovation planned"></div>
+          <div class="field"><label for="propertyMaintenanceDate">Maintenance date (optional)</label><input type="date" id="propertyMaintenanceDate"></div>
 
           <div id="tenantFields" style="display:none; grid-column:1 / -1; grid-template-columns:1fr 1fr; gap:10px;">
             <div class="field" style="grid-column:1 / -1;"><label for="tenantName">Tenant name</label><input type="text" id="tenantName" placeholder="Full name"></div>
@@ -737,6 +753,7 @@
               <label for="subscriptionAutoRenew">Auto-renews</label>
               <select id="subscriptionAutoRenew"><option value="true">Yes</option><option value="false">No</option></select>
             </div>
+            <div class="field"><label for="subscriptionLastUsed">Last used (optional)</label><input type="date" id="subscriptionLastUsed"></div>
             <div style="display:flex; gap:6px; align-items:end; grid-column:1 / -1;">
               <button type="submit" id="saveSubscriptionBtn" class="btn-light"><i class="ti ti-check"></i> Save</button>
               <button type="button" id="cancelSubscriptionBtn">Cancel</button>
@@ -775,6 +792,9 @@
               <select id="choreFrequency"><option value="daily">Daily</option><option value="weekly" selected>Weekly</option><option value="monthly">Monthly</option></select>
             </div>
             <div class="field"><label for="choreNotes">Notes (optional)</label><input type="text" id="choreNotes" placeholder="e.g. Filter size 16x20"></div>
+            <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-secondary); grid-column:1 / -1;">
+              <input type="checkbox" id="choreWeatherDependent" style="width:auto;"> Weather-dependent (suggest on Overview when weather is good)
+            </label>
             <div style="display:flex; gap:6px; align-items:end; grid-column:1 / -1;">
               <button type="submit" id="saveChoreBtn" class="btn-light"><i class="ti ti-check"></i> Save</button>
               <button type="button" id="cancelChoreBtn">Cancel</button>
@@ -2303,7 +2323,10 @@ function vehicleCardHtml(v) {
         <span>Plate: ${escapeHtml(v.plate || '–')}</span>
         <span>${v.mileage.toLocaleString()} km</span>
       </div>
-      ${nextServiceBadge(v.nextServiceDate)}
+      <div class="vehicle-card-badges">
+        <div class="vehicle-card-badge-row"><i class="ti ti-engine" title="Next service"></i> ${nextServiceBadge(v.nextServiceDate)}</div>
+        <div class="vehicle-card-badge-row"><i class="ti ti-shield-check" title="Insurance expiry"></i> ${nextServiceBadge(v.insuranceExpiryDate)}</div>
+      </div>
       <div class="vehicle-card-actions">
         <button type="button" class="icon-btn vehicle-edit" data-id="${v.id}" aria-label="Edit"><i class="ti ti-pencil"></i></button>
         <button type="button" class="icon-btn danger vehicle-delete" data-id="${v.id}" aria-label="Delete"><i class="ti ti-trash"></i></button>
@@ -2416,6 +2439,7 @@ function enterVehicleEditMode(v) {
   document.getElementById('vehicleVin').value = v.vin || '';
   document.getElementById('vehicleMileage').value = v.mileage || '';
   document.getElementById('vehicleNextService').value = v.nextServiceDate || '';
+  document.getElementById('vehicleInsuranceExpiry').value = v.insuranceExpiryDate || '';
   document.getElementById('vehicleForm').style.display = 'grid';
   document.getElementById('vehicleName').focus();
 }
@@ -2431,7 +2455,8 @@ document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
     plate: document.getElementById('vehiclePlate').value.trim(),
     vin: document.getElementById('vehicleVin').value.trim(),
     mileage: parseFloat(document.getElementById('vehicleMileage').value) || 0,
-    nextServiceDate: document.getElementById('vehicleNextService').value || null
+    nextServiceDate: document.getElementById('vehicleNextService').value || null,
+    insuranceExpiryDate: document.getElementById('vehicleInsuranceExpiry').value || null
   };
   const btn = document.getElementById('saveVehicleBtn');
   btn.disabled = true;
@@ -2615,6 +2640,9 @@ function openPropertyDrawer(id) {
       <div class="drawer-field"><span>Lease end</span><span>${p.tenant.leaseEnd || '–'}</span></div>
       <div class="drawer-field"><span>Rent</span><span>${p.tenant.rentAmount.toLocaleString()} zł/mo</span></div>`;
   }
+  if (p.maintenanceNote) {
+    fields += `<div class="drawer-field"><span>Maintenance</span><span>${escapeHtml(p.maintenanceNote)}${p.maintenanceDate ? ' — ' + p.maintenanceDate : ''}</span></div>`;
+  }
   document.getElementById('tenantDrawerFields').innerHTML = fields;
 
   const contactsEl = document.getElementById('tenantDrawerContacts');
@@ -2759,6 +2787,8 @@ function enterPropertyEditMode(id) {
   document.getElementById('propertyName').value = p.name;
   document.getElementById('propertyType').value = p.type;
   document.getElementById('propertyAddress').value = p.address;
+  document.getElementById('propertyMaintenanceNote').value = p.maintenanceNote || '';
+  document.getElementById('propertyMaintenanceDate').value = p.maintenanceDate || '';
   toggleTenantFields();
   const tenantIds = ['tenantName', 'tenantPhone', 'tenantLeaseStart', 'tenantLeaseEnd', 'tenantRentAmount'];
   if (p.tenant) {
@@ -2806,6 +2836,8 @@ document.getElementById('propertyForm').addEventListener('submit', async (e) => 
   const name = document.getElementById('propertyName').value.trim();
   const type = document.getElementById('propertyType').value;
   const address = document.getElementById('propertyAddress').value.trim();
+  const maintenanceNote = document.getElementById('propertyMaintenanceNote').value.trim();
+  const maintenanceDate = document.getElementById('propertyMaintenanceDate').value || null;
   if (!name || !address) return showPropertyFormError('Please fill in name and address.');
 
   let tenant = null;
@@ -2829,7 +2861,7 @@ document.getElementById('propertyForm').addEventListener('submit', async (e) => 
     const res = await fetch(id ? `/api/properties/${id}` : '/api/properties', {
       method: id ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, type, address, tenant })
+      body: JSON.stringify({ name, type, address, tenant, maintenanceNote, maintenanceDate })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error saving property');
@@ -2844,47 +2876,121 @@ document.getElementById('propertyForm').addEventListener('submit', async (e) => 
 });
 
 // --- Overview dashboard ---
-function actionRequiredItems() {
+
+// No real weather API here - a deterministic mock that still varies day to day, so the
+// weather-dependent chore suggestion below has something to react to for the demo.
+function getFakeForecast() {
+  const CONDITIONS = [
+    { key: 'sunny', label: 'sunny', icon: 'ti-sun', good: true },
+    { key: 'partly-cloudy', label: 'partly cloudy', icon: 'ti-cloud-sun', good: true },
+    { key: 'cloudy', label: 'cloudy', icon: 'ti-cloud', good: false },
+    { key: 'rainy', label: 'rainy', icon: 'ti-cloud-rain', good: false }
+  ];
+  const dayIndex = Math.floor(Date.now() / 86400000);
+  const condition = CONDITIONS[dayIndex % CONDITIONS.length];
+  const temp = 15 + (dayIndex % 15);
+  return { ...condition, temp };
+}
+
+function garageInsights() {
   const items = [];
   VEHICLES.forEach(v => {
     if (v.nextServiceDate) {
-      items.push({ icon: 'ti-car', title: v.name, subtitle: 'Next service', dateStr: v.nextServiceDate, section: 'garage', vehicleId: v.id });
+      items.push({ icon: 'ti-engine', message: `${v.name} service due`, dateStr: v.nextServiceDate, section: 'garage', vehicleId: v.id });
     }
-  });
-  PROPERTIES.forEach(p => {
-    if (p.type === 'rental' && p.tenant && p.tenant.leaseEnd) {
-      items.push({ icon: 'ti-building-estate', title: p.name, subtitle: 'Lease ends', dateStr: p.tenant.leaseEnd, section: 'properties', propertyId: p.id });
+    if (v.insuranceExpiryDate) {
+      items.push({ icon: 'ti-shield-check', message: `${v.name} insurance expires`, dateStr: v.insuranceExpiryDate, section: 'garage', vehicleId: v.id });
     }
   });
   items.sort((a, b) => (daysUntil(a.dateStr) ?? Infinity) - (daysUntil(b.dateStr) ?? Infinity));
   return items;
 }
 
-function actionItemHtml(item) {
+function propertiesInsights() {
+  const items = [];
+  PROPERTIES.forEach(p => {
+    if (p.type === 'rental' && p.tenant && p.tenant.leaseEnd) {
+      items.push({ icon: 'ti-calendar-event', message: `${p.name} lease ends`, dateStr: p.tenant.leaseEnd, section: 'properties', propertyId: p.id });
+    }
+    if (p.maintenanceNote) {
+      items.push({ icon: 'ti-hammer', message: `${p.name}: ${p.maintenanceNote}`, dateStr: p.maintenanceDate, section: 'properties', propertyId: p.id });
+    }
+  });
+  items.sort((a, b) => (daysUntil(a.dateStr) ?? Infinity) - (daysUntil(b.dateStr) ?? Infinity));
+  return items;
+}
+
+function subscriptionsInsights() {
+  const items = [];
+  SUBSCRIPTIONS.forEach(s => {
+    if (!s.lastUsedDate) return;
+    const daysSince = -daysUntil(s.lastUsedDate);
+    if (daysSince >= 60) {
+      const months = Math.floor(daysSince / 30);
+      const cycleLabel = s.billingCycle === 'yearly' ? '/yr' : '/mo';
+      items.push({
+        icon: 'ti-alert-triangle',
+        message: `You haven't used ${s.name} in ${months} month${months === 1 ? '' : 's'} — maybe cancel to save ${formatZl2(s.cost)}${cycleLabel}`,
+        section: 'subscriptions', subscriptionId: s.id
+      });
+    }
+  });
+  return items;
+}
+
+function choresInsights() {
+  const forecast = getFakeForecast();
+  if (!forecast.good) return [];
+  return CHORES.filter(c => c.weatherDependent && !c.doneThisPeriod).map(c => ({
+    icon: forecast.icon,
+    message: `Great weather for "${c.name}" today — ${forecast.temp}°C and ${forecast.label}. Perfect time to get it done!`,
+    section: 'chores', choreId: c.id
+  }));
+}
+
+const INSIGHT_CATEGORIES = [
+  { key: 'garage', label: 'Garage', icon: 'ti-car', getItems: garageInsights },
+  { key: 'properties', label: 'Properties', icon: 'ti-building-estate', getItems: propertiesInsights },
+  { key: 'subscriptions', label: 'Subscriptions', icon: 'ti-credit-card', getItems: subscriptionsInsights },
+  { key: 'chores', label: 'Chores', icon: 'ti-list-check', getItems: choresInsights }
+];
+
+function insightRowHtml(item) {
   return `
-    <div class="vehicle-card action-item" data-section="${item.section}" data-vehicle-id="${item.vehicleId || ''}" data-property-id="${item.propertyId || ''}">
-      <div class="vehicle-card-icon"><i class="ti ${item.icon}"></i></div>
-      <p class="vehicle-card-name">${escapeHtml(item.title)}</p>
-      <div class="vehicle-card-meta"><span>${item.subtitle}: ${item.dateStr}</span></div>
-      ${nextServiceBadge(item.dateStr)}
+    <div class="insight-row" data-section="${item.section}" data-vehicle-id="${item.vehicleId || ''}" data-property-id="${item.propertyId || ''}">
+      <div class="insight-row-icon"><i class="ti ${item.icon}"></i></div>
+      <div class="insight-row-body">
+        <p class="insight-row-message">${escapeHtml(item.message)}</p>
+        ${item.dateStr ? `<span class="insight-row-sub">${item.dateStr}</span>` : ''}
+      </div>
+      ${item.dateStr ? nextServiceBadge(item.dateStr) : ''}
     </div>`;
 }
 
-function renderActionRequired() {
-  const items = actionRequiredItems();
-  document.getElementById('actionRequiredEmpty').style.display = items.length ? 'none' : 'flex';
-  document.getElementById('actionRequiredCarousel').innerHTML = items.map(actionItemHtml).join('');
+function renderInsights() {
+  const categoriesHtml = INSIGHT_CATEGORIES.map(cat => {
+    const items = cat.getItems();
+    if (!items.length) return '';
+    return `
+      <div class="insight-category">
+        <div class="insight-category-header"><i class="ti ${cat.icon}"></i> <span>${cat.label}</span></div>
+        <div class="insight-list">${items.map(insightRowHtml).join('')}</div>
+      </div>`;
+  }).filter(Boolean);
+
+  document.getElementById('insightsEmpty').style.display = categoriesHtml.length ? 'none' : 'flex';
+  document.getElementById('insightsGrid').innerHTML = categoriesHtml.join('');
 }
 
-document.getElementById('actionRequiredCarousel').addEventListener('click', (e) => {
-  const card = e.target.closest('.action-item');
-  if (!card) return;
-  switchSection(card.dataset.section);
-  if (card.dataset.section === 'garage' && card.dataset.vehicleId) {
-    selectVehicle(card.dataset.vehicleId);
+document.getElementById('insightsGrid').addEventListener('click', (e) => {
+  const row = e.target.closest('.insight-row');
+  if (!row) return;
+  switchSection(row.dataset.section);
+  if (row.dataset.section === 'garage' && row.dataset.vehicleId) {
+    selectVehicle(row.dataset.vehicleId);
   }
-  if (card.dataset.section === 'properties' && card.dataset.propertyId) {
-    openPropertyDrawer(card.dataset.propertyId);
+  if (row.dataset.section === 'properties' && row.dataset.propertyId) {
+    openPropertyDrawer(row.dataset.propertyId);
   }
 });
 
@@ -2940,8 +3046,8 @@ async function renderQuickGlance() {
 }
 
 async function loadOverviewDashboard() {
-  await Promise.all([loadVehicles(), loadProperties(), loadHistory()]);
-  renderActionRequired();
+  await Promise.all([loadVehicles(), loadProperties(), loadHistory(), loadSubscriptions(), loadChores()]);
+  renderInsights();
   renderQuickGlance();
 }
 
@@ -3050,6 +3156,7 @@ function enterSubscriptionEditMode(s) {
   document.getElementById('subscriptionBillingCycle').value = s.billingCycle;
   document.getElementById('subscriptionNextRenewal').value = s.nextRenewalDate || '';
   document.getElementById('subscriptionAutoRenew').value = String(Boolean(s.autoRenew));
+  document.getElementById('subscriptionLastUsed').value = s.lastUsedDate || '';
   document.getElementById('subscriptionForm').style.display = 'grid';
   document.getElementById('subscriptionName').focus();
 }
@@ -3066,7 +3173,8 @@ document.getElementById('subscriptionForm').addEventListener('submit', async (e)
     cost: parseFloat(document.getElementById('subscriptionCost').value) || 0,
     billingCycle: document.getElementById('subscriptionBillingCycle').value,
     nextRenewalDate: document.getElementById('subscriptionNextRenewal').value || null,
-    autoRenew: document.getElementById('subscriptionAutoRenew').value === 'true'
+    autoRenew: document.getElementById('subscriptionAutoRenew').value === 'true',
+    lastUsedDate: document.getElementById('subscriptionLastUsed').value || null
   };
   const btn = document.getElementById('saveSubscriptionBtn');
   btn.disabled = true;
@@ -3135,6 +3243,7 @@ function choreItemHtml(c) {
         <div class="chore-row-header">
           <p class="chore-name">${escapeHtml(c.name)}</p>
           <span class="badge neutral">${FREQUENCY_LABELS[c.frequency] || c.frequency}</span>
+          ${c.weatherDependent ? '<span class="badge neutral"><i class="ti ti-sun"></i> Weather</span>' : ''}
           ${c.streak > 0 ? `<span class="badge warning"><i class="ti ti-flame"></i> ${c.streak}</span>` : ''}
         </div>
         ${c.notes ? `<p class="chore-notes">${escapeHtml(c.notes)}</p>` : ''}
@@ -3194,6 +3303,7 @@ function enterChoreEditMode(c) {
   document.getElementById('choreName').value = c.name;
   document.getElementById('choreFrequency').value = c.frequency;
   document.getElementById('choreNotes').value = c.notes || '';
+  document.getElementById('choreWeatherDependent').checked = Boolean(c.weatherDependent);
   document.getElementById('choreForm').style.display = 'grid';
   document.getElementById('choreName').focus();
 }
@@ -3207,7 +3317,8 @@ document.getElementById('choreForm').addEventListener('submit', async (e) => {
   const body = {
     name,
     frequency: document.getElementById('choreFrequency').value,
-    notes: document.getElementById('choreNotes').value.trim()
+    notes: document.getElementById('choreNotes').value.trim(),
+    weatherDependent: document.getElementById('choreWeatherDependent').checked
   };
   const btn = document.getElementById('saveChoreBtn');
   btn.disabled = true;

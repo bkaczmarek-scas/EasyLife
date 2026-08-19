@@ -10,7 +10,8 @@ const PROPERTIES_FILE = path.join(DATA_DIR, 'properties.json');
 const SEED_PROPERTIES = [
   {
     id: 'seed-p1', name: 'Rodzinny dom', type: 'primary', address: 'ul. Kwiatowa 12, Poznań',
-    tenant: null, comments: []
+    tenant: null, comments: [],
+    maintenanceNote: 'Bathroom renovation planned', maintenanceDate: '2026-09-20'
   },
   {
     id: 'seed-p2', name: 'Mieszkanie Jeżyce', type: 'rental', address: 'ul. Dąbrowskiego 45/3, Poznań',
@@ -60,19 +61,25 @@ function normalizeTenant(type, tenant) {
   };
 }
 
-function add({ name, type, address, tenant }) {
+function add({ name, type, address, tenant, maintenanceNote, maintenanceDate }) {
   const list = readAll();
-  const entry = { id: newId(), name, type: type === 'rental' ? 'rental' : 'primary', address, tenant: normalizeTenant(type, tenant), comments: [] };
+  const entry = {
+    id: newId(), name, type: type === 'rental' ? 'rental' : 'primary', address, tenant: normalizeTenant(type, tenant), comments: [],
+    maintenanceNote: maintenanceNote || '', maintenanceDate: maintenanceDate || null
+  };
   list.push(entry);
   writeAll(list);
   return entry;
 }
 
-function update(id, { name, type, address, tenant }) {
+function update(id, { name, type, address, tenant, maintenanceNote, maintenanceDate }) {
   const list = readAll();
   const idx = list.findIndex(p => p.id === id);
   if (idx === -1) throw new Error(`Property not found: ${id}`);
-  list[idx] = { ...list[idx], name, type: type === 'rental' ? 'rental' : 'primary', address, tenant: normalizeTenant(type, tenant) };
+  list[idx] = {
+    ...list[idx], name, type: type === 'rental' ? 'rental' : 'primary', address, tenant: normalizeTenant(type, tenant),
+    maintenanceNote: maintenanceNote || '', maintenanceDate: maintenanceDate || null
+  };
   writeAll(list);
   return list[idx];
 }

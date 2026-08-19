@@ -373,9 +373,9 @@ app.get('/api/vehicles', (req, res) => {
 
 app.post('/api/vehicles', (req, res) => {
   try {
-    const { name, plate, vin, mileage, nextServiceDate } = req.body;
+    const { name, plate, vin, mileage, nextServiceDate, insuranceExpiryDate } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = vehiclesService.addVehicle({ name, plate, vin, mileage, nextServiceDate });
+    const entry = vehiclesService.addVehicle({ name, plate, vin, mileage, nextServiceDate, insuranceExpiryDate });
     res.json({ vehicle: entry });
   } catch (err) {
     console.error(err);
@@ -385,9 +385,9 @@ app.post('/api/vehicles', (req, res) => {
 
 app.put('/api/vehicles/:id', (req, res) => {
   try {
-    const { name, plate, vin, mileage, nextServiceDate } = req.body;
+    const { name, plate, vin, mileage, nextServiceDate, insuranceExpiryDate } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = vehiclesService.updateVehicle(req.params.id, { name, plate, vin, mileage, nextServiceDate });
+    const entry = vehiclesService.updateVehicle(req.params.id, { name, plate, vin, mileage, nextServiceDate, insuranceExpiryDate });
     res.json({ vehicle: entry });
   } catch (err) {
     console.error(err);
@@ -447,9 +447,9 @@ app.get('/api/properties', (req, res) => {
 
 app.post('/api/properties', (req, res) => {
   try {
-    const { name, type, address, tenant } = req.body;
+    const { name, type, address, tenant, maintenanceNote, maintenanceDate } = req.body;
     if (!name || !address) return res.status(400).json({ error: 'Required: name, address' });
-    const entry = propertiesService.add({ name, type, address, tenant });
+    const entry = propertiesService.add({ name, type, address, tenant, maintenanceNote, maintenanceDate });
     res.json({ property: entry });
   } catch (err) {
     console.error(err);
@@ -459,9 +459,9 @@ app.post('/api/properties', (req, res) => {
 
 app.put('/api/properties/:id', (req, res) => {
   try {
-    const { name, type, address, tenant } = req.body;
+    const { name, type, address, tenant, maintenanceNote, maintenanceDate } = req.body;
     if (!name || !address) return res.status(400).json({ error: 'Required: name, address' });
-    const entry = propertiesService.update(req.params.id, { name, type, address, tenant });
+    const entry = propertiesService.update(req.params.id, { name, type, address, tenant, maintenanceNote, maintenanceDate });
     res.json({ property: entry });
   } catch (err) {
     console.error(err);
@@ -512,9 +512,9 @@ app.get('/api/subscriptions', (req, res) => {
 
 app.post('/api/subscriptions', (req, res) => {
   try {
-    const { name, category, cost, billingCycle, nextRenewalDate, autoRenew } = req.body;
+    const { name, category, cost, billingCycle, nextRenewalDate, autoRenew, lastUsedDate } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = subscriptionsService.add({ name, category, cost, billingCycle, nextRenewalDate, autoRenew });
+    const entry = subscriptionsService.add({ name, category, cost, billingCycle, nextRenewalDate, autoRenew, lastUsedDate });
     res.json({ subscription: entry });
   } catch (err) {
     console.error(err);
@@ -524,9 +524,9 @@ app.post('/api/subscriptions', (req, res) => {
 
 app.put('/api/subscriptions/:id', (req, res) => {
   try {
-    const { name, category, cost, billingCycle, nextRenewalDate, autoRenew } = req.body;
+    const { name, category, cost, billingCycle, nextRenewalDate, autoRenew, lastUsedDate } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = subscriptionsService.update(req.params.id, { name, category, cost, billingCycle, nextRenewalDate, autoRenew });
+    const entry = subscriptionsService.update(req.params.id, { name, category, cost, billingCycle, nextRenewalDate, autoRenew, lastUsedDate });
     res.json({ subscription: entry });
   } catch (err) {
     console.error(err);
@@ -555,9 +555,9 @@ app.get('/api/chores', (req, res) => {
 
 app.post('/api/chores', (req, res) => {
   try {
-    const { name, frequency, notes } = req.body;
+    const { name, frequency, notes, weatherDependent } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = choresService.add({ name, frequency, notes });
+    const entry = choresService.add({ name, frequency, notes, weatherDependent });
     res.json({ chore: entry });
   } catch (err) {
     console.error(err);
@@ -567,9 +567,9 @@ app.post('/api/chores', (req, res) => {
 
 app.put('/api/chores/:id', (req, res) => {
   try {
-    const { name, frequency, notes } = req.body;
+    const { name, frequency, notes, weatherDependent } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = choresService.update(req.params.id, { name, frequency, notes });
+    const entry = choresService.update(req.params.id, { name, frequency, notes, weatherDependent });
     res.json({ chore: entry });
   } catch (err) {
     console.error(err);
