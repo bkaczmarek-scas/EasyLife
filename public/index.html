@@ -619,13 +619,7 @@
         <form id="vehicleForm" class="panel" style="display:none; grid-template-columns:1fr 1fr; gap:10px;" novalidate>
           <input type="hidden" id="vehicleEditId" value="">
           <p id="vehicleFormError" class="form-error"></p>
-          <div class="field" style="grid-column:1 / -1;">
-            <label for="vehicleVin">VIN</label>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <input type="text" id="vehicleVin" placeholder="17-character VIN — paste to auto-fill" maxlength="17" style="flex:1;">
-              <span id="vehicleVinStatus" style="font-size:12px; white-space:nowrap;"></span>
-            </div>
-          </div>
+          <div class="field" style="grid-column:1 / -1;"><label for="vehicleVin">VIN</label><input type="text" id="vehicleVin" placeholder="17-character VIN" maxlength="17"></div>
           <div class="field"><label for="vehicleName">Name</label><input type="text" id="vehicleName" placeholder="e.g. Škoda Octavia"></div>
           <div class="field"><label for="vehiclePlate">License plate</label><input type="text" id="vehiclePlate" placeholder="PO 12345"></div>
           <div class="field"><label for="vehicleMileage">Mileage (km)</label><input type="number" id="vehicleMileage" min="0"></div>
@@ -919,15 +913,10 @@
       <button type="button" class="drawer-close" id="vinDrawerClose" aria-label="Close"><i class="ti ti-x"></i></button>
     </div>
     <div class="drawer-body">
-      <div id="vinDrawerLoading" class="empty-state" style="display:none;">
-        <i class="ti ti-loader-2"></i>
-        <p>Decoding VIN…</p>
+      <div class="empty-state">
+        <i class="ti ti-clock"></i>
+        <p>Coming soon: vehicle details fetched automatically from the vehicle registry, based on this VIN.</p>
       </div>
-      <div id="vinDrawerError" class="empty-state" style="display:none;">
-        <i class="ti ti-alert-triangle"></i>
-        <p id="vinDrawerErrorText">Couldn't decode this VIN.</p>
-      </div>
-      <div id="vinDrawerFields"></div>
     </div>
   </div>
 </div>
@@ -2513,46 +2502,12 @@ function resetVehicleForm() {
   document.getElementById('vehicleForm').reset();
   document.getElementById('vehicleEditId').value = '';
   document.getElementById('vehicleFormError').style.display = 'none';
-  document.getElementById('vehicleVinStatus').textContent = '';
 }
 
 document.getElementById('addVehicleBtn').addEventListener('click', () => {
   resetVehicleForm();
   document.getElementById('vehicleForm').style.display = 'grid';
   document.getElementById('vehicleVin').focus();
-});
-
-// Auto-fill from VIN (NHTSA vPIC, free/no key) once a full 17-character VIN is entered - only
-// fills Name, since that's the only form field VIN data actually maps to (plate/mileage/dates
-// aren't vehicle-identity data). Full decoded details stay available via the VIN drawer.
-document.getElementById('vehicleVin').addEventListener('input', () => {
-  const vin = document.getElementById('vehicleVin').value.trim().toUpperCase();
-  const statusEl = document.getElementById('vehicleVinStatus');
-  if (vin.length !== 17) { statusEl.textContent = ''; return; }
-
-  statusEl.textContent = 'Looking up…';
-  statusEl.style.color = 'var(--text-muted)';
-  fetch(`/api/vehicles/vin/${encodeURIComponent(vin)}`)
-    .then(res => res.json().then(data => ({ ok: res.ok, data })))
-    .then(({ ok, data }) => {
-      if (document.getElementById('vehicleVin').value.trim().toUpperCase() !== vin) return; // VIN changed since this lookup started
-      if (!ok) throw new Error(data.error || 'Lookup failed');
-      const info = data.info || {};
-      const nameParts = [info['Model Year'], info['Make'], info['Model']].filter(Boolean);
-      if (!nameParts.length) {
-        statusEl.textContent = 'No data found for this VIN';
-        statusEl.style.color = 'var(--text-muted)';
-        return;
-      }
-      const nameEl = document.getElementById('vehicleName');
-      if (!nameEl.value.trim()) nameEl.value = nameParts.join(' ');
-      statusEl.textContent = `✓ ${nameParts.join(' ')}`;
-      statusEl.style.color = 'var(--text-success)';
-    })
-    .catch(() => {
-      statusEl.textContent = 'Lookup failed';
-      statusEl.style.color = 'var(--text-muted)';
-    });
 });
 
 document.getElementById('cancelVehicleBtn').addEventListener('click', () => {
@@ -2751,48 +2706,14 @@ document.getElementById('serviceTimeline').addEventListener('click', (e) => {
     .catch(err => alert(err.message));
 });
 
-// --- Garage: VIN lookup drawer (NHTSA vPIC - free, no key, US-market focused) ---
-const VIN_FIELD_LABELS = {
-  'Make': 'Make', 'Model': 'Model', 'Model Year': 'Model year',
-  'Manufacturer Name': 'Manufacturer', 'Vehicle Type': 'Vehicle type', 'Body Class': 'Body style',
-  'Doors': 'Doors', 'Engine Model': 'Engine', 'Engine Number of Cylinders': 'Cylinders',
-  'Displacement (L)': 'Engine size (L)', 'Engine Brake (hp) From': 'Horsepower', 'Engine Power (kW)': 'Power (kW)',
-  'Fuel Type - Primary': 'Fuel type', 'Drive Type': 'Drive type', 'Transmission Style': 'Transmission',
-  'Plant Country': 'Plant country', 'Plant City': 'Plant city'
-};
-
-async function openVinDrawer(vehicleId) {
+// --- Garage: VIN drawer. No lookup integration - placeholder for a future vehicle-registry
+// lookup by VIN. Just shows the vehicle name/VIN and a "coming soon" note.
+function openVinDrawer(vehicleId) {
   const v = VEHICLES.find(x => x.id === vehicleId);
   if (!v || !v.vin) return;
-
   document.getElementById('vinDrawerTitle').textContent = v.name;
   document.getElementById('vinDrawerVin').textContent = v.vin;
-  document.getElementById('vinDrawerFields').innerHTML = '';
-  document.getElementById('vinDrawerError').style.display = 'none';
-  document.getElementById('vinDrawerLoading').style.display = 'flex';
   document.getElementById('vinDrawerOverlay').classList.add('open');
-
-  try {
-    const res = await fetch(`/api/vehicles/vin/${encodeURIComponent(v.vin)}`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to decode VIN');
-    document.getElementById('vinDrawerLoading').style.display = 'none';
-
-    const entries = Object.entries(data.info || {});
-    if (!entries.length) {
-      document.getElementById('vinDrawerErrorText').textContent = 'No data found for this VIN. NHTSA\'s database mainly covers vehicles sold in the US market.';
-      document.getElementById('vinDrawerError').style.display = 'flex';
-      return;
-    }
-    const VIN_VALUE_SUFFIX = { 'Engine Brake (hp) From': ' hp', 'Engine Power (kW)': ' kW', 'Displacement (L)': ' L' };
-    document.getElementById('vinDrawerFields').innerHTML = entries.map(([key, value]) => `
-      <div class="drawer-field"><span>${escapeHtml(VIN_FIELD_LABELS[key] || key)}</span><span>${escapeHtml(value)}${VIN_VALUE_SUFFIX[key] || ''}</span></div>
-    `).join('');
-  } catch (err) {
-    document.getElementById('vinDrawerLoading').style.display = 'none';
-    document.getElementById('vinDrawerErrorText').textContent = err.message;
-    document.getElementById('vinDrawerError').style.display = 'flex';
-  }
 }
 
 function closeVinDrawer() {

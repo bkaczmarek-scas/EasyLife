@@ -28,7 +28,6 @@ const ratesService = require('./src/services/ratesService');
 const costsService = require('./src/services/costsService');
 const protocolsHistoryService = require('./src/services/protocolsHistoryService');
 const vehiclesService = require('./src/services/vehiclesService');
-const vinService = require('./src/services/vinService');
 const propertiesService = require('./src/services/propertiesService');
 const subscriptionsService = require('./src/services/subscriptionsService');
 const choresService = require('./src/services/choresService');
@@ -405,16 +404,6 @@ app.put('/api/vehicles/:id/mileage', (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(404).json({ error: err.message });
-  }
-});
-
-app.get('/api/vehicles/vin/:vin', async (req, res) => {
-  try {
-    const info = await vinService.decodeVin(req.params.vin);
-    res.json({ info });
-  } catch (err) {
-    console.error(err);
-    res.status(502).json({ error: 'Failed to decode VIN. The lookup service may be unavailable.' });
   }
 });
 
