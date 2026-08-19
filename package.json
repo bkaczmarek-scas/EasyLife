@@ -9,8 +9,8 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js",
+    "dev": "node -r ./src/session.js server.js",
+    "start": "node -r ./src/session.js server.js",
     "test": "node --test"
   },
   "dependencies": {
