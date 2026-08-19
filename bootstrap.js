@@ -97,6 +97,7 @@ function requestValidation(req, res, next) {
     validateBody(req);
     next();
   } catch (error) {
+    if (error instanceof ValidationError) return res.status(400).json({ error: error.message });
     next(error);
   }
 }
@@ -140,9 +141,3 @@ Module._load = function patchedLoad(request, parent, isMain) {
 
   return originalLoad(request, parent, isMain);
 };
-
-process.on('uncaughtException', error => {
-  if (error instanceof ValidationError) {
-    console.error(error.message);
-  }
-});
