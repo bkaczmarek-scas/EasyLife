@@ -63,7 +63,6 @@ jobs:
               properties: {
                 "Wersja": {title: [{text: {content: $title}}]},
                 "Data wdrożenia": {date: {start: $now}},
-                "Środowisko": {select: {name: "Production"}},
                 "Status": {select: {name: "Zmiana w main"}},
                 "Opis zmiany": {rich_text: [{text: {content: $message}}]},
                 "Link do PR/release": {url: $commit_url},
