@@ -64,10 +64,18 @@ treściach dokumentów i commit messages jeśli o nie poprosi.
 
 ## Bezpieczeństwo / wdrożenie demo
 
-- `DEMO_MODE=true` w env wymusza placeholder danych kontrahenta (`Jan Kowalski` itd.) i kasuje
-  `JIRA_API_TOKEN`/`TEMPO_API_TOKEN`/`CONTRACTOR_JIRA_ACCOUNT_ID` z `process.env` przy starcie
-  (`server.js`) — zabezpieczenie na wypadek pomyłkowego ustawienia prawdziwych sekretów na
-  hostingu do publicznego demo. Ustawiać wyłącznie na środowisku demo, nigdy lokalnie/prod.
+- `DEMO_MODE=true` w env wymusza placeholder danych kontrahenta (`Jan Kowalski`, inicjały `XX`
+  w numerze zamówienia, generyczna data umowy) i kasuje `JIRA_API_TOKEN`/`TEMPO_API_TOKEN`/
+  `CONTRACTOR_JIRA_ACCOUNT_ID` z `process.env` przy starcie (`server.js`) — zabezpieczenie na
+  wypadek pomyłkowego ustawienia prawdziwych sekretów na hostingu do publicznego demo. W trybie
+  demo `req.session.email` (i wyliczana z niego nazwa w sidebarze) jest też na sztywno ustawiane
+  na `demo@example.com`, niezależnie od realnie skonfigurowanego `AUTH_EMAIL` — więc nawet
+  pomyłkowe użycie prawdziwego loginu do demo-wdrożenia nie ujawnia niczyjej tożsamości.
+  Ustawiać wyłącznie na środowisku demo, nigdy lokalnie/prod.
+- Dane demo w seedach (`ratesService.js`, `bonusesService.js` itd.) muszą być w pełni fikcyjne —
+  nie kopiować realnych stawek/kwot/premii jako "przykładowych" wartości.
+- `tempoService.demoTotalHours` nigdy nie zwraca godzin dla bieżącego (niedokończonego) ani
+  przyszłego miesiąca — spójne z resztą apki, która liczy tylko w pełni zakończone miesiące.
 - `NODE_ENV=production` włącza `secure: true` na cieście sesji (wymaga `app.set('trust proxy', 1)`,
   już ustawione — potrzebne za reverse proxy typu Railway/Render/Fly, które terminują TLS).
 - Nigdy nie hardkodować prawdziwych danych osobowych (imię, adres, NIP) jako fallback w kodzie —

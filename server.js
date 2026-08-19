@@ -10,6 +10,8 @@ if (process.env.DEMO_MODE === 'true') {
   process.env.CONTRACTOR_NAME = 'Jan Kowalski';
   process.env.CONTRACTOR_ADDRESS = 'ul. Przykładowa 1, 00-000 Warszawa';
   process.env.CONTRACTOR_NIP = '0000000000';
+  process.env.CONTRACTOR_ORDER_INITIALS = 'XX';
+  process.env.CONTRACTOR_AGREEMENT_DATE = '01.01.2025';
 }
 
 const path = require('path');
@@ -90,7 +92,10 @@ app.post('/api/login', loginLimiter, (req, res) => {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
   req.session.authenticated = true;
-  req.session.email = email;
+  // Decoupled from whatever AUTH_EMAIL is actually configured, so the UI (sidebar name is
+  // derived from this) never displays a real identity even if the operator forgets to use a
+  // demo-only login email on a public deployment.
+  req.session.email = process.env.DEMO_MODE === 'true' ? 'demo@example.com' : email;
   res.json({ ok: true });
 });
 

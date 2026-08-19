@@ -21,6 +21,13 @@ function resolveGroupName(projectName) {
 const KNOWN_DEMO_TOTALS = { 2026: { 3: 138, 4: 152, 5: 145, 6: 160, 7: 134, 8: 150 } };
 
 function demoTotalHours(month, year) {
+  // Never fabricate hours for the current (in-progress) or a future month - nobody has
+  // worklogs for a period that hasn't happened yet, real API or demo alike.
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  if (year > currentYear || (year === currentYear && month >= currentMonth)) return 0;
+
   if (KNOWN_DEMO_TOTALS[year] && KNOWN_DEMO_TOTALS[year][month] != null) {
     return KNOWN_DEMO_TOTALS[year][month];
   }

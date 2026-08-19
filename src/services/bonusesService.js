@@ -5,7 +5,7 @@ const DATA_DIR = path.join(__dirname, '..', '..', 'data');
 const DATA_FILE = path.join(DATA_DIR, 'bonuses.json');
 
 const SEED = [
-  { id: 'seed-dywidenda-2026-06', name: 'Dywidenda', date: '2026-06-30', amount: 13851 }
+  { id: 'seed-dywidenda-2026-06', name: 'Dywidenda', date: '2026-06-30', amount: 9000 }
 ];
 
 function ensureFile() {

@@ -28,7 +28,7 @@ function buildPeriodData(month, year, worklogs) {
     totalHours: worklogs.totalHours,
     kwota,
     kwotaSlownie: slownieZlote(kwota),
-    numerZamowienia: `SC/${year}/${pad2(month)}/01/BK`,
+    numerZamowienia: `SC/${year}/${pad2(month)}/01/${process.env.CONTRACTOR_ORDER_INITIALS || 'XX'}`,
     dataZamowienia: `${year}-${pad2(month)}-01`,
     terminWykonania: `${month}/${lastDay}/${year}`,
     dataPodpisania: `${month}/${lastDay}/${year}`,
@@ -251,7 +251,7 @@ async function buildOdbiorczy(data) {
           { type: 'spacer', h: 8 },
           { text: 'Zleceniobiorca oświadcza, że utwory zostały zarchiwizowane na odpowiednich serwerach zdefiniowanych dla poszczególnych projektów.' },
           { type: 'spacer', h: 8 },
-          { text: `Zleceniobiorca oświadcza, że za wykonanie Zamówienia nr ${data.numerZamowienia} z dnia ${data.dataZamowienia} do Umowy z dnia 16.07.2025. Zleceniobiorcy przysługuje wynagrodzenie netto` },
+          { text: `Zleceniobiorca oświadcza, że za wykonanie Zamówienia nr ${data.numerZamowienia} z dnia ${data.dataZamowienia} do Umowy z dnia ${process.env.CONTRACTOR_AGREEMENT_DATE || '01.01.2025'}. Zleceniobiorcy przysługuje wynagrodzenie netto` },
           { type: 'spacer', h: 6 },
           { text: `${data.kwota.toLocaleString('pl-PL')} zł (słownie: ${data.kwotaSlownie})` }
         ]

@@ -8,8 +8,8 @@ const DATA_DIR = path.join(__dirname, '..', '..', 'data');
 const DATA_FILE = path.join(DATA_DIR, 'rates.json');
 
 const SEED = [
-  { id: 'seed-2025-07', from: '2025-07', rate: 115 },
-  { id: 'seed-2026-07', from: '2026-07', rate: 120 }
+  { id: 'seed-2025-07', from: '2025-07', rate: 90 },
+  { id: 'seed-2026-07', from: '2026-07', rate: 100 }
 ];
 
 function ensureFile() {
