@@ -6,7 +6,8 @@ const axios = require('axios');
 // Podzbior ~136 pol zwracanych przez NHTSA - tylko te uzyteczne w karcie pojazdu.
 const FIELDS = [
   'Make', 'Model', 'Model Year', 'Manufacturer Name', 'Vehicle Type', 'Body Class',
-  'Doors', 'Engine Number of Cylinders', 'Displacement (L)', 'Fuel Type - Primary',
+  'Doors', 'Engine Model', 'Engine Number of Cylinders', 'Displacement (L)',
+  'Engine Brake (hp) From', 'Engine Power (kW)', 'Fuel Type - Primary',
   'Drive Type', 'Transmission Style', 'Plant Country', 'Plant City'
 ];
 

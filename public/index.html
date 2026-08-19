@@ -2736,7 +2736,8 @@ document.getElementById('serviceTimeline').addEventListener('click', (e) => {
 const VIN_FIELD_LABELS = {
   'Make': 'Make', 'Model': 'Model', 'Model Year': 'Model year',
   'Manufacturer Name': 'Manufacturer', 'Vehicle Type': 'Vehicle type', 'Body Class': 'Body style',
-  'Doors': 'Doors', 'Engine Number of Cylinders': 'Cylinders', 'Displacement (L)': 'Engine size (L)',
+  'Doors': 'Doors', 'Engine Model': 'Engine', 'Engine Number of Cylinders': 'Cylinders',
+  'Displacement (L)': 'Engine size (L)', 'Engine Brake (hp) From': 'Horsepower', 'Engine Power (kW)': 'Power (kW)',
   'Fuel Type - Primary': 'Fuel type', 'Drive Type': 'Drive type', 'Transmission Style': 'Transmission',
   'Plant Country': 'Plant country', 'Plant City': 'Plant city'
 };
@@ -2764,8 +2765,9 @@ async function openVinDrawer(vehicleId) {
       document.getElementById('vinDrawerError').style.display = 'flex';
       return;
     }
+    const VIN_VALUE_SUFFIX = { 'Engine Brake (hp) From': ' hp', 'Engine Power (kW)': ' kW', 'Displacement (L)': ' L' };
     document.getElementById('vinDrawerFields').innerHTML = entries.map(([key, value]) => `
-      <div class="drawer-field"><span>${escapeHtml(VIN_FIELD_LABELS[key] || key)}</span><span>${escapeHtml(value)}</span></div>
+      <div class="drawer-field"><span>${escapeHtml(VIN_FIELD_LABELS[key] || key)}</span><span>${escapeHtml(value)}${VIN_VALUE_SUFFIX[key] || ''}</span></div>
     `).join('');
   } catch (err) {
     document.getElementById('vinDrawerLoading').style.display = 'none';
