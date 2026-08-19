@@ -1,0 +1,130 @@
+name: Finish EasyLife hardening
+
+on:
+  push:
+    branches: [agent/easylife-hardening]
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply fixes
+        shell: python
+        run: |
+          from pathlib import Path
+          import json, subprocess
+          root = Path('.')
+          def replace(path, old, new, count=1):
+              p = root / path
+              text = p.read_text()
+              if text.count(old) < count:
+                  raise SystemExit(f'pattern not found in {path}: {old[:100]!r}')
+              p.write_text(text.replace(old, new, count))
+
+          # package.json
+          p = root / 'package.json'
+          pkg = json.loads(p.read_text())
+          pkg['scripts']['test'] = 'node --test'
+          p.write_text(json.dumps(pkg, ensure_ascii=False, indent=2) + '\\n')
+
+          # server.js: fail-fast production config, persistent store, validation helpers.
+          replace('server.js',
+            "const rateLimit = require('express-rate-limit');",
+            "const rateLimit = require('express-rate-limit');\\nconst FileSessionStore = require('./src/session/FileSessionStore');\\nconst { ValidationError, runtimeConfig, month, year, number, string, email, date, pdfBase64 } = require('./src/services/validation');\\n\\nruntimeConfig();")
+          old_session = """app.use(session({
+  secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 1000 * 60 * 60 * 24 * 7
+  }
+}));"""
+          replace('server.js', old_session, "app.use(session({\\n  store: new FileSessionStore(),\\n  secret: process.env.SESSION_SECRET || (() => { throw new Error('SESSION_SECRET must be configured'); })(),\\n  resave: false,\\n  saveUninitialized: false,\\n  cookie: {\\n    httpOnly: true,\\n    sameSite: 'lax',\\n    secure: process.env.NODE_ENV === 'production',\\n    maxAge: 1000 * 60 * 60 * 24 * 7\\n  }\\n}));")
+
+          # Auth input validation.
+          replace('server.js',
+            "  const { email, password } = req.body || {};\n  if (!authService.isConfigured()) {",
+            "  const rawEmail = req.body?.email;\n  const password = req.body?.password;\n  email(rawEmail);\n  if (typeof password !== 'string' || password.length < 8 || password.length > 200) throw new ValidationError('password is invalid');\n  if (!authService.isConfigured()) {")
+
+          # Worklogs + protocol generation validation.
+          replace('server.js',
+            "    const month = parseInt(req.query.month, 10);\n    const year = parseInt(req.query.year, 10);\n    if (!month || !year) return res.status(400).json({ error: 'Please provide month and year' });\n    const worklogs = await tempoService.getWorklogsGrouped(month, year);",
+            "    const monthValue = month(req.query.month);\n    const yearValue = year(req.query.year);\n    const worklogs = await tempoService.getWorklogsGrouped(monthValue, yearValue);")
+          replace('server.js',
+            "    const { month, year, projects, totalHours, force } = req.body;\n    if (!month || !year || !projects || totalHours == null) {\n      return res.status(400).json({ error: 'Required: month, year, projects, totalHours' });\n    }\n\n    const existing = protocolsHistoryService.getById(protocolsHistoryService.periodId(month, year));",
+            "    const monthValue = month(req.body?.month);\n    const yearValue = year(req.body?.year);\n    const projects = req.body?.projects;\n    const totalHours = number(req.body?.totalHours, 'totalHours', { min: 0 });\n    const force = Boolean(req.body?.force);\n    if (!Array.isArray(projects)) throw new ValidationError('projects must be an array');\n\n    const existing = protocolsHistoryService.getById(protocolsHistoryService.periodId(monthValue, yearValue));")
+          replace('server.js',
+            "    const { data, files } = await pdfService.generateProtocols(month, year, { projects, totalHours });",
+            "    const { data, files } = await pdfService.generateProtocols(monthValue, yearValue, { projects, totalHours });")
+
+          # PDF upload: verify extension, actual PDF header and size.
+          old_upload = """    const { month, year, filename, base64 } = req.body;
+    if (!month || !year || !filename || !base64) {
+      return res.status(400).json({ error: 'Required: month, year, filename, base64' });
+    }
+    if (!/\\.pdf$/i.test(filename)) {
+      return res.status(400).json({ error: 'Only PDF files are supported' });
+    }
+    const entry = protocolsHistoryService.addManualFile(Number(month), Number(year), { filename, base64 });"""
+          new_upload = """    const monthValue = month(req.body?.month);
+    const yearValue = year(req.body?.year);
+    const filename = string(req.body?.filename, 'filename');
+    if (!/\\.pdf$/i.test(filename)) throw new ValidationError('filename must end with .pdf');
+    const base64 = pdfBase64(req.body?.base64);
+    const entry = protocolsHistoryService.addManualFile(monthValue, yearValue, { filename, base64 });"""
+          replace('server.js', old_upload, new_upload)
+
+          # Normalize validation errors to 400 in existing try/catch handlers.
+          text = (root / 'server.js').read_text().replace("res.status(500).json({ error: err.message });", "res.status(err.statusCode || 500).json({ error: err.message });")
+          (root / 'server.js').write_text(text)
+
+          # Input validation in services where Number(x) previously silently became 0.
+          replace('src/services/bonusesService.js', "const path = require('path');", "const path = require('path');\\nconst { string, number, date: dateValue } = require('./validation');")
+          replace('src/services/bonusesService.js', "  const entry = { id: newId(), name, date, amount: Number(amount) || 0 };", "  const entry = { id: newId(), name: string(name, 'name'), date: dateValue(date, 'date', { required: true }), amount: number(amount, 'amount', { min: 0 }) };")
+          replace('src/services/bonusesService.js', "  list[idx] = { ...list[idx], name, date, amount: Number(amount) || 0 };", "  list[idx] = { ...list[idx], name: string(name, 'name'), date: dateValue(date, 'date', { required: true }), amount: number(amount, 'amount', { min: 0 }) };")
+
+          replace('src/services/ratesService.js', "const path = require('path');", "const path = require('path');\\nconst { string, number } = require('./validation');")
+          replace('src/services/ratesService.js', "  const entry = { id: newId(), from, rate: Number(rate) || 0 };", "  const entry = { id: newId(), from: string(from, 'from'), rate: number(rate, 'rate', { min: 0 }) };")
+          replace('src/services/ratesService.js', "  list[idx] = { ...list[idx], from, rate: Number(rate) || 0 };", "  list[idx] = { ...list[idx], from: string(from, 'from'), rate: number(rate, 'rate', { min: 0 }) };")
+
+          replace('src/services/costsService.js', "const path = require('path');", "const path = require('path');\\nconst { number } = require('./validation');")
+          replace('src/services/costsService.js', "    zus: Number(zus) || 0,\n    tax: Number(tax) || 0,\n    accounting: Number(accounting) || 0",
+            "    zus: number(zus ?? 0, 'zus', { min: 0 }),\n    tax: number(tax ?? 0, 'tax', { min: 0 }),\n    accounting: number(accounting ?? 0, 'accounting', { min: 0 })")
+
+          # Vehicles: preserve explicit fixes with validated inputs and correct mileage after deletion.
+          p = root / 'src/services/vehiclesService.js'
+          text = p.read_text()
+          text = text.replace("const path = require('path');", "const path = require('path');\\nconst { string, number, date: dateValue } = require('./validation');", 1)
+          text = text.replace("  const entry = {\n    id: newId(), name, plate, vin, mileage: Number(mileage) || 0,\n    nextServiceDate: nextServiceDate || null, insuranceExpiryDate: insuranceExpiryDate || null,", "  const entry = {\n    id: newId(), name: string(name, 'name'), plate: string(plate, 'plate', { required: false, max: 32 }), vin: string(vin, 'vin', { required: false, max: 32 }), mileage: number(mileage ?? 0, 'mileage', { min: 0 }),\n    nextServiceDate: dateValue(nextServiceDate, 'nextServiceDate'), insuranceExpiryDate: dateValue(insuranceExpiryDate, 'insuranceExpiryDate'),", 1)
+          text = text.replace("  const newMileage = Number(mileage) || 0;", "  const newMileage = number(mileage ?? 0, 'mileage', { min: 0 });", 1)
+          text = text.replace("  list[idx].mileage = Number(mileage) || 0;", "  list[idx].mileage = number(mileage, 'mileage', { min: 0 });", 1)
+          text = text.replace("  const entry = {\n    id: newId(), vehicleId, date, type, description: description || '', cost: Number(cost) || 0,\n    mileage: mileage != null && mileage !== '' ? Number(mileage) : null\n  };", "  const entry = {\n    id: newId(), vehicleId: string(vehicleId, 'vehicleId'), date: dateValue(date, 'date', { required: true }), type: string(type, 'type'), description: string(description, 'description', { required: false, max: 2000 }) || '', cost: number(cost ?? 0, 'cost', { min: 0 }),\n    mileage: mileage != null && mileage !== '' ? number(mileage, 'mileage', { min: 0 }) : null\n  };", 1)
+          old = "  const list = readAll(SERVICE_LOG_FILE, SEED_SERVICE_LOG);\n  const next = list.filter(s => s.id !== id);\n  if (next.length === list.length) throw new Error(`Service entry not found: ${id}`);\n  writeAll(SERVICE_LOG_FILE, next);"
+          new = "  const list = readAll(SERVICE_LOG_FILE, SEED_SERVICE_LOG);\n  const deleted = list.find(s => s.id === id);\n  if (!deleted) throw new Error(`Service entry not found: ${id}`);\n  const next = list.filter(s => s.id !== id);\n  writeAll(SERVICE_LOG_FILE, next);\n  if (deleted.mileage != null) {\n    const vehicles = readAll(VEHICLES_FILE, SEED_VEHICLES);\n    const vIdx = vehicles.findIndex(v => v.id === deleted.vehicleId);\n    if (vIdx !== -1 && vehicles[vIdx].mileage === deleted.mileage) {\n      const maxRemaining = next.filter(s => s.vehicleId === deleted.vehicleId && s.mileage != null).reduce((max, s) => Math.max(max, s.mileage), 0);\n      vehicles[vIdx].mileage = maxRemaining;\n      vehicles[vIdx].mileageUpdatedAt = new Date().toISOString();\n      writeAll(VEHICLES_FILE, vehicles);\n    }\n  }"
+          replace('src/services/vehiclesService.js', old, new)
+          p.write_text(text)
+
+          # Tests
+          testdir = root / 'test'; testdir.mkdir(exist_ok=True)
+          (testdir / 'validation.test.js').write_text('''const test = require('node:test');\nconst assert = require('node:assert/strict');\nconst { ValidationError, number, date, pdfBase64, runtimeConfig } = require('../src/services/validation');\n\ntest('invalid numbers are rejected', () => {\n  assert.throws(() => number('abc', 'cost', { min: 0 }), ValidationError);\n  assert.equal(number('42', 'cost', { min: 0 }), 42);\n});\n\ntest('dates are validated', () => {\n  assert.equal(date('2026-08-19', 'date', { required: true }), '2026-08-19');\n  assert.throws(() => date('2026-02-31', 'date', { required: true }), ValidationError);\n});\n\ntest('PDF validation checks the file header', () => {\n  const valid = Buffer.from('%PDF-1.7\\n').toString('base64');\n  assert.equal(pdfBase64(valid), valid);\n  assert.throws(() => pdfBase64(Buffer.from('not a pdf').toString('base64')), ValidationError);\n});\n\ntest('production requires a strong session secret', () => {\n  assert.throws(() => runtimeConfig({ NODE_ENV: 'production', SESSION_SECRET: 'short' }));\n  assert.doesNotThrow(() => runtimeConfig({ NODE_ENV: 'production', SESSION_SECRET: '12345678901234567890123456789012' }));\n});\n''')
+          (testdir / 'vehiclesService.test.js').write_text('''const test = require('node:test');\nconst assert = require('node:assert/strict');\nconst fs = require('fs');\nconst os = require('os');\nconst path = require('path');\n\ntest('service deletion recalculates vehicle mileage', () => {\n  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'easylife-'));\n  fs.mkdirSync(path.join(dir, 'data'), { recursive: true });\n  const original = process.cwd();\n  process.chdir(dir);\n  try {\n    delete require.cache[require.resolve('../src/services/vehiclesService')];\n    const service = require('../src/services/vehiclesService');\n    const vehicle = service.addVehicle({ name: 'Test car', mileage: 100000 });\n    service.addServiceEntry({ vehicleId: vehicle.id, date: '2026-08-01', type: 'Service', mileage: 101000 });\n    const latest = service.addServiceEntry({ vehicleId: vehicle.id, date: '2026-08-10', type: 'Service', mileage: 102000 });\n    assert.equal(service.getVehicles().find(v => v.id === vehicle.id).mileage, 102000);\n    service.removeServiceEntry(latest.id);\n    assert.equal(service.getVehicles().find(v => v.id === vehicle.id).mileage, 101000);\n  } finally {\n    process.chdir(original);\n    fs.rmSync(dir, { recursive: true, force: true });\n  }\n});\n''')
+
+          subprocess.run(['npm', 'install', '--package-lock-only'], check=True)
+          subprocess.run(['npm', 'test'], check=True)
+          subprocess.run(['git', 'rm', '.github/workflows/finish-hardening.yml'], check=True)
+          subprocess.run(['git', 'config', 'user.name', 'github-actions[bot]'], check=True)
+          subprocess.run(['git', 'config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'], check=True)
+          subprocess.run(['git', 'add', 'package.json', 'package-lock.json', 'server.js', 'src/services', 'src/session/FileSessionStore.js', 'test'], check=True)
+          subprocess.run(['git', 'commit', '-m', 'Harden sessions, validation and mileage'], check=True)
+          subprocess.run(['git', 'push'], check=True)
+      - name: Final test run
+        run: npm test
