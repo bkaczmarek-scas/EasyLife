@@ -1,28 +1,37 @@
 ---
 name: ifirma-integration
-description: Reference context for integrating this app with iFirma.pl's accounting API (invoices, expenses, contractors) - a future roadmap item that extends or replaces the "Taxxxo export" item in CLAUDE.md. Use this skill whenever the user asks about iFirma, about integrating with an accounting/bookkeeping API, about implementing the "Eksport CSV/XLSX do Taxxxo" roadmap item, or about building /api/export endpoints for this app.
+description: Reference context for building the real iFirma.pl accounting API integration (invoices, expenses, contractors) - the confirmed replacement for the dropped Taxxxo export idea (Taxxxo was too expensive to integrate with, so its API/UI code was removed entirely). Use this skill whenever the user asks about iFirma, about finishing the accounting/invoice export feature, about src/services/ifirmaService.js, or about the POST /api/export/ifirma endpoint.
 ---
 
 # Integracja z iFirma.pl — punkt startowy
 
-To jest notatka referencyjna, nie gotowa integracja. Prawdziwa praca (flow autoryzacji, mapowanie
-endpointów, testy) jeszcze się nie odbyła — ten plik ma oszczędzić czas na research przy starcie,
-nie zastąpić go.
+To jest notatka referencyjna i punkt startowy dla szkieletu, który już istnieje w kodzie — nie
+gotowa integracja. Prawdziwa praca (flow autoryzacji, mapowanie endpointów, testy) jeszcze się nie
+odbyła.
+
+## Decyzja i stan obecny
+
+Taxxxo zostało **porzucone** — zbyt kosztowna integracja API. Cała logika/UI Taxxxo (link,
+przycisk "Open Taxxxo", `TAXXXO_URL`) zostały usunięte z kodu. iFirma to **potwierdzony**, jedyny
+cel eksportu faktur — nie trzeba już pytać użytkownika "czy zamiast, czy obok".
+
+Co już istnieje jako szkielet:
+- `src/services/ifirmaService.js` — `isConfigured()` (sprawdza `IFIRMA_API_KEY`), `createInvoice()`
+  na razie rzuca `Error('not implemented yet')`.
+- `POST /api/export/ifirma` w `server.js` — zwraca `501` dopóki `IFIRMA_API_KEY` nie jest
+  ustawiony; docelowo ma wołać `ifirmaService.createInvoice(periodData)`.
+- `/api/status` zwraca `ifirmaConfigured` (analogicznie do `jiraConfigured`/`tempoConfigured`).
+- `.env.example` ma placeholder `IFIRMA_API_KEY=` z komentarzem.
 
 ## Kontekst w projekcie
 
-Apka ma już koncepcję eksportu do księgowości ("Taxxxo") — patrz `CLAUDE.md`, sekcja "Priorytety
-dalszego rozwoju", punkt 1: `Eksport CSV/XLSX do Taxxxo — nowy endpoint /api/export/taxxxo`.
-Obecnie to tylko link (`TAXXXO_URL` w `.env`), sam eksport CSV/XLSX nie jest zaimplementowany.
-iFirma może być alternatywnym albo dodatkowym celem eksportu obok/zamiast Taxxxo — do ustalenia
-z użytkownikiem, zanim zacznie się kodować.
-
 Powiązane pliki:
 - `src/services/protocolsHistoryService.js` — historia wygenerowanych protokołów (dane wejściowe
-  do ewentualnej faktury)
+  do faktury)
 - `src/services/ratesService.js` — stawki godzinowe (kwota faktury = godziny × stawka)
 - `src/services/pdfService.js` — `buildPeriodData` zwraca gotowy zestaw danych okresu (kwota,
-  kontrahent, projekty, daty) — najbliższy kandydat do zmapowania na strukturę faktury iFirma
+  kontrahent, projekty, daty) — to jest dokładnie to, co trzeba zmapować na strukturę faktury
+  iFirma w `createInvoice()`
 
 ## Co oferuje API iFirma
 
@@ -42,17 +51,19 @@ czystego adresu bazowego powyżej, nie kopiuj tamtych parametrów.
 - Limit dzienny: 15 000 zapytań
 - Limit minutowy: 100 zapytań
 - Autoryzacja przez nagłówki HTTP — dokładny schemat (jaki nagłówek, jak wygenerować klucz) nie
-  jest jeszcze potwierdzony, trzeba sprawdzić w dokumentacji na starcie integracji. API wymaga
-  wcześniejszej aktywacji na koncie iFirma, zanim zacznie odpowiadać.
+  jest jeszcze potwierdzony, trzeba sprawdzić w dokumentacji na starcie prawdziwej implementacji.
+  API wymaga wcześniejszej aktywacji na koncie iFirma, zanim zacznie odpowiadać.
 
-## Zanim zaczniesz kodować integrację
+## Żeby dokończyć integrację
 
 1. Sprawdź dokładny mechanizm autoryzacji w dokumentacji — nie zakładaj z góry jakiego nagłówka
    wymaga.
-2. Ustal z użytkownikiem: iFirma **zamiast** Taxxxo, czy oba równolegle (może chcieć wybór albo
-   eksport do obu).
-3. Zmapuj `pdfService.buildPeriodData` (kwota, stawka, kontrahent, projekty, daty) na strukturę
-   faktury iFirma — prawdopodobnie endpoint faktur sprzedażowych krajowych.
-4. Nowe zmienne env (klucz API itd.) dopisz do `.env.example` jako placeholder — nigdy jako
-   prawdziwą wartość (patrz sekcja "Bezpieczeństwo / wdrożenie demo" w `CLAUDE.md` — te same zasady
-   dotyczą każdego nowego sekretu, nie tylko istniejących).
+2. Zaimplementuj `ifirmaService.createInvoice(periodData)`: zmapuj `buildPeriodData` (kwota,
+   stawka, kontrahent, projekty, daty) na strukturę faktury iFirma — prawdopodobnie endpoint
+   faktur sprzedażowych krajowych.
+3. Dodaj realną wartość `IFIRMA_API_KEY` tylko do `.env` (nigdy do `.env.example` ani do żadnego
+   pliku źródłowego — patrz sekcja "Bezpieczeństwo / wdrożenie demo" w `CLAUDE.md`, te same zasady
+   dotyczą każdego nowego sekretu).
+4. Podłącz frontend: po `exportBtn` (generowanie/pobranie PDF-ów) dodać wywołanie
+   `POST /api/export/ifirma`, analogicznie do istniejącego flow `mark-exported` w
+   `protocolsHistoryService`.

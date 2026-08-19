@@ -9,8 +9,11 @@ Trzy główne przepływy:
 2. **Dokumenty** — wygenerowanie dwóch dokumentów PDF na bazie prawdziwych wzorów Softcraft:
    protokół zamówienia i protokół zdawczo-odbiorczy, z automatyczną kalkulacją kwoty i zapisem
    słownym po polsku.
-3. **Taxxxo** — po zatwierdzeniu dokumentów, dane są gotowe do eksportu do zewnętrznego systemu
-   księgowego Taxxxo (na razie tylko link, eksport CSV/XLSX jeszcze nie zaimplementowany).
+3. **iFirma** — po zatwierdzeniu dokumentów, dane mają trafić do zewnętrznego systemu
+   księgowo-fakturowego iFirma (integracja jeszcze nie zaimplementowana, patrz
+   `src/services/ifirmaService.js` i `.claude/skills/ifirma-integration/SKILL.md`). Integracja
+   z Taxxxo została świadomie porzucona — zbyt kosztowna integracja API — cała logika/UI Taxxxo
+   usunięte.
 
 Rozmowy z właścicielem projektu (Bartek) prowadzone są po polsku — trzymaj się polskiego w UI,
 treściach dokumentów i commit messages jeśli o nie poprosi.
@@ -98,7 +101,11 @@ apka sama wchodzi w tryb demo worklogów (`tempoService.demoWorklogs`).
 
 ## Priorytety dalszego rozwoju (w kolejności)
 
-1. Eksport CSV/XLSX do Taxxxo — nowy endpoint `/api/export/taxxxo`.
+1. Integracja z iFirma (eksport faktur) — `src/services/ifirmaService.js` to na razie szkielet
+   (`createInvoice` rzuca "not implemented"), endpoint `POST /api/export/ifirma` zwraca 501 dopóki
+   `IFIRMA_API_KEY` nie jest ustawiony. Przed prawdziwą implementacją: potwierdzić dokładny
+   mechanizm autoryzacji w dokumentacji (https://api.ifirma.pl/) i zmapować
+   `pdfService.buildPeriodData` na strukturę faktury — patrz skill po pełny kontekst.
 2. Panel administracji (wielu zleceniobiorców, umowy, stawki) — obecnie dane kontrahenta na sztywno
    w `.env`.
 3. Asystent AI (zapytania NL o dane rozliczeniowe, wykrywanie anomalii) — wymaga `ANTHROPIC_API_KEY`.

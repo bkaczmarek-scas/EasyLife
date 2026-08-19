@@ -1,7 +1,8 @@
 # Softcraft — protokoły i rozliczenia
 
 Lokalna aplikacja webowa: pobiera worklogi z Jira/Tempo za wybrany miesiąc, generuje protokół zamówienia
-i protokół zdawczo-odbiorczy (PDF, wzory Softcraft), i przygotowuje dane do eksportu do Taxxxo.
+i protokół zdawczo-odbiorczy (PDF, wzory Softcraft), i przygotowuje dane do eksportu do iFirma
+(planowane, jeszcze nie zaimplementowane).
 
 To jest działający szkielet (MVP): backend w Node/Express, prosty frontend w `public/index.html`,
 generowanie PDF przez `pdf-lib`. Bez skonfigurowanych kluczy API aplikacja działa w **trybie demo**
@@ -41,7 +42,9 @@ public/index.html              Frontend (one-pager)
 
 ## Co dalej (kolejne kroki rozwoju)
 
-- Eksport CSV/XLSX do Taxxxo (obecnie tylko link do platformy — patrz `.env` `TAXXXO_URL`).
+- Integracja z iFirma (eksport faktur) — szkielet w `src/services/ifirmaService.js`, patrz
+  `.claude/skills/ifirma-integration/SKILL.md` po kontekst. Taxxxo porzucone (zbyt kosztowna
+  integracja API).
 - Asystent AI (zapytania naturalnym językiem o dane rozliczeniowe, wykrywanie anomalii) —
   podłączyć `ANTHROPIC_API_KEY` i dodać endpoint `/api/assistant`.
 - Administracja: więcej zleceniobiorców, umowy, stawki (obecnie jeden kontrahent z `.env`).

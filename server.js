@@ -31,6 +31,7 @@ const vehiclesService = require('./src/services/vehiclesService');
 const propertiesService = require('./src/services/propertiesService');
 const subscriptionsService = require('./src/services/subscriptionsService');
 const choresService = require('./src/services/choresService');
+const ifirmaService = require('./src/services/ifirmaService');
 
 const app = express();
 // Needed for secure cookies to work behind a TLS-terminating reverse proxy (Railway, Render,
@@ -115,7 +116,7 @@ app.get('/api/status', (req, res) => {
   res.json({
     jiraConfigured: jiraService.isConfigured(),
     tempoConfigured: Boolean(process.env.TEMPO_API_TOKEN),
-    taxxxoUrl: process.env.TAXXXO_URL || 'https://platforma2.taxxo.pl/',
+    ifirmaConfigured: ifirmaService.isConfigured(),
     email: req.session.email || ''
   });
 });
@@ -606,6 +607,19 @@ app.post('/api/chores/:id/toggle', (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(404).json({ error: err.message });
+  }
+});
+
+app.post('/api/export/ifirma', async (req, res) => {
+  try {
+    if (!ifirmaService.isConfigured()) {
+      return res.status(501).json({ error: 'iFirma integration not implemented yet - see .claude/skills/ifirma-integration/SKILL.md' });
+    }
+    const entry = await ifirmaService.createInvoice(req.body);
+    res.json({ entry });
+  } catch (err) {
+    console.error(err);
+    res.status(501).json({ error: err.message });
   }
 });
 
