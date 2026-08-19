@@ -9,7 +9,7 @@ const SERVICE_LOG_FILE = path.join(DATA_DIR, 'serviceLog.json');
 
 const SEED_VEHICLES = [
   { id: 'seed-v1', name: 'Škoda Octavia', plate: 'PO 12345', vin: 'TMBJJ7NE0N0123456', mileage: 68200, nextServiceDate: '2026-09-02', insuranceExpiryDate: '2027-01-10', mileageUpdatedAt: '2026-08-10T09:00:00.000Z' },
-  { id: 'seed-v2', name: 'VW Transporter', plate: 'PO 98765', vin: 'WV1ZZZ7HZKH123456', mileage: 142500, nextServiceDate: '2026-10-15', insuranceExpiryDate: '2026-09-03', mileageUpdatedAt: '2026-08-05T09:00:00.000Z' }
+  { id: 'seed-v2', name: 'VW Transporter', plate: 'PO 98765', vin: 'WV1ZZZ7HZKH123456', mileage: 142500, nextServiceDate: '2026-10-15', insuranceExpiryDate: '2026-08-05T09:00:00.000Z' }
 ];
 
 const SEED_SERVICE_LOG = [
@@ -42,8 +42,10 @@ function getVehicles() {
 
 function addVehicle({ name, plate, vin, mileage, nextServiceDate, insuranceExpiryDate }) {
   const list = readAll(VEHICLES_FILE, SEED_VEHICLES);
+  const numericMileage = mileage == null || mileage === '' ? 0 : Number(mileage);
+  if (!Number.isFinite(numericMileage) || numericMileage < 0) throw new Error('Mileage must be a non-negative number');
   const entry = {
-    id: newId(), name, plate, vin, mileage: Number(mileage) || 0,
+    id: newId(), name, plate, vin, mileage: numericMileage,
     nextServiceDate: nextServiceDate || null, insuranceExpiryDate: insuranceExpiryDate || null,
     mileageUpdatedAt: new Date().toISOString()
   };
@@ -68,8 +70,6 @@ function updateVehicle(id, { name, plate, vin, mileage, nextServiceDate, insuran
   return list[idx];
 }
 
-// Quick correction from the vehicle card - unlike the service-log-driven bump below, this always
-// takes the given value (even lower), since it's an explicit manual correction, not a derived one.
 function updateMileage(id, mileage) {
   const list = readAll(VEHICLES_FILE, SEED_VEHICLES);
   const idx = list.findIndex(v => v.id === id);
@@ -87,7 +87,6 @@ function removeVehicle(id) {
   const next = list.filter(v => v.id !== id);
   if (next.length === list.length) throw new Error(`Vehicle not found: ${id}`);
   writeAll(VEHICLES_FILE, next);
-  // Vehicle removed - its service log entries no longer point anywhere useful, drop them too.
   const logs = readAll(SERVICE_LOG_FILE, SEED_SERVICE_LOG).filter(s => s.vehicleId !== id);
   writeAll(SERVICE_LOG_FILE, logs);
 }
@@ -104,17 +103,12 @@ function addServiceEntry({ vehicleId, date, type, description, cost, mileage }) 
   if (entryMileage != null && (!Number.isFinite(entryMileage) || entryMileage < 0)) {
     throw new Error('Service mileage must be a non-negative number');
   }
-  const entry = {
-    id: newId(), vehicleId, date, type, description: description || '', cost: Number(cost) || 0,
-    mileage: entryMileage
-  };
+  const numericCost = cost == null || cost === '' ? 0 : Number(cost);
+  if (!Number.isFinite(numericCost) || numericCost < 0) throw new Error('Service cost must be a non-negative number');
+  const entry = { id: newId(), vehicleId, date, type, description: description || '', cost: numericCost, mileage: entryMileage };
   list.push(entry);
   writeAll(SERVICE_LOG_FILE, list);
 
-  // Keep the vehicle's headline mileage current. The number itself only ever moves forward, so
-  // logging an older/backdated service can't regress the odometer reading on the vehicle card -
-  // but the "last updated" timestamp always bumps, so logging a service is always visibly
-  // reflected even when the entered mileage happens to match what's already on file.
   if (entry.mileage != null) {
     const vehicles = readAll(VEHICLES_FILE, SEED_VEHICLES);
     const vIdx = vehicles.findIndex(v => v.id === vehicleId);
@@ -128,6 +122,17 @@ function addServiceEntry({ vehicleId, date, type, description, cost, mileage }) 
   return entry;
 }
 
+function recalculateMileage(currentMileage, deletedMileage, remainingLogs) {
+  const current = Number(currentMileage);
+  const deleted = Number(deletedMileage);
+  if (!Number.isFinite(current)) return currentMileage;
+  if (!Number.isFinite(deleted) || current !== deleted) return currentMileage;
+  const remainingMileages = remainingLogs
+    .filter(s => s.mileage != null && Number.isFinite(Number(s.mileage)))
+    .map(s => Number(s.mileage));
+  return remainingMileages.length ? Math.max(...remainingMileages) : 0;
+}
+
 function removeServiceEntry(id) {
   const list = readAll(SERVICE_LOG_FILE, SEED_SERVICE_LOG);
   const entry = list.find(s => s.id === id);
@@ -135,30 +140,20 @@ function removeServiceEntry(id) {
   const next = list.filter(s => s.id !== id);
   writeAll(SERVICE_LOG_FILE, next);
 
-  // The vehicle mileage is derived from the vehicle's manual value and service history. Removing
-  // the service entry must therefore recalculate the highest mileage still present in the log.
-  // We intentionally do not lower a manually corrected mileage when it is higher than the log.
   const vehicles = readAll(VEHICLES_FILE, SEED_VEHICLES);
   const vIdx = vehicles.findIndex(v => v.id === entry.vehicleId);
   if (vIdx !== -1) {
-    const remainingMileages = next
-      .filter(s => s.vehicleId === entry.vehicleId && s.mileage != null && Number.isFinite(Number(s.mileage)))
-      .map(s => Number(s.mileage));
-    const highestLoggedMileage = remainingMileages.length ? Math.max(...remainingMileages) : 0;
-    if (vehicles[vIdx].mileage > highestLoggedMileage) {
-      // Preserve a higher manually entered mileage; only roll back a value that was derived from
-      // the deleted service entry.
-      const wasDeletedMileage = Number(entry.mileage);
-      if (Number.isFinite(wasDeletedMileage) && vehicles[vIdx].mileage === wasDeletedMileage) {
-        vehicles[vIdx].mileage = highestLoggedMileage;
-        vehicles[vIdx].mileageUpdatedAt = new Date().toISOString();
-        writeAll(VEHICLES_FILE, vehicles);
-      }
+    const remainingLogs = next.filter(s => s.vehicleId === entry.vehicleId);
+    const recalculated = recalculateMileage(vehicles[vIdx].mileage, entry.mileage, remainingLogs);
+    if (recalculated !== vehicles[vIdx].mileage) {
+      vehicles[vIdx].mileage = recalculated;
+      vehicles[vIdx].mileageUpdatedAt = new Date().toISOString();
+      writeAll(VEHICLES_FILE, vehicles);
     }
   }
 }
 
 module.exports = {
   getVehicles, addVehicle, updateVehicle, updateMileage, removeVehicle,
-  getServiceLog, addServiceEntry, removeServiceEntry
+  getServiceLog, addServiceEntry, removeServiceEntry, recalculateMileage
 };
