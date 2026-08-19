@@ -27,6 +27,8 @@ const costsService = require('./src/services/costsService');
 const protocolsHistoryService = require('./src/services/protocolsHistoryService');
 const vehiclesService = require('./src/services/vehiclesService');
 const propertiesService = require('./src/services/propertiesService');
+const subscriptionsService = require('./src/services/subscriptionsService');
+const choresService = require('./src/services/choresService');
 
 const app = express();
 // Needed for secure cookies to work behind a TLS-terminating reverse proxy (Railway, Render,
@@ -488,6 +490,102 @@ app.delete('/api/properties/:id/comments/:commentId', (req, res) => {
   try {
     const property = propertiesService.removeComment(req.params.id, req.params.commentId);
     res.json({ property });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.get('/api/subscriptions', (req, res) => {
+  try {
+    res.json({ subscriptions: subscriptionsService.getAll() });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/subscriptions', (req, res) => {
+  try {
+    const { name, category, cost, billingCycle, nextRenewalDate, autoRenew } = req.body;
+    if (!name) return res.status(400).json({ error: 'Required: name' });
+    const entry = subscriptionsService.add({ name, category, cost, billingCycle, nextRenewalDate, autoRenew });
+    res.json({ subscription: entry });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/subscriptions/:id', (req, res) => {
+  try {
+    const { name, category, cost, billingCycle, nextRenewalDate, autoRenew } = req.body;
+    if (!name) return res.status(400).json({ error: 'Required: name' });
+    const entry = subscriptionsService.update(req.params.id, { name, category, cost, billingCycle, nextRenewalDate, autoRenew });
+    res.json({ subscription: entry });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.delete('/api/subscriptions/:id', (req, res) => {
+  try {
+    subscriptionsService.remove(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.get('/api/chores', (req, res) => {
+  try {
+    res.json({ chores: choresService.getAll() });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/chores', (req, res) => {
+  try {
+    const { name, frequency, notes } = req.body;
+    if (!name) return res.status(400).json({ error: 'Required: name' });
+    const entry = choresService.add({ name, frequency, notes });
+    res.json({ chore: entry });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/chores/:id', (req, res) => {
+  try {
+    const { name, frequency, notes } = req.body;
+    if (!name) return res.status(400).json({ error: 'Required: name' });
+    const entry = choresService.update(req.params.id, { name, frequency, notes });
+    res.json({ chore: entry });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.delete('/api/chores/:id', (req, res) => {
+  try {
+    choresService.remove(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.post('/api/chores/:id/toggle', (req, res) => {
+  try {
+    const entry = choresService.toggleComplete(req.params.id);
+    res.json({ chore: entry });
   } catch (err) {
     console.error(err);
     res.status(404).json({ error: err.message });

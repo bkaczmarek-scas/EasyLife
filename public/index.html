@@ -223,6 +223,26 @@
   .stats-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;}
   .action-item{cursor:pointer;}
 
+  .view-toggle{display:inline-flex; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;}
+  .view-toggle-btn{border:none; border-radius:0; padding:6px 9px; background:var(--surface-2); color:var(--text-secondary); display:flex; align-items:center; cursor:pointer;}
+  .view-toggle-btn + .view-toggle-btn{border-left:1px solid var(--border);}
+  .view-toggle-btn.active{background:var(--accent-tint); color:var(--accent);}
+  .view-toggle-btn:hover:not(.active){background:var(--surface-1);}
+
+  .chores-list{display:flex; flex-direction:column; gap:10px;}
+  .chore-row{display:flex; align-items:flex-start; gap:12px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface-2); padding:14px;}
+  .chore-checkbox{width:26px; height:26px; flex-shrink:0; margin-top:2px; border:2px solid var(--border); border-radius:50%;
+    background:transparent; color:var(--accent-contrast); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; font-size:14px;}
+  .chore-checkbox:hover{border-color:var(--accent);}
+  .chore-checkbox.checked{background:var(--accent); border-color:var(--accent);}
+  .chore-checkbox.checked:hover{background:var(--accent-ring); border-color:var(--accent-ring);}
+  .chore-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:4px;}
+  .chore-row-header{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .chore-name{font-size:14px; font-weight:700; margin:0;}
+  .chore-notes{font-size:12px; color:var(--text-secondary); margin:0;}
+  .chore-history{font-size:11px; color:var(--text-muted); margin:0;}
+  .chore-actions{display:flex; gap:4px; flex-shrink:0;}
+
   .drawer-overlay{display:none; position:fixed; inset:0; background:rgba(10,10,18,0.45); z-index:10;}
   .drawer-overlay.open{display:block;}
   .drawer{position:fixed; top:0; right:0; bottom:0; width:360px; max-width:100%; background:var(--surface-2);
@@ -279,6 +299,8 @@
         <p class="nav-group-title">Home</p>
         <button class="navItem" data-section="garage"><i class="ti ti-car"></i> Garage</button>
         <button class="navItem" data-section="properties"><i class="ti ti-building-estate"></i> Properties</button>
+        <button class="navItem" data-section="subscriptions"><i class="ti ti-credit-card"></i> Subscriptions</button>
+        <button class="navItem" data-section="chores"><i class="ti ti-list-check"></i> Chores</button>
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -677,6 +699,97 @@
 
       </section>
 
+      <section id="section-subscriptions" class="section" style="display:none; max-width:960px;">
+
+        <div class="block">
+          <p class="block-title">Monthly cost</p>
+          <div class="stat-tile">
+            <div class="stat-label">Estimated monthly spend</div>
+            <div class="stat-value" id="subscriptionsMonthlyTotal">–</div>
+            <span class="badge neutral" id="subscriptionsCountBadge" style="margin-top:8px;"></span>
+          </div>
+        </div>
+
+        <div class="block">
+          <div class="panel-header">
+            <p class="block-title">Subscriptions</p>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <div class="view-toggle">
+                <button type="button" class="view-toggle-btn active" id="subscriptionsGridViewBtn" aria-label="Grid view"><i class="ti ti-layout-grid"></i></button>
+                <button type="button" class="view-toggle-btn" id="subscriptionsListViewBtn" aria-label="List view"><i class="ti ti-list"></i></button>
+              </div>
+              <button type="button" id="addSubscriptionBtn" class="btn-light"><i class="ti ti-plus"></i> Add subscription</button>
+            </div>
+          </div>
+
+          <form id="subscriptionForm" class="panel" style="display:none; grid-template-columns:1fr 1fr; gap:10px;" novalidate>
+            <input type="hidden" id="subscriptionEditId" value="">
+            <p id="subscriptionFormError" class="form-error"></p>
+            <div class="field"><label for="subscriptionName">Name</label><input type="text" id="subscriptionName" placeholder="e.g. Netflix"></div>
+            <div class="field"><label for="subscriptionCategory">Category</label><input type="text" id="subscriptionCategory" placeholder="e.g. Streaming"></div>
+            <div class="field"><label for="subscriptionCost">Cost (zł)</label><input type="number" id="subscriptionCost" min="0" step="0.01"></div>
+            <div class="field">
+              <label for="subscriptionBillingCycle">Billing cycle</label>
+              <select id="subscriptionBillingCycle"><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select>
+            </div>
+            <div class="field"><label for="subscriptionNextRenewal">Next renewal date</label><input type="date" id="subscriptionNextRenewal"></div>
+            <div class="field">
+              <label for="subscriptionAutoRenew">Auto-renews</label>
+              <select id="subscriptionAutoRenew"><option value="true">Yes</option><option value="false">No</option></select>
+            </div>
+            <div style="display:flex; gap:6px; align-items:end; grid-column:1 / -1;">
+              <button type="submit" id="saveSubscriptionBtn" class="btn-light"><i class="ti ti-check"></i> Save</button>
+              <button type="button" id="cancelSubscriptionBtn">Cancel</button>
+            </div>
+          </form>
+
+          <div id="subscriptionsEmpty" class="empty-state" style="display:none;">
+            <i class="ti ti-credit-card"></i>
+            <p>No subscriptions yet. Add one to start tracking recurring costs.</p>
+          </div>
+          <div class="property-grid" id="subscriptionsGrid"></div>
+          <div class="panel" id="subscriptionsListPanel" style="display:none;">
+            <table>
+              <tr><th style="padding-right:16px;">Name</th><th style="padding-right:16px;">Category</th><th style="text-align:right; padding-right:16px;">Cost</th><th style="padding-right:16px;">Renewal</th><th></th></tr>
+              <tbody id="subscriptionsListBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <section id="section-chores" class="section" style="display:none; max-width:960px;">
+
+        <div class="block">
+          <div class="panel-header">
+            <p class="block-title">Chores</p>
+            <button type="button" id="addChoreBtn" class="btn-light"><i class="ti ti-plus"></i> Add chore</button>
+          </div>
+
+          <form id="choreForm" class="panel" style="display:none; grid-template-columns:1fr 1fr; gap:10px;" novalidate>
+            <input type="hidden" id="choreEditId" value="">
+            <p id="choreFormError" class="form-error"></p>
+            <div class="field" style="grid-column:1 / -1;"><label for="choreName">Name</label><input type="text" id="choreName" placeholder="e.g. Replace HVAC filter"></div>
+            <div class="field">
+              <label for="choreFrequency">Frequency</label>
+              <select id="choreFrequency"><option value="daily">Daily</option><option value="weekly" selected>Weekly</option><option value="monthly">Monthly</option></select>
+            </div>
+            <div class="field"><label for="choreNotes">Notes (optional)</label><input type="text" id="choreNotes" placeholder="e.g. Filter size 16x20"></div>
+            <div style="display:flex; gap:6px; align-items:end; grid-column:1 / -1;">
+              <button type="submit" id="saveChoreBtn" class="btn-light"><i class="ti ti-check"></i> Save</button>
+              <button type="button" id="cancelChoreBtn">Cancel</button>
+            </div>
+          </form>
+
+          <div id="choresEmpty" class="empty-state" style="display:none;">
+            <i class="ti ti-list-check"></i>
+            <p>No chores yet. Add one to start tracking recurring home maintenance.</p>
+          </div>
+          <div class="chores-list" id="choresList"></div>
+        </div>
+
+      </section>
+
       <section id="section-history" class="section" style="display:none; max-width:960px;">
 
         <div class="block">
@@ -920,6 +1033,12 @@ function switchSection(section) {
   }
   if (section === 'overview') {
     loadOverviewDashboard();
+  }
+  if (section === 'subscriptions') {
+    loadSubscriptions();
+  }
+  if (section === 'chores') {
+    loadChores();
   }
 }
 
@@ -2825,6 +2944,329 @@ async function loadOverviewDashboard() {
   renderActionRequired();
   renderQuickGlance();
 }
+
+// --- Subscriptions ---
+let SUBSCRIPTIONS = [];
+let SUBSCRIPTIONS_VIEW = 'grid';
+
+function subscriptionCardHtml(s) {
+  const cycleLabel = s.billingCycle === 'yearly' ? '/yr' : '/mo';
+  const renewalBadge = s.autoRenew ? nextServiceBadge(s.nextRenewalDate) : '<span class="badge neutral">Manual renewal</span>';
+  return `
+    <div class="vehicle-card" data-id="${s.id}">
+      <div class="vehicle-card-icon"><i class="ti ti-credit-card"></i></div>
+      <p class="vehicle-card-name">${escapeHtml(s.name)}</p>
+      <div class="vehicle-card-meta">
+        <span>${escapeHtml(s.category || 'Other')}</span>
+        <span>${formatZl2(s.cost)}${cycleLabel}</span>
+      </div>
+      ${renewalBadge}
+      <div class="vehicle-card-actions">
+        <button type="button" class="icon-btn subscription-edit" data-id="${s.id}" aria-label="Edit"><i class="ti ti-pencil"></i></button>
+        <button type="button" class="icon-btn danger subscription-delete" data-id="${s.id}" aria-label="Delete"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`;
+}
+
+function subscriptionRowHtml(s) {
+  const cycleLabel = s.billingCycle === 'yearly' ? '/yr' : '/mo';
+  const renewalBadge = s.autoRenew ? nextServiceBadge(s.nextRenewalDate) : '<span class="badge neutral">Manual renewal</span>';
+  return `
+    <tr data-id="${s.id}">
+      <td style="padding-right:16px;">${escapeHtml(s.name)}</td>
+      <td style="padding-right:16px;">${escapeHtml(s.category || '–')}</td>
+      <td style="text-align:right; white-space:nowrap; padding-right:16px;">${formatZl2(s.cost)}${cycleLabel}</td>
+      <td style="padding-right:16px;">${renewalBadge}</td>
+      <td style="text-align:right; white-space:nowrap;">
+        <button type="button" class="icon-btn subscription-edit" data-id="${s.id}" aria-label="Edit"><i class="ti ti-pencil"></i></button>
+        <button type="button" class="icon-btn danger subscription-delete" data-id="${s.id}" aria-label="Delete"><i class="ti ti-trash"></i></button>
+      </td>
+    </tr>`;
+}
+
+function renderSubscriptions() {
+  document.getElementById('subscriptionsEmpty').style.display = SUBSCRIPTIONS.length ? 'none' : 'flex';
+  document.getElementById('subscriptionsGrid').style.display = SUBSCRIPTIONS.length && SUBSCRIPTIONS_VIEW === 'grid' ? 'grid' : 'none';
+  document.getElementById('subscriptionsListPanel').style.display = SUBSCRIPTIONS.length && SUBSCRIPTIONS_VIEW === 'list' ? 'flex' : 'none';
+  document.getElementById('subscriptionsGrid').innerHTML = SUBSCRIPTIONS.map(subscriptionCardHtml).join('');
+  document.getElementById('subscriptionsListBody').innerHTML = SUBSCRIPTIONS.map(subscriptionRowHtml).join('');
+
+  const totalMonthly = SUBSCRIPTIONS.reduce((sum, s) => sum + (s.billingCycle === 'yearly' ? s.cost / 12 : s.cost), 0);
+  document.getElementById('subscriptionsMonthlyTotal').textContent = formatZl2(totalMonthly);
+  document.getElementById('subscriptionsCountBadge').textContent = `${SUBSCRIPTIONS.length} active subscription${SUBSCRIPTIONS.length === 1 ? '' : 's'}`;
+}
+
+async function loadSubscriptions() {
+  try {
+    const res = await fetch('/api/subscriptions');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error fetching subscriptions');
+    SUBSCRIPTIONS = data.subscriptions;
+  } catch (err) {
+    console.warn('Failed to load subscriptions', err);
+    SUBSCRIPTIONS = [];
+  }
+  renderSubscriptions();
+}
+
+function setSubscriptionsView(view) {
+  SUBSCRIPTIONS_VIEW = view;
+  document.getElementById('subscriptionsGridViewBtn').classList.toggle('active', view === 'grid');
+  document.getElementById('subscriptionsListViewBtn').classList.toggle('active', view === 'list');
+  renderSubscriptions();
+}
+document.getElementById('subscriptionsGridViewBtn').addEventListener('click', () => setSubscriptionsView('grid'));
+document.getElementById('subscriptionsListViewBtn').addEventListener('click', () => setSubscriptionsView('list'));
+
+function showSubscriptionFormError(msg) {
+  const el = document.getElementById('subscriptionFormError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function resetSubscriptionForm() {
+  document.getElementById('subscriptionForm').reset();
+  document.getElementById('subscriptionEditId').value = '';
+  document.getElementById('subscriptionFormError').style.display = 'none';
+}
+
+document.getElementById('addSubscriptionBtn').addEventListener('click', () => {
+  resetSubscriptionForm();
+  document.getElementById('subscriptionForm').style.display = 'grid';
+  document.getElementById('subscriptionName').focus();
+});
+
+document.getElementById('cancelSubscriptionBtn').addEventListener('click', () => {
+  document.getElementById('subscriptionForm').style.display = 'none';
+  resetSubscriptionForm();
+});
+
+function enterSubscriptionEditMode(s) {
+  document.getElementById('subscriptionFormError').style.display = 'none';
+  document.getElementById('subscriptionEditId').value = s.id;
+  document.getElementById('subscriptionName').value = s.name;
+  document.getElementById('subscriptionCategory').value = s.category || '';
+  document.getElementById('subscriptionCost').value = s.cost || '';
+  document.getElementById('subscriptionBillingCycle').value = s.billingCycle;
+  document.getElementById('subscriptionNextRenewal').value = s.nextRenewalDate || '';
+  document.getElementById('subscriptionAutoRenew').value = String(Boolean(s.autoRenew));
+  document.getElementById('subscriptionForm').style.display = 'grid';
+  document.getElementById('subscriptionName').focus();
+}
+
+document.getElementById('subscriptionForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  document.getElementById('subscriptionFormError').style.display = 'none';
+  const id = document.getElementById('subscriptionEditId').value;
+  const name = document.getElementById('subscriptionName').value.trim();
+  if (!name) return showSubscriptionFormError('Please enter a subscription name.');
+  const body = {
+    name,
+    category: document.getElementById('subscriptionCategory').value.trim(),
+    cost: parseFloat(document.getElementById('subscriptionCost').value) || 0,
+    billingCycle: document.getElementById('subscriptionBillingCycle').value,
+    nextRenewalDate: document.getElementById('subscriptionNextRenewal').value || null,
+    autoRenew: document.getElementById('subscriptionAutoRenew').value === 'true'
+  };
+  const btn = document.getElementById('saveSubscriptionBtn');
+  btn.disabled = true;
+  try {
+    const res = await fetch(id ? `/api/subscriptions/${id}` : '/api/subscriptions', {
+      method: id ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error saving subscription');
+    document.getElementById('subscriptionForm').style.display = 'none';
+    resetSubscriptionForm();
+    loadSubscriptions();
+  } catch (err) {
+    showSubscriptionFormError(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+function onSubscriptionsListClick(e) {
+  const editBtn = e.target.closest('.subscription-edit');
+  const deleteBtn = e.target.closest('.subscription-delete');
+  if (editBtn) {
+    const s = SUBSCRIPTIONS.find(x => x.id === editBtn.dataset.id);
+    if (s) enterSubscriptionEditMode(s);
+    return;
+  }
+  if (deleteBtn) {
+    const s = SUBSCRIPTIONS.find(x => x.id === deleteBtn.dataset.id);
+    if (!s) return;
+    confirmDialog(`Delete "${s.name}"? This can't be undone.`, { title: 'Delete subscription?' })
+      .then(confirmed => {
+        if (!confirmed) return;
+        return fetch(`/api/subscriptions/${s.id}`, { method: 'DELETE' })
+          .then(res => res.json().then(data => ({ ok: res.ok, data })))
+          .then(({ ok, data }) => {
+            if (!ok) throw new Error(data.error || 'Error deleting subscription');
+            loadSubscriptions();
+          });
+      })
+      .catch(err => alert(err.message));
+  }
+}
+document.getElementById('subscriptionsGrid').addEventListener('click', onSubscriptionsListClick);
+document.getElementById('subscriptionsListBody').addEventListener('click', onSubscriptionsListClick);
+
+// --- Chores ---
+let CHORES = [];
+const FREQUENCY_LABELS = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' };
+
+function formatShortDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return `${MONTH_NAMES[m - 1].slice(0, 3)} ${d}`;
+}
+
+function choreItemHtml(c) {
+  const recent = (c.completions || []).slice().sort((a, b) => b.localeCompare(a)).slice(0, 5);
+  return `
+    <div class="chore-row" data-id="${c.id}">
+      <button type="button" class="chore-checkbox ${c.doneThisPeriod ? 'checked' : ''}" data-id="${c.id}" aria-label="Toggle complete">
+        ${c.doneThisPeriod ? '<i class="ti ti-check"></i>' : ''}
+      </button>
+      <div class="chore-body">
+        <div class="chore-row-header">
+          <p class="chore-name">${escapeHtml(c.name)}</p>
+          <span class="badge neutral">${FREQUENCY_LABELS[c.frequency] || c.frequency}</span>
+          ${c.streak > 0 ? `<span class="badge warning"><i class="ti ti-flame"></i> ${c.streak}</span>` : ''}
+        </div>
+        ${c.notes ? `<p class="chore-notes">${escapeHtml(c.notes)}</p>` : ''}
+        ${recent.length ? `<p class="chore-history">Recently: ${recent.map(formatShortDate).join(', ')}</p>` : ''}
+      </div>
+      <div class="chore-actions">
+        <button type="button" class="icon-btn chore-edit" data-id="${c.id}" aria-label="Edit"><i class="ti ti-pencil"></i></button>
+        <button type="button" class="icon-btn danger chore-delete" data-id="${c.id}" aria-label="Delete"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`;
+}
+
+function renderChores() {
+  document.getElementById('choresEmpty').style.display = CHORES.length ? 'none' : 'flex';
+  document.getElementById('choresList').innerHTML = CHORES.map(choreItemHtml).join('');
+}
+
+async function loadChores() {
+  try {
+    const res = await fetch('/api/chores');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error fetching chores');
+    CHORES = data.chores;
+  } catch (err) {
+    console.warn('Failed to load chores', err);
+    CHORES = [];
+  }
+  renderChores();
+}
+
+function showChoreFormError(msg) {
+  const el = document.getElementById('choreFormError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function resetChoreForm() {
+  document.getElementById('choreForm').reset();
+  document.getElementById('choreEditId').value = '';
+  document.getElementById('choreFormError').style.display = 'none';
+}
+
+document.getElementById('addChoreBtn').addEventListener('click', () => {
+  resetChoreForm();
+  document.getElementById('choreForm').style.display = 'grid';
+  document.getElementById('choreName').focus();
+});
+
+document.getElementById('cancelChoreBtn').addEventListener('click', () => {
+  document.getElementById('choreForm').style.display = 'none';
+  resetChoreForm();
+});
+
+function enterChoreEditMode(c) {
+  document.getElementById('choreFormError').style.display = 'none';
+  document.getElementById('choreEditId').value = c.id;
+  document.getElementById('choreName').value = c.name;
+  document.getElementById('choreFrequency').value = c.frequency;
+  document.getElementById('choreNotes').value = c.notes || '';
+  document.getElementById('choreForm').style.display = 'grid';
+  document.getElementById('choreName').focus();
+}
+
+document.getElementById('choreForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  document.getElementById('choreFormError').style.display = 'none';
+  const id = document.getElementById('choreEditId').value;
+  const name = document.getElementById('choreName').value.trim();
+  if (!name) return showChoreFormError('Please enter a chore name.');
+  const body = {
+    name,
+    frequency: document.getElementById('choreFrequency').value,
+    notes: document.getElementById('choreNotes').value.trim()
+  };
+  const btn = document.getElementById('saveChoreBtn');
+  btn.disabled = true;
+  try {
+    const res = await fetch(id ? `/api/chores/${id}` : '/api/chores', {
+      method: id ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error saving chore');
+    document.getElementById('choreForm').style.display = 'none';
+    resetChoreForm();
+    loadChores();
+  } catch (err) {
+    showChoreFormError(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('choresList').addEventListener('click', (e) => {
+  const checkbox = e.target.closest('.chore-checkbox');
+  const editBtn = e.target.closest('.chore-edit');
+  const deleteBtn = e.target.closest('.chore-delete');
+
+  if (checkbox) {
+    fetch(`/api/chores/${checkbox.dataset.id}/toggle`, { method: 'POST' })
+      .then(res => res.json().then(data => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        if (!ok) throw new Error(data.error || 'Error updating chore');
+        const idx = CHORES.findIndex(c => c.id === checkbox.dataset.id);
+        if (idx !== -1) CHORES[idx] = data.chore;
+        renderChores();
+      })
+      .catch(err => alert(err.message));
+    return;
+  }
+  if (editBtn) {
+    const c = CHORES.find(x => x.id === editBtn.dataset.id);
+    if (c) enterChoreEditMode(c);
+    return;
+  }
+  if (deleteBtn) {
+    const c = CHORES.find(x => x.id === deleteBtn.dataset.id);
+    if (!c) return;
+    confirmDialog(`Delete "${c.name}"? This can't be undone.`, { title: 'Delete chore?' })
+      .then(confirmed => {
+        if (!confirmed) return;
+        return fetch(`/api/chores/${c.id}`, { method: 'DELETE' })
+          .then(res => res.json().then(data => ({ ok: res.ok, data })))
+          .then(({ ok, data }) => {
+            if (!ok) throw new Error(data.error || 'Error deleting chore');
+            loadChores();
+          });
+      })
+      .catch(err => alert(err.message));
+  }
+});
 
 loadStatus();
 loadHoursChart();
