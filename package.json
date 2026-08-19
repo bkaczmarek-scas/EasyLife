@@ -10,18 +10,21 @@
   },
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",
     "axios": "^1.7.7",
     "bcryptjs": "^3.0.3",
+    "connect-redis": "^8.0.2",
     "dejavu-fonts-ttf": "^2.37.3",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^8.6.2",
     "express-session": "^1.19.0",
     "helmet": "^8.3.0",
-    "pdf-lib": "^1.17.1"
+    "pdf-lib": "^1.17.1",
+    "redis": "^5.0.1"
   }
 }
