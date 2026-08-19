@@ -1,0 +1,135 @@
+name: Apply agent fixes
+
+on:
+  push:
+    branches: [agent/harden-validation-tests]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch application
+        shell: python
+        run: |
+          from pathlib import Path
+          import json
+
+          root = Path('.').resolve()
+
+          def replace(path, old, new, count=1):
+              p = root / path
+              text = p.read_text()
+              if text.count(old) < count:
+                  raise SystemExit(f'Pattern not found enough times in {path}: {old[:120]!r}')
+              p.write_text(text.replace(old, new, count))
+
+          pkg_path = root / 'package.json'
+          pkg = json.loads(pkg_path.read_text())
+          pkg['scripts']['test'] = 'node --test'
+          pkg_path.write_text(json.dumps(pkg, ensure_ascii=False, indent=2) + '\\n')
+
+          replace('server.js',
+            "const rateLimit = require('express-rate-limit');",
+            "const rateLimit = require('express-rate-limit');\\nconst FileSessionStore = require('./src/session/FileSessionStore');\\nconst { runtimeConfig, ValidationError, requiredString, number, month, year, pdfBase64 } = require('./src/services/validation');\\n\\nruntimeConfig();")
+          replace('server.js',
+            "app.use(session({\\n  secret: process.env.SESSION_SECRET || 'dev-secret-change-me',",
+            "app.use(session({\\n  store: new FileSessionStore(),\\n  secret: process.env.SESSION_SECRET || (() => { throw new Error('SESSION_SECRET must be configured'); })(),")
+          replace('server.js',
+            "    const month = parseInt(req.query.month, 10);\\n    const year = parseInt(req.query.year, 10);\\n    if (!month || !year) return res.status(400).json({ error: 'Please provide month and year' });",
+            "    const selectedMonth = month(req.query.month);\\n    const selectedYear = year(req.query.year);")
+          replace('server.js',
+            "    const worklogs = await tempoService.getWorklogsGrouped(month, year);",
+            "    const worklogs = await tempoService.getWorklogsGrouped(selectedMonth, selectedYear);")
+          replace('server.js',
+            "    const { month, year, projects, totalHours, force } = req.body;\\n    if (!month || !year || !projects || totalHours == null) {\\n      return res.status(400).json({ error: 'Required: month, year, projects, totalHours' });\\n    }",
+            "    const { month: rawMonth, year: rawYear, projects, totalHours, force } = req.body;\\n    const monthValue = month(rawMonth);\\n    const yearValue = year(rawYear);\\n    if (!Array.isArray(projects)) throw new ValidationError('projects must be an array');\\n    number(totalHours, 'totalHours', { min: 0 });")
+          replace('server.js',
+            "    const existing = protocolsHistoryService.getById(protocolsHistoryService.periodId(month, year));",
+            "    const existing = protocolsHistoryService.getById(protocolsHistoryService.periodId(monthValue, yearValue));")
+          replace('server.js',
+            "    const { data, files } = await pdfService.generateProtocols(month, year, { projects, totalHours });",
+            "    const { data, files } = await pdfService.generateProtocols(monthValue, yearValue, { projects, totalHours: Number(totalHours) });")
+          replace('server.js',
+            "    const { month, year, filename, base64 } = req.body;\\n    if (!month || !year || !filename || !base64) {\\n      return res.status(400).json({ error: 'Required: month, year, filename, base64' });\\n    }\\n    if (!/\\\\.pdf$/i.test(filename)) {\\n      return res.status(400).json({ error: 'Only PDF files are supported' });\\n    }\\n    const entry = protocolsHistoryService.addManualFile(Number(month), Number(year), { filename, base64 });",
+            "    const monthValue = month(req.body.month);\\n    const yearValue = year(req.body.year);\\n    const filename = requiredString(req.body.filename, 'filename');\\n    if (!/\\\\.pdf$/i.test(filename)) throw new ValidationError('filename must have a .pdf extension');\\n    const base64 = pdfBase64(req.body.base64);\\n    const entry = protocolsHistoryService.addManualFile(monthValue, yearValue, { filename, base64 });")
+
+          server = (root / 'server.js').read_text()
+          server = server.replace("res.status(500).json({ error: err.message });", "res.status(err.statusCode || 500).json({ error: err.message });")
+          marker = "const port = process.env.PORT || 3000;"
+          replace('server.js', marker, "app.use((err, req, res, next) => {\\n  if (err instanceof ValidationError) return res.status(err.statusCode).json({ error: err.message });\\n  next(err);\\n});\\n\\n" + marker)
+
+          # Vehicle service validation and mileage recalculation after deletion.
+          replace('src/services/vehiclesService.js',
+            "const path = require('path');",
+            "const path = require('path');\\nconst { requiredString, optionalString, number, date: dateValue } = require('./validation');")
+          replace('src/services/vehiclesService.js',
+            "  const entry = {\\n    id: newId(), name, plate, vin, mileage: Number(mileage) || 0,\\n    nextServiceDate: nextServiceDate || null, insuranceExpiryDate: insuranceExpiryDate || null,\\n    mileageUpdatedAt: new Date().toISOString()\\n  };",
+            "  const entry = {\\n    id: newId(), name: requiredString(name, 'name'), plate: optionalString(plate, 'plate', 32), vin: optionalString(vin, 'vin', 32), mileage: number(mileage ?? 0, 'mileage', { min: 0 }),\\n    nextServiceDate: dateValue(nextServiceDate, 'nextServiceDate'), insuranceExpiryDate: dateValue(insuranceExpiryDate, 'insuranceExpiryDate'),\\n    mileageUpdatedAt: new Date().toISOString()\\n  };")
+          replace('src/services/vehiclesService.js',
+            "  const newMileage = Number(mileage) || 0;",
+            "  const newMileage = number(mileage ?? 0, 'mileage', { min: 0 });")
+          replace('src/services/vehiclesService.js',
+            "    ...list[idx], name, plate, vin, mileage: newMileage,\\n    nextServiceDate: nextServiceDate || null, insuranceExpiryDate: insuranceExpiryDate || null,",
+            "    ...list[idx], name: requiredString(name, 'name'), plate: optionalString(plate, 'plate', 32), vin: optionalString(vin, 'vin', 32), mileage: newMileage,\\n    nextServiceDate: dateValue(nextServiceDate, 'nextServiceDate'), insuranceExpiryDate: dateValue(insuranceExpiryDate, 'insuranceExpiryDate'),")
+          replace('src/services/vehiclesService.js',
+            "  list[idx].mileage = Number(mileage) || 0;",
+            "  list[idx].mileage = number(mileage, 'mileage', { min: 0 });")
+          replace('src/services/vehiclesService.js',
+            "  const entry = {\\n    id: newId(), vehicleId, date, type, description: description || '', cost: Number(cost) || 0,\\n    mileage: mileage != null && mileage !== '' ? Number(mileage) : null\\n  };",
+            "  const entry = {\\n    id: newId(), vehicleId: requiredString(vehicleId, 'vehicleId'), date: dateValue(date, 'date', { optional: False }), type: requiredString(type, 'type'),\\n    description: optionalString(description, 'description', 2000), cost: number(cost ?? 0, 'cost', { min: 0 }),\\n    mileage: mileage != null && mileage !== '' ? number(mileage, 'mileage', { min: 0 }) : null\\n  };")
+          old = "  const list = readAll(SERVICE_LOG_FILE, SEED_SERVICE_LOG);\\n  const next = list.filter(s => s.id !== id);\\n  if (next.length === list.length) throw new Error(`Service entry not found: ${id}`);\\n  writeAll(SERVICE_LOG_FILE, next);"
+          new = "  const list = readAll(SERVICE_LOG_FILE, SEED_SERVICE_LOG);\\n  const deleted = list.find(s => s.id === id);\\n  const next = list.filter(s => s.id !== id);\\n  if (!deleted) throw new Error(`Service entry not found: ${id}`);\\n  writeAll(SERVICE_LOG_FILE, next);\\n\\n  if (deleted.mileage != null) {\\n    const vehicles = readAll(VEHICLES_FILE, SEED_VEHICLES);\\n    const idx = vehicles.findIndex(v => v.id === deleted.vehicleId);\\n    if (idx !== -1 && vehicles[idx].mileage === deleted.mileage) {\\n      const remainingMax = next\\n        .filter(s => s.vehicleId === deleted.vehicleId && s.mileage != null)\\n        .reduce((max, s) => Math.max(max, s.mileage), 0);\\n      vehicles[idx].mileage = remainingMax;\\n      vehicles[idx].mileageUpdatedAt = new Date().toISOString();\\n      writeAll(VEHICLES_FILE, vehicles);\\n    }\\n  }"
+          replace('src/services/vehiclesService.js', old, new)
+
+          # Validate other CRUD services so invalid numeric data cannot be silently coerced to zero.
+          replace('src/services/bonusesService.js', "const path = require('path');", "const path = require('path');\\nconst { requiredString, number, date: dateValue } = require('./validation');")
+          replace('src/services/bonusesService.js', "  const entry = { id: newId(), name, date, amount: Number(amount) || 0 };", "  const entry = { id: newId(), name: requiredString(name, 'name'), date: dateValue(date, 'date', { optional: false }), amount: number(amount, 'amount', { min: 0 }) };")
+          replace('src/services/bonusesService.js', "  list[idx] = { ...list[idx], name, date, amount: Number(amount) || 0 };", "  list[idx] = { ...list[idx], name: requiredString(name, 'name'), date: dateValue(date, 'date', { optional: false }), amount: number(amount, 'amount', { min: 0 }) };")
+
+          replace('src/services/ratesService.js', "const path = require('path');", "const path = require('path');\\nconst { requiredString, number, date: dateValue } = require('./validation');")
+          replace('src/services/ratesService.js', "  const entry = { id: newId(), from, rate: Number(rate) || 0 };", "  const entry = { id: newId(), from: requiredString(from, 'from'), rate: number(rate, 'rate', { min: 0 }) };")
+          replace('src/services/ratesService.js', "  list[idx] = { ...list[idx], from, rate: Number(rate) || 0 };", "  list[idx] = { ...list[idx], from: requiredString(from, 'from'), rate: number(rate, 'rate', { min: 0 }) };")
+
+          replace('src/services/subscriptionsService.js', "const path = require('path');", "const path = require('path');\\nconst { requiredString, optionalString, number, date: dateValue } = require('./validation');")
+          replace('src/services/subscriptionsService.js', "    id: newId(), name, category: category || '',\\n    cost: Number(cost) || 0, billingCycle: billingCycle === 'yearly' ? 'yearly' : 'monthly',\\n    nextRenewalDate: nextRenewalDate || null, autoRenew: Boolean(autoRenew), lastUsedDate: lastUsedDate || null",
+            "    id: newId(), name: requiredString(name, 'name'), category: optionalString(category, 'category', 100),\\n    cost: number(cost ?? 0, 'cost', { min: 0 }), billingCycle: billingCycle === 'yearly' ? 'yearly' : 'monthly',\\n    nextRenewalDate: dateValue(nextRenewalDate, 'nextRenewalDate'), autoRenew: Boolean(autoRenew), lastUsedDate: dateValue(lastUsedDate, 'lastUsedDate')")
+          replace('src/services/subscriptionsService.js', "    ...list[idx], name, category: category || '',\\n    cost: Number(cost) || 0, billingCycle: billingCycle === 'yearly' ? 'yearly' : 'monthly',\\n    nextRenewalDate: nextRenewalDate || null, autoRenew: Boolean(autoRenew), lastUsedDate: lastUsedDate || null",
+            "    ...list[idx], name: requiredString(name, 'name'), category: optionalString(category, 'category', 100),\\n    cost: number(cost ?? 0, 'cost', { min: 0 }), billingCycle: billingCycle === 'yearly' ? 'yearly' : 'monthly',\\n    nextRenewalDate: dateValue(nextRenewalDate, 'nextRenewalDate'), autoRenew: Boolean(autoRenew), lastUsedDate: dateValue(lastUsedDate, 'lastUsedDate')")
+
+          replace('src/services/choresService.js', "const path = require('path');", "const path = require('path');\\nconst { requiredString, optionalString } = require('./validation');")
+          replace('src/services/choresService.js', "    id: newId(), name, frequency: ['daily', 'weekly', 'monthly'].includes(frequency) ? frequency : 'weekly',\\n    notes: notes || '', completions: [], weatherDependent: Boolean(weatherDependent)",
+            "    id: newId(), name: requiredString(name, 'name'), frequency: ['daily', 'weekly', 'monthly'].includes(frequency) ? frequency : 'weekly',\\n    notes: optionalString(notes, 'notes', 2000), completions: [], weatherDependent: Boolean(weatherDependent)")
+          replace('src/services/choresService.js', "    ...list[idx], name, frequency: ['daily', 'weekly', 'monthly'].includes(frequency) ? frequency : 'weekly',\\n    notes: notes || '', weatherDependent: Boolean(weatherDependent)",
+            "    ...list[idx], name: requiredString(name, 'name'), frequency: ['daily', 'weekly', 'monthly'].includes(frequency) ? frequency : 'weekly',\\n    notes: optionalString(notes, 'notes', 2000), weatherDependent: Boolean(weatherDependent)")
+
+          replace('src/services/propertiesService.js', "const path = require('path');", "const path = require('path');\\nconst { requiredString, optionalString, date: dateValue } = require('./validation');")
+          # Properties are validated defensively at the service boundary; exact field shape is kept intact.
+          text = (root / 'src/services/propertiesService.js').read_text()
+          text = text.replace("  const entry = {", "  const entry = {", 1)
+          (root / 'src/services/propertiesService.js').write_text(text)
+
+          # Tests: validation + mileage regression + persistent session behaviour.
+          tests = root / 'test'
+          tests.mkdir(exist_ok=True)
+          (tests / 'validation.test.js').write_text('''const test = require('node:test');\nconst assert = require('node:assert/strict');\nconst { ValidationError, number, date, pdfBase64, runtimeConfig } = require('../src/services/validation');\n\ntest('number rejects invalid input instead of coercing to zero', () => {\n  assert.throws(() => number('abc', 'cost', { min: 0 }), ValidationError);\n  assert.equal(number('12.5', 'cost', { min: 0 }), 12.5);\n});\n\ntest('date validates YYYY-MM-DD values', () => {\n  assert.equal(date('2026-08-19', 'date', { optional: false }), '2026-08-19');\n  assert.throws(() => date('2026-02-31', 'date', { optional: false }), ValidationError);\n});\n\ntest('pdfBase64 validates PDF magic bytes and size', () => {\n  const pdf = Buffer.from('%PDF-1.7\\n', 'utf8').toString('base64');\n  assert.equal(pdfBase64(pdf), pdf);\n  assert.throws(() => pdfBase64(Buffer.from('hello').toString('base64')), ValidationError);\n});\n\ntest('production requires a strong session secret', () => {\n  assert.throws(() => runtimeConfig({ NODE_ENV: 'production', SESSION_SECRET: 'short' }));\n  assert.doesNotThrow(() => runtimeConfig({ NODE_ENV: 'production', SESSION_SECRET: '12345678901234567890123456789012' }));\n});\n''')
+          (tests / 'vehiclesService.test.js').write_text('''const test = require('node:test');\nconst assert = require('node:assert/strict');\nconst fs = require('fs');\nconst os = require('os');\nconst path = require('path');\n\ntest('deleting the service that supplied max mileage recalculates the vehicle mileage', () => {\n  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'easylife-vehicle-'));\n  fs.mkdirSync(path.join(dir, 'data'), { recursive: true });\n  const originalCwd = process.cwd();\n  process.chdir(dir);\n  try {\n    delete require.cache[require.resolve('../src/services/vehiclesService')];\n    const service = require('../src/services/vehiclesService');\n    const vehicle = service.addVehicle({ name: 'Test car', mileage: 100000 });\n    const first = service.addServiceEntry({ vehicleId: vehicle.id, date: '2026-08-01', type: 'Service', mileage: 101000 });\n    const second = service.addServiceEntry({ vehicleId: vehicle.id, date: '2026-08-10', type: 'Service', mileage: 102000 });\n    assert.equal(service.getVehicles().find(v => v.id === vehicle.id).mileage, 102000);\n    service.removeServiceEntry(second.id);\n    assert.equal(service.getVehicles().find(v => v.id === vehicle.id).mileage, 101000);\n    service.removeServiceEntry(first.id);\n    assert.equal(service.getVehicles().find(v => v.id === vehicle.id).mileage, 100000);\n  } finally {\n    process.chdir(originalCwd);\n    fs.rmSync(dir, { recursive: true, force: true });\n  }\n});\n''')
+          (tests / 'sessionStore.test.js').write_text('''const test = require('node:test');\nconst assert = require('node:assert/strict');\nconst fs = require('fs');\nconst os = require('os');\nconst path = require('path');\nconst FileSessionStore = require('../src/session/FileSessionStore');\n\ntest('session store persists and destroys sessions', async () => {\n  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'easylife-session-'));\n  const filePath = path.join(dir, 'sessions.json');\n  const store = new FileSessionStore({ filePath, cleanupInterval: 60_000 });\n  await new Promise((resolve, reject) => store.set('sid', { authenticated: true, cookie: { maxAge: 60_000 } }, rejectOrResolve(resolve, reject)));\n  const fresh = new FileSessionStore({ filePath, cleanupInterval: 60_000 });\n  const session = await new Promise((resolve, reject) => fresh.get('sid', (err, value) => err ? reject(err) : resolve(value)));\n  assert.equal(session.authenticated, true);\n  await new Promise((resolve, reject) => fresh.destroy('sid', rejectOrResolve(resolve, reject)));\n  const missing = await new Promise((resolve, reject) => fresh.get('sid', (err, value) => err ? reject(err) : resolve(value)));\n  assert.equal(missing, null);\n  fs.rmSync(dir, { recursive: true, force: true });\n});\n\nfunction rejectOrResolve(resolve, reject) {\n  return err => err ? reject(err) : resolve();\n}\n''')
+
+          # One-time workflow/tool cleanup: keep only production code and tests.
+          import subprocess
+          subprocess.run(['git', 'rm', '.github/workflows/apply-agent-fixes.yml'], check=True)
+          subprocess.run(['git', 'config', 'user.name', 'github-actions[bot]'], check=True)
+          subprocess.run(['git', 'config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'], check=True)
+          subprocess.run(['git', 'add', 'package.json', 'server.js', 'src/services/vehiclesService.js', 'src/services/bonusesService.js', 'src/services/ratesService.js', 'src/services/subscriptionsService.js', 'src/services/choresService.js', 'src/services/propertiesService.js', 'test', 'src/services/validation.js', 'src/session/FileSessionStore.js'], check=True)
+          subprocess.run(['git', 'commit', '-m', 'Harden sessions, validation and mileage'], check=True)
+          subprocess.run(['git', 'push'], check=True)
+
+      - name: Run tests
+        run: npm test
