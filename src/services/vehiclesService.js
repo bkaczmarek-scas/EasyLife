@@ -56,7 +56,8 @@ function updateVehicle(id, { name, plate, vin, mileage, nextServiceDate, insuran
   const list = readAll(VEHICLES_FILE, SEED_VEHICLES);
   const idx = list.findIndex(v => v.id === id);
   if (idx === -1) throw new Error(`Vehicle not found: ${id}`);
-  const newMileage = Number(mileage) || 0;
+  const newMileage = Number(mileage);
+  if (!Number.isFinite(newMileage) || newMileage < 0) throw new Error('Mileage must be a non-negative number');
   const mileageChanged = newMileage !== list[idx].mileage;
   list[idx] = {
     ...list[idx], name, plate, vin, mileage: newMileage,
@@ -73,7 +74,9 @@ function updateMileage(id, mileage) {
   const list = readAll(VEHICLES_FILE, SEED_VEHICLES);
   const idx = list.findIndex(v => v.id === id);
   if (idx === -1) throw new Error(`Vehicle not found: ${id}`);
-  list[idx].mileage = Number(mileage) || 0;
+  const newMileage = Number(mileage);
+  if (!Number.isFinite(newMileage) || newMileage < 0) throw new Error('Mileage must be a non-negative number');
+  list[idx].mileage = newMileage;
   list[idx].mileageUpdatedAt = new Date().toISOString();
   writeAll(VEHICLES_FILE, list);
   return list[idx];
@@ -97,9 +100,13 @@ function getServiceLog(vehicleId) {
 
 function addServiceEntry({ vehicleId, date, type, description, cost, mileage }) {
   const list = readAll(SERVICE_LOG_FILE, SEED_SERVICE_LOG);
+  const entryMileage = mileage != null && mileage !== '' ? Number(mileage) : null;
+  if (entryMileage != null && (!Number.isFinite(entryMileage) || entryMileage < 0)) {
+    throw new Error('Service mileage must be a non-negative number');
+  }
   const entry = {
     id: newId(), vehicleId, date, type, description: description || '', cost: Number(cost) || 0,
-    mileage: mileage != null && mileage !== '' ? Number(mileage) : null
+    mileage: entryMileage
   };
   list.push(entry);
   writeAll(SERVICE_LOG_FILE, list);
@@ -123,9 +130,32 @@ function addServiceEntry({ vehicleId, date, type, description, cost, mileage }) 
 
 function removeServiceEntry(id) {
   const list = readAll(SERVICE_LOG_FILE, SEED_SERVICE_LOG);
+  const entry = list.find(s => s.id === id);
+  if (!entry) throw new Error(`Service entry not found: ${id}`);
   const next = list.filter(s => s.id !== id);
-  if (next.length === list.length) throw new Error(`Service entry not found: ${id}`);
   writeAll(SERVICE_LOG_FILE, next);
+
+  // The vehicle mileage is derived from the vehicle's manual value and service history. Removing
+  // the service entry must therefore recalculate the highest mileage still present in the log.
+  // We intentionally do not lower a manually corrected mileage when it is higher than the log.
+  const vehicles = readAll(VEHICLES_FILE, SEED_VEHICLES);
+  const vIdx = vehicles.findIndex(v => v.id === entry.vehicleId);
+  if (vIdx !== -1) {
+    const remainingMileages = next
+      .filter(s => s.vehicleId === entry.vehicleId && s.mileage != null && Number.isFinite(Number(s.mileage)))
+      .map(s => Number(s.mileage));
+    const highestLoggedMileage = remainingMileages.length ? Math.max(...remainingMileages) : 0;
+    if (vehicles[vIdx].mileage > highestLoggedMileage) {
+      // Preserve a higher manually entered mileage; only roll back a value that was derived from
+      // the deleted service entry.
+      const wasDeletedMileage = Number(entry.mileage);
+      if (Number.isFinite(wasDeletedMileage) && vehicles[vIdx].mileage === wasDeletedMileage) {
+        vehicles[vIdx].mileage = highestLoggedMileage;
+        vehicles[vIdx].mileageUpdatedAt = new Date().toISOString();
+        writeAll(VEHICLES_FILE, vehicles);
+      }
+    }
+  }
 }
 
 module.exports = {
