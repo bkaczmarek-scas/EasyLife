@@ -13,9 +13,9 @@ const SEED_VEHICLES = [
 ];
 
 const SEED_SERVICE_LOG = [
-  { id: 'seed-s1', vehicleId: 'seed-v1', date: '2026-03-04', type: 'Oil change', description: 'Full synthetic oil + filter', cost: 420 },
-  { id: 'seed-s2', vehicleId: 'seed-v1', date: '2025-09-11', type: 'Repair', description: 'Front brake pads and discs', cost: 980 },
-  { id: 'seed-s3', vehicleId: 'seed-v2', date: '2026-01-20', type: 'Inspection', description: 'Annual technical inspection', cost: 150 }
+  { id: 'seed-s1', vehicleId: 'seed-v1', date: '2026-03-04', type: 'Oil change', description: 'Full synthetic oil + filter', cost: 420, mileage: 65000 },
+  { id: 'seed-s2', vehicleId: 'seed-v1', date: '2025-09-11', type: 'Repair', description: 'Front brake pads and discs', cost: 980, mileage: 58000 },
+  { id: 'seed-s3', vehicleId: 'seed-v2', date: '2026-01-20', type: 'Inspection', description: 'Annual technical inspection', cost: 150, mileage: 138000 }
 ];
 
 function ensureFile(file, seed) {
@@ -73,11 +73,26 @@ function getServiceLog(vehicleId) {
   return filtered.sort((a, b) => b.date.localeCompare(a.date));
 }
 
-function addServiceEntry({ vehicleId, date, type, description, cost }) {
+function addServiceEntry({ vehicleId, date, type, description, cost, mileage }) {
   const list = readAll(SERVICE_LOG_FILE, SEED_SERVICE_LOG);
-  const entry = { id: newId(), vehicleId, date, type, description: description || '', cost: Number(cost) || 0 };
+  const entry = {
+    id: newId(), vehicleId, date, type, description: description || '', cost: Number(cost) || 0,
+    mileage: mileage != null && mileage !== '' ? Number(mileage) : null
+  };
   list.push(entry);
   writeAll(SERVICE_LOG_FILE, list);
+
+  // Keep the vehicle's headline mileage current - only move it forward, never backward, so
+  // logging an older/backdated service can't regress the odometer reading on the vehicle card.
+  if (entry.mileage != null) {
+    const vehicles = readAll(VEHICLES_FILE, SEED_VEHICLES);
+    const vIdx = vehicles.findIndex(v => v.id === vehicleId);
+    if (vIdx !== -1 && entry.mileage > vehicles[vIdx].mileage) {
+      vehicles[vIdx].mileage = entry.mileage;
+      writeAll(VEHICLES_FILE, vehicles);
+    }
+  }
+
   return entry;
 }
 

@@ -313,7 +313,7 @@
         <button class="navItem" data-section="garage"><i class="ti ti-car"></i> Garage</button>
         <button class="navItem" data-section="properties"><i class="ti ti-building-estate"></i> Properties</button>
         <button class="navItem" data-section="subscriptions"><i class="ti ti-credit-card"></i> Subscriptions</button>
-        <button class="navItem" data-section="chores"><i class="ti ti-list-check"></i> Chores</button>
+        <button class="navItem" data-section="chores"><i class="ti ti-list-check"></i> Home Tasks</button>
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -640,6 +640,7 @@
             </div>
             <div class="field" style="grid-column:1 / -1;"><label for="serviceDescription">Description</label><input type="text" id="serviceDescription" placeholder="What was done"></div>
             <div class="field"><label for="serviceCost">Cost (zł)</label><input type="number" id="serviceCost" min="0" step="0.01"></div>
+            <div class="field"><label for="serviceMileage">Mileage at service (km)</label><input type="number" id="serviceMileage" min="0"></div>
             <div style="display:flex; gap:6px; align-items:end;">
               <button type="submit" id="saveServiceEntryBtn" class="btn-light"><i class="ti ti-check"></i> Save</button>
               <button type="button" id="cancelServiceEntryBtn">Cancel</button>
@@ -779,8 +780,8 @@
 
         <div class="block">
           <div class="panel-header">
-            <p class="block-title">Chores</p>
-            <button type="button" id="addChoreBtn" class="btn-light"><i class="ti ti-plus"></i> Add chore</button>
+            <p class="block-title">Home Tasks</p>
+            <button type="button" id="addChoreBtn" class="btn-light"><i class="ti ti-plus"></i> Add task</button>
           </div>
 
           <form id="choreForm" class="panel" style="display:none; grid-template-columns:1fr 1fr; gap:10px;" novalidate>
@@ -803,7 +804,7 @@
 
           <div id="choresEmpty" class="empty-state" style="display:none;">
             <i class="ti ti-list-check"></i>
-            <p>No chores yet. Add one to start tracking recurring home maintenance.</p>
+            <p>No tasks yet. Add one to start tracking recurring home maintenance.</p>
           </div>
           <div class="chores-list" id="choresList"></div>
         </div>
@@ -1032,10 +1033,21 @@ function currentPeriod() {
   return { month, year };
 }
 
-function switchSection(section) {
+const VALID_SECTIONS = ['overview', 'invoicing', 'hours', 'rates', 'income', 'history', 'garage', 'properties', 'subscriptions', 'chores'];
+
+function sectionFromPath() {
+  const path = location.pathname.replace(/^\/+|\/+$/g, '');
+  return VALID_SECTIONS.includes(path) ? path : 'overview';
+}
+
+function switchSection(section, options = {}) {
   document.querySelectorAll('.navItem').forEach(b => b.classList.toggle('active', b.dataset.section === section));
   document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
   document.getElementById(`section-${section}`).style.display = 'flex';
+  if (!options.skipHistory) {
+    const path = `/${section}`;
+    if (location.pathname !== path) history.pushState({ section }, '', path);
+  }
   if (section === 'hours' && hoursChartInstance) {
     hoursChartInstance.resize();
   }
@@ -1064,6 +1076,10 @@ function switchSection(section) {
 
 document.querySelectorAll('.navItem').forEach(btn => {
   btn.addEventListener('click', () => switchSection(btn.dataset.section));
+});
+
+window.addEventListener('popstate', () => {
+  switchSection(sectionFromPath(), { skipHistory: true });
 });
 
 async function loadStatus() {
@@ -2385,7 +2401,7 @@ function serviceItemHtml(entry) {
           </span>
         </div>
         ${entry.description ? `<p class="timeline-desc">${escapeHtml(entry.description)}</p>` : ''}
-        <span class="timeline-date">${entry.date}</span>
+        <span class="timeline-date">${entry.date}${entry.mileage != null ? ` · ${entry.mileage.toLocaleString()} km` : ''}</span>
       </div>
     </div>`;
 }
@@ -2513,6 +2529,8 @@ document.getElementById('addServiceEntryBtn').addEventListener('click', () => {
   document.getElementById('serviceEntryForm').reset();
   document.getElementById('serviceEntryFormError').style.display = 'none';
   document.getElementById('serviceDate').value = new Date().toISOString().slice(0, 10);
+  const vehicle = VEHICLES.find(v => v.id === SELECTED_VEHICLE_ID);
+  document.getElementById('serviceMileage').value = vehicle ? vehicle.mileage : '';
   document.getElementById('serviceEntryForm').style.display = 'grid';
   document.getElementById('serviceDate').focus();
 });
@@ -2532,7 +2550,8 @@ document.getElementById('serviceEntryForm').addEventListener('submit', async (e)
     date,
     type: document.getElementById('serviceType').value,
     description: document.getElementById('serviceDescription').value.trim(),
-    cost: parseFloat(document.getElementById('serviceCost').value) || 0
+    cost: parseFloat(document.getElementById('serviceCost').value) || 0,
+    mileage: document.getElementById('serviceMileage').value !== '' ? parseFloat(document.getElementById('serviceMileage').value) : null
   };
   const btn = document.getElementById('saveServiceEntryBtn');
   btn.disabled = true;
@@ -2545,7 +2564,9 @@ document.getElementById('serviceEntryForm').addEventListener('submit', async (e)
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error saving service entry');
     document.getElementById('serviceEntryForm').style.display = 'none';
-    loadServiceLog(SELECTED_VEHICLE_ID);
+    // Reload vehicles too, not just the log - the odometer reading on the vehicle card may have
+    // just moved forward server-side.
+    loadVehicles();
   } catch (err) {
     errEl.textContent = err.message;
     errEl.style.display = 'block';
@@ -2952,7 +2973,7 @@ const INSIGHT_CATEGORIES = [
   { key: 'garage', label: 'Garage', icon: 'ti-car', getItems: garageInsights },
   { key: 'properties', label: 'Properties', icon: 'ti-building-estate', getItems: propertiesInsights },
   { key: 'subscriptions', label: 'Subscriptions', icon: 'ti-credit-card', getItems: subscriptionsInsights },
-  { key: 'chores', label: 'Chores', icon: 'ti-list-check', getItems: choresInsights }
+  { key: 'chores', label: 'Home Tasks', icon: 'ti-list-check', getItems: choresInsights }
 ];
 
 function insightRowHtml(item) {
@@ -3313,7 +3334,7 @@ document.getElementById('choreForm').addEventListener('submit', async (e) => {
   document.getElementById('choreFormError').style.display = 'none';
   const id = document.getElementById('choreEditId').value;
   const name = document.getElementById('choreName').value.trim();
-  if (!name) return showChoreFormError('Please enter a chore name.');
+  if (!name) return showChoreFormError('Please enter a task name.');
   const body = {
     name,
     frequency: document.getElementById('choreFrequency').value,
@@ -3365,7 +3386,7 @@ document.getElementById('choresList').addEventListener('click', (e) => {
   if (deleteBtn) {
     const c = CHORES.find(x => x.id === deleteBtn.dataset.id);
     if (!c) return;
-    confirmDialog(`Delete "${c.name}"? This can't be undone.`, { title: 'Delete chore?' })
+    confirmDialog(`Delete "${c.name}"? This can't be undone.`, { title: 'Delete task?' })
       .then(confirmed => {
         if (!confirmed) return;
         return fetch(`/api/chores/${c.id}`, { method: 'DELETE' })
@@ -3387,7 +3408,7 @@ loadRates().then(() => {
 });
 loadBonuses();
 loadHistory();
-loadOverviewDashboard();
+switchSection(sectionFromPath(), { skipHistory: true });
 </script>
 
 </body>

@@ -416,9 +416,9 @@ app.get('/api/service-log', (req, res) => {
 
 app.post('/api/service-log', (req, res) => {
   try {
-    const { vehicleId, date, type, description, cost } = req.body;
+    const { vehicleId, date, type, description, cost, mileage } = req.body;
     if (!vehicleId || !date || !type) return res.status(400).json({ error: 'Required: vehicleId, date, type' });
-    const entry = vehiclesService.addServiceEntry({ vehicleId, date, type, description, cost });
+    const entry = vehiclesService.addServiceEntry({ vehicleId, date, type, description, cost, mileage });
     res.json({ entry });
   } catch (err) {
     console.error(err);
@@ -595,6 +595,15 @@ app.post('/api/chores/:id/toggle', (req, res) => {
     console.error(err);
     res.status(404).json({ error: err.message });
   }
+});
+
+// SPA fallback: client-side routing (switchSection) pushes URLs like /invoicing or /garage that
+// don't correspond to a real file. A direct load or refresh on one of those must still serve the
+// app shell - the section itself is picked from location.pathname by client JS on load. Must be
+// registered last, after every other route, or it would swallow all the GET /api/* handlers above.
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found' });
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const port = process.env.PORT || 3000;
