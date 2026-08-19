@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Bartosz Kaczmarek - SoftCraft AS - Invoicing</title>
+<meta name="color-scheme" content="light dark">
+<title>EasyMoney - SoftCraft AS - Invoicing</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.46.0/tabler-icons.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,19 +16,40 @@
     --accent:#0369a1; --accent-ring:#075985; --accent-contrast:#ffffff; --accent-tint:rgba(3,105,161,0.08); --accent-tint-hover:rgba(3,105,161,0.14);
     --bg-success:#ecfdf3; --text-success:#15803d;
     --bg-warning:#fffbeb; --text-warning:#b45309;
+    --bg-danger:#fef2f2; --bg-danger-hover:#fbdad6; --text-danger:#c0392b;
+    color-scheme: light;
     font-family: "Plus Jakarta Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
   }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --surface-0:#0b1220; --surface-1:#111a2e; --surface-2:#101a2c;
+      --text-primary:#f1f5f9; --text-secondary:#94a3b8; --text-muted:#64748b;
+      --border:#22304a;
+      --accent:#38bdf8; --accent-ring:#7dd3fc; --accent-contrast:#0b1220; --accent-tint:rgba(56,189,248,0.12); --accent-tint-hover:rgba(56,189,248,0.2);
+      --bg-success:rgba(34,197,94,0.15); --text-success:#4ade80;
+      --bg-warning:rgba(217,119,6,0.18); --text-warning:#fbbf24;
+      --bg-danger:rgba(220,38,38,0.18); --bg-danger-hover:rgba(220,38,38,0.28); --text-danger:#f87171;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --surface-0:#0b1220; --surface-1:#111a2e; --surface-2:#101a2c;
+    --text-primary:#f1f5f9; --text-secondary:#94a3b8; --text-muted:#64748b;
+    --border:#22304a;
+    --accent:#38bdf8; --accent-ring:#7dd3fc; --accent-contrast:#0b1220; --accent-tint:rgba(56,189,248,0.12); --accent-tint-hover:rgba(56,189,248,0.2);
+    --bg-success:rgba(34,197,94,0.15); --text-success:#4ade80;
+    --bg-warning:rgba(217,119,6,0.18); --text-warning:#fbbf24;
+    --bg-danger:rgba(220,38,38,0.18); --bg-danger-hover:rgba(220,38,38,0.28); --text-danger:#f87171;
+    color-scheme: dark;
+  }
   *{box-sizing:border-box;}
-  body{margin:0; background:var(--surface-0); color:var(--text-primary);}
+  body{margin:0; background:var(--surface-0); color:var(--text-primary); transition:background-color 150ms, color 150ms;}
   .app{display:block; min-height:100vh;}
 
   .topnav{position:sticky; top:0; z-index:5; background:var(--surface-0); border-bottom:1px solid var(--border);}
   .topnav-inner{max-width:1360px; margin:0 auto; display:flex; align-items:center; gap:28px; padding:14px 32px;}
   .brand{display:flex; align-items:center; gap:10px; flex-shrink:0;}
-  .brand-mark{width:26px; height:26px; border-radius:7px; flex-shrink:0;
-    background:var(--text-primary);
-    display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:11px;}
-  .brand-name{font-weight:800; font-size:14px; letter-spacing:-0.01em; line-height:1.2;}
+  .brand-name{font-weight:800; font-size:16px; letter-spacing:-0.01em; line-height:1.2;}
   .nav-tabs{display:flex; align-items:center; gap:2px; flex:1;}
   .navItem{display:flex; align-items:center; gap:8px; text-align:left; font-size:13px; font-weight:500;
     padding:7px 12px; border:none; border-radius:var(--radius); white-space:nowrap;
@@ -81,7 +103,7 @@
 
   .icon-btn{width:26px; height:26px; padding:0; border:none; background:transparent; border-radius:6px; color:var(--text-secondary); display:inline-flex; align-items:center; justify-content:center; cursor:pointer;}
   .icon-btn:hover{background:var(--surface-1); color:var(--text-primary);}
-  .icon-btn.danger:hover{background:#fdecea; color:#c0392b;}
+  .icon-btn.danger:hover{background:var(--bg-danger); color:var(--text-danger);}
 
   select{font-size:13px; font-family:inherit; padding:6px 10px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2);}
   input[type="text"], input[type="date"], input[type="number"]{font-size:13px; font-family:inherit; padding:6px 10px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2); width:100%;}
@@ -137,7 +159,8 @@
   .badge{font-size:11px; font-weight:500; padding:3px 10px; border-radius:var(--radius-pill);}
   .badge.success{background:var(--bg-success); color:var(--text-success);}
   .badge.warning{background:var(--bg-warning); color:var(--text-warning);}
-  .badge.danger{background:#fdecea; color:#c0392b;}
+  .badge.danger{background:var(--bg-danger); color:var(--text-danger);}
+  .badge.neutral{background:var(--surface-1); color:var(--text-secondary);}
   .status-line{font-size:12px; color:var(--text-secondary); display:flex; align-items:center; gap:6px;}
   canvas{max-height:180px;}
   .stat-tile{background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px;}
@@ -150,8 +173,8 @@
   .modal h3{font-size:14px; font-weight:700; margin:0 0 8px;}
   .modal p{font-size:13px; color:var(--text-secondary); margin:0 0 20px; line-height:1.5;}
   .modal-actions{display:flex; justify-content:flex-end; gap:8px;}
-  .btn-danger{background:#fdecea; border:1px solid transparent; color:#c0392b; font-weight:600;}
-  .btn-danger:hover:not(:disabled){background:#fbdad6;}
+  .btn-danger{background:var(--bg-danger); border:1px solid transparent; color:var(--text-danger); font-weight:600;}
+  .btn-danger:hover:not(:disabled){background:var(--bg-danger-hover);}
   .icon-circle{width:36px; height:36px; border-radius:50%; background:var(--bg-success); color:var(--text-success); display:flex; align-items:center; justify-content:center; font-size:17px; margin-bottom:12px;}
 
   .form-error{display:none; background:var(--bg-warning); color:var(--text-warning); font-size:12px; padding:8px 12px; border-radius:var(--radius); grid-column:1 / -1;}
@@ -164,14 +187,14 @@
   <header class="topnav">
     <div class="topnav-inner">
       <div class="brand">
-        <div class="brand-mark">BK</div>
-        <div class="brand-name">Bartosz Kaczmarek</div>
+        <div class="brand-name">EasyMoney</div>
       </div>
       <nav class="nav-tabs">
         <button class="navItem active" data-section="invoicing">Invoicing</button>
         <button class="navItem" data-section="hours">Hours &amp; vacations</button>
         <button class="navItem" data-section="rates">Rates</button>
         <button class="navItem" data-section="income">Income</button>
+        <button class="navItem" data-section="history">History</button>
       </nav>
       <div class="profile-menu">
         <button type="button" class="profile-trigger" id="profileTrigger" aria-label="Account menu"><i class="ti ti-user"></i></button>
@@ -180,6 +203,7 @@
           <div class="profile-email" id="profileEmail">–</div>
           <div id="connectionStatus"></div>
           <div class="profile-divider"></div>
+          <button type="button" class="dropdown-item" id="themeToggleBtn"><i class="ti ti-moon" id="themeToggleIcon"></i> <span id="themeToggleLabel">Dark mode</span></button>
           <button type="button" class="dropdown-item" id="logoutBtn"><i class="ti ti-logout"></i> Log out</button>
         </div>
       </div>
@@ -353,7 +377,10 @@
         </div>
 
         <div class="block">
-          <p class="block-title">Overview</p>
+          <div class="panel-header">
+            <p class="block-title">Overview</p>
+            <button type="button" id="exportYearlySummaryBtn" class="btn-light"><i class="ti ti-download"></i> Export yearly summary (CSV)</button>
+          </div>
           <div class="stat-tile">
             <div class="stat-label">Net income + Bonuses in <span id="incomeOverviewYearLabel">2026</span></div>
             <div class="stat-value" id="incomeOverviewValue">–</div>
@@ -425,6 +452,50 @@
 
       </section>
 
+      <section id="section-history" class="section" style="display:none; max-width:960px;">
+
+        <div class="block">
+          <p class="block-title">Upload invoice</p>
+          <form id="uploadInvoiceForm" class="panel" style="display:grid; grid-template-columns:1fr 1fr 2fr auto; gap:10px; align-items:end;" novalidate>
+            <p id="uploadInvoiceError" class="form-error"></p>
+            <div class="field">
+              <label for="uploadMonth">Month</label>
+              <select id="uploadMonth">
+                <option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8" selected>August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="uploadYear">Year</label>
+              <select id="uploadYear"><option>2025</option><option selected>2026</option></select>
+            </div>
+            <div class="field">
+              <label for="uploadFile">PDF file</label>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button type="button" id="uploadFileTrigger" class="btn-sm"><i class="ti ti-paperclip"></i> Choose file</button>
+                <span id="uploadFileName" style="font-size:12px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">No file chosen</span>
+              </div>
+              <input type="file" id="uploadFile" accept="application/pdf" style="display:none;">
+            </div>
+            <button type="submit" id="uploadInvoiceBtn" class="btn-light"><i class="ti ti-upload"></i> Upload</button>
+          </form>
+        </div>
+
+        <div class="block">
+          <p class="block-title">Issued protocols</p>
+          <div id="historyEmpty" class="empty-state">
+            <i class="ti ti-history"></i>
+            <p>No protocols generated yet. Generate one from the Invoicing tab and it will show up here.</p>
+          </div>
+          <div class="panel" id="historyPanel" style="display:none;">
+            <table>
+              <tr><th>Period</th><th>Order #</th><th style="text-align:right; padding-right:16px;">Hours</th><th style="text-align:right; padding-right:16px;">Amount</th><th style="padding-right:16px;">Status</th><th></th></tr>
+              <tbody id="historyBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
     </div>
 
   </div>
@@ -454,9 +525,83 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="deleteProtocolOverlay">
+  <div class="modal">
+    <h3>Delete files</h3>
+    <p id="deleteProtocolSub"></p>
+    <div id="deleteProtocolList"></div>
+    <div class="modal-actions">
+      <button type="button" id="deleteProtocolCancelBtn">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// --- Theme (light/dark) ---
+// Sets the data-theme attribute + toggle label only. Deliberately does NOT touch
+// hoursChartInstance/rateChartInstance: those are declared with `let` further down this same
+// script, and this function also runs once at the top (before that point) to apply the saved
+// theme before first paint — referencing them that early would throw (temporal dead zone),
+// even via a `typeof` guard, since the bindings already exist in scope, just not yet initialized.
+function applyTheme(theme) {
+  if (theme === 'light' || theme === 'dark') {
+    document.documentElement.setAttribute('data-theme', theme);
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  const isDark = theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const icon = document.getElementById('themeToggleIcon');
+  const label = document.getElementById('themeToggleLabel');
+  if (icon) icon.className = isDark ? 'ti ti-sun' : 'ti ti-moon';
+  if (label) label.textContent = isDark ? 'Light mode' : 'Dark mode';
+}
+
+function themeColors() {
+  const style = getComputedStyle(document.documentElement);
+  return {
+    text: style.getPropertyValue('--text-primary').trim(),
+    textSecondary: style.getPropertyValue('--text-secondary').trim(),
+    accent: style.getPropertyValue('--accent').trim(),
+    border: style.getPropertyValue('--border').trim()
+  };
+}
+
+// Only ever called from the toggle click handler below (after full script init) or from the
+// chart-loading functions themselves, so hoursChartInstance/rateChartInstance are always
+// safely in scope by the time this runs.
+function refreshChartTheme() {
+  const c = themeColors();
+  if (hoursChartInstance) {
+    hoursChartInstance.data.datasets[0].backgroundColor = c.accent;
+    hoursChartInstance.options.scales.y.grid.color = c.border;
+    hoursChartInstance.options.scales.x.ticks.color = c.textSecondary;
+    hoursChartInstance.update();
+  }
+  if (rateChartInstance) {
+    const ds = rateChartInstance.data.datasets[0];
+    ds.borderColor = c.accent;
+    ds.backgroundColor = c.accent;
+    ds.pointBackgroundColor = c.accent;
+    ds.pointBorderColor = c.accent;
+    rateChartInstance.options.scales.y.grid.color = c.border;
+    rateChartInstance.options.scales.x.ticks.color = c.textSecondary;
+    rateChartInstance.update();
+  }
+}
+
+applyTheme(localStorage.getItem('theme'));
+
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const next = current === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', next);
+  applyTheme(next);
+  refreshChartTheme();
+});
 
 function confirmDialog(message, { okLabel = 'Delete', title = 'Are you sure?' } = {}) {
   return new Promise(resolve => {
@@ -508,6 +653,9 @@ document.querySelectorAll('.navItem').forEach(btn => {
     }
     if (btn.dataset.section === 'rates' && rateChartInstance) {
       rateChartInstance.resize();
+    }
+    if (btn.dataset.section === 'history') {
+      loadHistory();
     }
   });
 });
@@ -663,7 +811,9 @@ function blobUrlFromBase64(base64) {
   return URL.createObjectURL(new Blob([arr], { type: 'application/pdf' }));
 }
 
-document.getElementById('genBtn').addEventListener('click', async () => {
+document.getElementById('genBtn').addEventListener('click', () => generateProtocols(false));
+
+async function generateProtocols(force) {
   const genBtn = document.getElementById('genBtn');
   genBtn.disabled = true;
   genBtn.innerHTML = '<i class="ti ti-refresh"></i> Generating…';
@@ -677,9 +827,17 @@ document.getElementById('genBtn').addEventListener('click', async () => {
     const res = await fetch('/api/protocols/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ month, year, projects, totalHours })
+      body: JSON.stringify({ month, year, projects, totalHours, force })
     });
     const data = await res.json();
+
+    if (res.status === 409 && data.code === 'ALREADY_GENERATED') {
+      genBtn.disabled = false;
+      genBtn.innerHTML = '<i class="ti ti-file-text"></i> Generate';
+      const confirmed = await confirmDialog(data.error, { title: 'Already generated', okLabel: 'Regenerate anyway' });
+      if (confirmed) await generateProtocols(true);
+      return;
+    }
     if (!res.ok) throw new Error(data.error || 'Error generating protocols');
 
     PDF_CACHE = data;
@@ -693,7 +851,7 @@ document.getElementById('genBtn').addEventListener('click', async () => {
     genBtn.disabled = false;
     genBtn.innerHTML = '<i class="ti ti-file-text"></i> Generate';
   }
-});
+}
 
 document.querySelectorAll('.previewDocBtn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -703,7 +861,7 @@ document.querySelectorAll('.previewDocBtn').forEach(btn => {
   });
 });
 
-document.getElementById('exportBtn').addEventListener('click', () => {
+document.getElementById('exportBtn').addEventListener('click', async () => {
   if (!PDF_CACHE) return;
   ['zamowienie', 'odbiorczy'].forEach(kind => {
     const doc = PDF_CACHE[kind];
@@ -717,6 +875,13 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   document.getElementById('previewWrap').style.display = 'none';
   document.getElementById('protocolsEmpty').style.display = 'flex';
   document.getElementById('exportModalOverlay').classList.add('open');
+  if (PDF_CACHE.historyId) {
+    try {
+      await fetch(`/api/protocols/history/${PDF_CACHE.historyId}/mark-exported`, { method: 'POST' });
+    } catch (e) {
+      console.warn('Failed to mark protocol as exported', e);
+    }
+  }
 });
 
 document.getElementById('exportModalCloseBtn').addEventListener('click', () => {
@@ -744,6 +909,7 @@ const barValueLabels = {
   id: 'barValueLabels',
   afterDatasetsDraw(chart) {
     const { ctx } = chart;
+    const c = themeColors();
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
@@ -751,10 +917,10 @@ const barValueLabels = {
       const value = chart.data.datasets[0].data[i];
       const capacity = CHART_CAPACITY[i];
       ctx.font = '700 11px "Plus Jakarta Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif';
-      ctx.fillStyle = '#0f172a';
+      ctx.fillStyle = c.text;
       ctx.fillText(value, bar.x, bar.y - 16);
       ctx.font = '10px "Plus Jakarta Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif';
-      ctx.fillStyle = '#475569';
+      ctx.fillStyle = c.textSecondary;
       ctx.fillText(`of ${capacity}h`, bar.x, bar.y - 4);
     });
     ctx.restore();
@@ -805,13 +971,14 @@ async function loadHoursChart() {
     return;
   }
 
+  const c = themeColors();
   hoursChartInstance = new Chart(document.getElementById('hoursChart'), {
     type: 'bar',
     data: {
       labels,
       datasets: [{
         data: results,
-        backgroundColor: '#0369a1',
+        backgroundColor: c.accent,
         borderRadius: 6,
         maxBarThickness: 36
       }]
@@ -821,9 +988,16 @@ async function loadHoursChart() {
       maintainAspectRatio: false,
       layout: { padding: { top: 28 } },
       plugins: { legend: { display: false } },
+      // Bars grow straight up from the x-axis (0) instead of Chart.js's default left-to-right
+      // reveal — animate only the bar's vertical extent, starting from the y=0 pixel position.
+      animation: { duration: 700, easing: 'easeOutQuart' },
+      animations: {
+        y: { from: (ctx) => ctx.chart.scales.y.getPixelForValue(0) },
+        x: { duration: 0 }
+      },
       scales: {
-        y: { beginAtZero: true, ticks: { display: false }, grid: { color: '#e2e8f0' } },
-        x: { ticks: { font: { size: 11, family: 'Plus Jakarta Sans' } }, grid: { display: false } }
+        y: { beginAtZero: true, ticks: { display: false }, grid: { color: c.border } },
+        x: { ticks: { color: c.textSecondary, font: { size: 11, family: 'Plus Jakarta Sans' } }, grid: { display: false } }
       }
     },
     plugins: [barValueLabels]
@@ -1027,7 +1201,7 @@ const ratePointLabels = {
     const { ctx } = chart;
     ctx.save();
     ctx.font = '700 11px "Plus Jakarta Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif';
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = themeColors().text;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
     chart.getDatasetMeta(0).data.forEach((point, i) => {
@@ -1059,6 +1233,7 @@ function loadRateChart() {
     return;
   }
 
+  const c = themeColors();
   rateChartInstance = new Chart(document.getElementById('rateChart'), {
     type: 'line',
     data: {
@@ -1066,11 +1241,11 @@ function loadRateChart() {
       datasets: [{
         data: values,
         periods,
-        borderColor: '#0369a1',
+        borderColor: c.accent,
         borderWidth: 2,
-        backgroundColor: '#0369a1',
-        pointBackgroundColor: '#0369a1',
-        pointBorderColor: '#0369a1',
+        backgroundColor: c.accent,
+        pointBackgroundColor: c.accent,
+        pointBorderColor: c.accent,
         pointRadius: 6,
         pointHoverRadius: 7,
         tension: 0
@@ -1090,8 +1265,8 @@ function loadRateChart() {
         }
       },
       scales: {
-        y: { ticks: { display: false }, grid: { color: '#e2e8f0' }, suggestedMin: minVal - pad, suggestedMax: maxVal + pad },
-        x: { ticks: { font: { size: 11, family: 'Plus Jakarta Sans' } }, grid: { display: false } }
+        y: { ticks: { display: false }, grid: { color: c.border }, suggestedMin: minVal - pad, suggestedMax: maxVal + pad },
+        x: { ticks: { color: c.textSecondary, font: { size: 11, family: 'Plus Jakarta Sans' } }, grid: { display: false } }
       }
     },
     plugins: [ratePointLabels]
@@ -1143,7 +1318,7 @@ async function calculateYearlyIncome(year) {
     totals.accounting += accounting;
     totals.net += net;
 
-    return { monthKey, m, gross, zus, tax, accounting, net };
+    return { monthKey, m, hours, rate, gross, zus, tax, accounting, net };
   });
 
   return { rowsData, totals };
@@ -1197,6 +1372,77 @@ async function loadIncomeOverview() {
 
   document.getElementById('incomeOverviewValue').textContent = formatZl2(totals.net + bonusesTotal);
 }
+
+// Polish-locale CSV: semicolon delimiter + comma decimals, since a comma-delimited file would
+// collide with the pl-PL decimal comma when opened in Excel (the accountant's likely target).
+function csvNum(n) {
+  return Number(n).toFixed(2).replace('.', ',');
+}
+function csvEscape(str) {
+  const s = String(str);
+  return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+document.getElementById('exportYearlySummaryBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('exportYearlySummaryBtn');
+  const year = parseInt(document.getElementById('incomeYear').value, 10);
+  btn.disabled = true;
+  try {
+    const [{ rowsData, totals }, bonusesRes] = await Promise.all([
+      calculateYearlyIncome(year),
+      fetch('/api/bonuses').then(res => res.json()).catch(() => ({ bonuses: [] }))
+    ]);
+    const yearBonuses = (bonusesRes.bonuses || []).filter(b => b.date.startsWith(`${year}-`));
+    const bonusesByMonth = {};
+    yearBonuses.forEach(b => {
+      const key = b.date.slice(0, 7);
+      bonusesByMonth[key] = (bonusesByMonth[key] || 0) + Number(b.amount);
+    });
+    const bonusesTotal = yearBonuses.reduce((sum, b) => sum + Number(b.amount), 0);
+
+    const lines = [];
+    lines.push(['Miesiąc', 'Godziny', 'Stawka (zł/h)', 'Brutto (zł)', 'ZUS (zł)', 'Podatek (zł)', 'Księgowość (zł)', 'Netto (zł)', 'Premie (zł)'].join(';'));
+    rowsData.forEach(r => {
+      lines.push([
+        r.monthKey,
+        csvNum(r.hours),
+        csvNum(r.rate),
+        csvNum(r.gross),
+        csvNum(r.zus),
+        csvNum(r.tax),
+        csvNum(r.accounting),
+        csvNum(r.net),
+        csvNum(bonusesByMonth[r.monthKey] || 0)
+      ].join(';'));
+    });
+    const totalHours = rowsData.reduce((sum, r) => sum + r.hours, 0);
+    lines.push([
+      'Razem', csvNum(totalHours), '', csvNum(totals.gross), csvNum(totals.zus),
+      csvNum(totals.tax), csvNum(totals.accounting), csvNum(totals.net), csvNum(bonusesTotal)
+    ].join(';'));
+
+    if (yearBonuses.length) {
+      lines.push('');
+      lines.push(['Premie — szczegóły', 'Data', 'Kwota (zł)'].join(';'));
+      yearBonuses.forEach(b => {
+        lines.push([csvEscape(b.name), b.date, csvNum(b.amount)].join(';'));
+      });
+    }
+
+    const csv = '﻿' + lines.join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `podsumowanie-roczne-${year}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
 
 document.getElementById('incomeBody').addEventListener('focusout', (e) => {
   const input = e.target.closest('.income-input');
@@ -1391,6 +1637,224 @@ document.getElementById('bonusForm').addEventListener('submit', async (e) => {
   }
 });
 
+function formatHistoryPeriod(month, year) {
+  return `${MONTH_NAMES[month - 1]} ${year}`;
+}
+
+let HISTORY_CACHE = [];
+
+async function loadHistory() {
+  const empty = document.getElementById('historyEmpty');
+  const panel = document.getElementById('historyPanel');
+  try {
+    const res = await fetch('/api/protocols/history');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error fetching history');
+
+    const history = data.history || [];
+    HISTORY_CACHE = history;
+    if (!history.length) {
+      panel.style.display = 'none';
+      empty.style.display = 'flex';
+      return;
+    }
+
+    const rows = history.map(entry => {
+      let statusBadge;
+      if (!entry.generatedAt) {
+        statusBadge = '<span class="badge neutral">Manual upload</span>';
+      } else {
+        statusBadge = `<span class="badge ${entry.exported ? 'success' : 'warning'}">${entry.exported ? 'Exported' : 'Generated'}</span>`;
+      }
+
+      const generatedButtons = `
+          ${entry.files && entry.files.zamowienie ? `<button type="button" class="previewDocBtn history-download" data-id="${entry.id}" data-doc="zamowienie" aria-label="Download order protocol" title="Download order protocol"><i class="ti ti-file-text"></i></button>` : ''}
+          ${entry.files && entry.files.odbiorczy ? `<button type="button" class="previewDocBtn history-download" data-id="${entry.id}" data-doc="odbiorczy" aria-label="Download acceptance protocol" title="Download acceptance protocol"><i class="ti ti-file-check"></i></button>` : ''}
+        `;
+      const manualButtons = (entry.manualFiles || []).map(f => `
+          <button type="button" class="previewDocBtn history-download-manual" data-id="${entry.id}" data-file-id="${f.id}" aria-label="Download ${escapeHtml(f.filename)}" title="Download ${escapeHtml(f.filename)}"><i class="ti ti-paperclip"></i></button>
+        `).join('');
+
+      return `
+      <tr>
+        <td>${formatHistoryPeriod(entry.month, entry.year)}</td>
+        <td>${entry.orderNumber ? escapeHtml(entry.orderNumber) : '–'}</td>
+        <td style="text-align:right; padding-right:16px;">${entry.totalHours != null ? entry.totalHours.toFixed(1) : '–'}</td>
+        <td style="text-align:right; font-weight:600; padding-right:16px;">${entry.amount != null ? formatZl2(entry.amount) : '–'}</td>
+        <td style="padding-right:16px;">${statusBadge}</td>
+        <td style="text-align:right; white-space:nowrap;">${generatedButtons}${manualButtons}
+          <button type="button" class="icon-btn danger history-delete-trigger" data-id="${entry.id}" aria-label="Delete" title="Delete"><i class="ti ti-trash"></i></button>
+        </td>
+      </tr>
+    `;
+    }).join('');
+
+    document.getElementById('historyBody').innerHTML = rows;
+    empty.style.display = 'none';
+    panel.style.display = 'flex';
+  } catch (err) {
+    console.warn('Failed to load protocol history', err);
+  }
+}
+
+document.getElementById('historyBody').addEventListener('click', async (e) => {
+  const trashBtn = e.target.closest('.history-delete-trigger');
+  if (trashBtn) {
+    const entry = HISTORY_CACHE.find(h => h.id === trashBtn.dataset.id);
+    if (entry) openDeleteProtocolModal(entry);
+    return;
+  }
+
+  const genBtn = e.target.closest('.history-download');
+  const manualBtn = e.target.closest('.history-download-manual');
+  const btn = genBtn || manualBtn;
+  if (!btn) return;
+  btn.disabled = true;
+  try {
+    const url = genBtn
+      ? `/api/protocols/history/${genBtn.dataset.id}/download/${genBtn.dataset.doc}`
+      : `/api/protocols/history/${manualBtn.dataset.id}/manual/${manualBtn.dataset.fileId}/download`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error downloading document');
+    const a = document.createElement('a');
+    a.href = blobUrlFromBase64(data.base64);
+    a.download = data.filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+let DELETE_MODAL_ENTRY = null;
+
+function openDeleteProtocolModal(entry) {
+  DELETE_MODAL_ENTRY = entry;
+  document.getElementById('deleteProtocolSub').textContent = formatHistoryPeriod(entry.month, entry.year);
+
+  const items = [];
+  if (entry.files && entry.files.zamowienie) items.push({ target: 'zamowienie', label: 'Order protocol' });
+  if (entry.files && entry.files.odbiorczy) items.push({ target: 'odbiorczy', label: 'Acceptance protocol' });
+  (entry.manualFiles || []).forEach(f => items.push({ target: f.id, label: f.filename }));
+
+  let html = `<button type="button" id="deleteEntireRowBtn" class="btn-danger" style="width:100%; display:flex; align-items:center; justify-content:center; gap:6px; margin:12px 0;"><i class="ti ti-trash"></i> Delete entire row (${items.length} file${items.length === 1 ? '' : 's'})</button>`;
+  if (items.length > 1) {
+    html += `<p class="block-title" style="margin:14px 0 4px;">Or delete individual files</p>`;
+    items.forEach(it => {
+      html += `
+        <div class="doc-row">
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(it.label)}</span>
+          <button type="button" class="icon-btn danger delete-protocol-item" data-target="${it.target}" aria-label="Delete ${escapeHtml(it.label)}" title="Delete ${escapeHtml(it.label)}"><i class="ti ti-trash"></i></button>
+        </div>
+      `;
+    });
+  }
+  document.getElementById('deleteProtocolList').innerHTML = html;
+  document.getElementById('deleteProtocolOverlay').classList.add('open');
+}
+
+function closeDeleteProtocolModal() {
+  document.getElementById('deleteProtocolOverlay').classList.remove('open');
+  DELETE_MODAL_ENTRY = null;
+}
+
+document.getElementById('deleteProtocolCancelBtn').addEventListener('click', closeDeleteProtocolModal);
+document.getElementById('deleteProtocolOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeDeleteProtocolModal();
+});
+
+document.getElementById('deleteProtocolList').addEventListener('click', async (e) => {
+  if (!DELETE_MODAL_ENTRY) return;
+  const entireBtn = e.target.closest('#deleteEntireRowBtn');
+  const itemBtn = e.target.closest('.delete-protocol-item');
+  const clicked = entireBtn || itemBtn;
+  if (!clicked) return;
+
+  clicked.disabled = true;
+  try {
+    const url = entireBtn
+      ? `/api/protocols/history/${DELETE_MODAL_ENTRY.id}`
+      : `/api/protocols/history/${DELETE_MODAL_ENTRY.id}/file/${itemBtn.dataset.target}`;
+    const res = await fetch(url, { method: 'DELETE' });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Error deleting file');
+    }
+    closeDeleteProtocolModal();
+    loadHistory();
+  } catch (err) {
+    alert(err.message);
+    clicked.disabled = false;
+  }
+});
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(',')[1]);
+    reader.onerror = () => reject(new Error('Could not read the selected file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function showUploadInvoiceError(message) {
+  const el = document.getElementById('uploadInvoiceError');
+  el.textContent = message;
+  el.style.display = 'block';
+}
+
+function clearUploadInvoiceError() {
+  document.getElementById('uploadInvoiceError').style.display = 'none';
+}
+
+document.getElementById('uploadFileTrigger').addEventListener('click', () => {
+  document.getElementById('uploadFile').click();
+});
+document.getElementById('uploadFile').addEventListener('change', () => {
+  const file = document.getElementById('uploadFile').files[0];
+  document.getElementById('uploadFileName').textContent = file ? file.name : 'No file chosen';
+});
+
+document.getElementById('uploadInvoiceForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearUploadInvoiceError();
+
+  const month = parseInt(document.getElementById('uploadMonth').value, 10);
+  const year = parseInt(document.getElementById('uploadYear').value, 10);
+  const fileInput = document.getElementById('uploadFile');
+  const file = fileInput.files[0];
+
+  if (!file) return showUploadInvoiceError('Please choose a PDF file.');
+  if (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name)) {
+    return showUploadInvoiceError('Only PDF files are supported.');
+  }
+
+  const btn = document.getElementById('uploadInvoiceBtn');
+  btn.disabled = true;
+  try {
+    const base64 = await fileToBase64(file);
+    const res = await fetch('/api/protocols/history/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ month, year, filename: file.name, base64 })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error uploading file');
+
+    fileInput.value = '';
+    document.getElementById('uploadFileName').textContent = 'No file chosen';
+    loadHistory();
+  } catch (err) {
+    showUploadInvoiceError(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await fetch('/api/logout', { method: 'POST' });
   window.location.href = '/login';
@@ -1422,6 +1886,7 @@ loadRates().then(() => {
   loadIncomeOverview();
 });
 loadBonuses();
+loadHistory();
 </script>
 
 </body>

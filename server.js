@@ -9,9 +9,12 @@ const bonusesService = require('./src/services/bonusesService');
 const authService = require('./src/services/authService');
 const ratesService = require('./src/services/ratesService');
 const costsService = require('./src/services/costsService');
+const protocolsHistoryService = require('./src/services/protocolsHistoryService');
 
 const app = express();
-app.use(express.json());
+// Default 100kb JSON body limit is too small for base64-encoded PDF uploads (manual invoice
+// upload in the History tab) - a few MB of scanned PDF becomes ~33% larger as base64.
+app.use(express.json({ limit: '15mb' }));
 app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
   resave: false,
@@ -73,12 +76,27 @@ app.get('/api/worklogs', async (req, res) => {
 
 app.post('/api/protocols/generate', async (req, res) => {
   try {
-    const { month, year, projects, totalHours } = req.body;
+    const { month, year, projects, totalHours, force } = req.body;
     if (!month || !year || !projects || totalHours == null) {
       return res.status(400).json({ error: 'Required: month, year, projects, totalHours' });
     }
-    const { files } = await pdfService.generateProtocols(month, year, { projects, totalHours });
+
+    const existing = protocolsHistoryService.getById(protocolsHistoryService.periodId(month, year));
+    if (existing && !force) {
+      const when = existing.generatedAt ? new Date(existing.generatedAt).toLocaleDateString() : null;
+      return res.status(409).json({
+        code: 'ALREADY_GENERATED',
+        error: when
+          ? `Protocols for this period were already generated on ${when}${existing.exported ? ' and exported' : ''}. Check the History tab, or regenerate to overwrite.`
+          : 'A document was already manually uploaded for this period. Check the History tab, or regenerate to add protocols alongside it.',
+        entry: existing
+      });
+    }
+
+    const { data, files } = await pdfService.generateProtocols(month, year, { projects, totalHours });
+    const historyEntry = protocolsHistoryService.recordGenerated(month, year, data, files);
     res.json({
+      historyId: historyEntry.id,
       zamowienie: {
         filename: files.zamowienie.filename,
         base64: Buffer.from(files.zamowienie.bytes).toString('base64')
@@ -91,6 +109,83 @@ app.post('/api/protocols/generate', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/protocols/history', (req, res) => {
+  try {
+    res.json({ history: protocolsHistoryService.getAll() });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/protocols/history/:id/download/:kind', (req, res) => {
+  try {
+    const { bytes, filename } = protocolsHistoryService.getFileBytes(req.params.id, req.params.kind);
+    res.json({ filename, base64: bytes.toString('base64') });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.post('/api/protocols/history/:id/mark-exported', (req, res) => {
+  try {
+    const entry = protocolsHistoryService.markExported(req.params.id);
+    res.json({ protocol: entry });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.post('/api/protocols/history/upload', (req, res) => {
+  try {
+    const { month, year, filename, base64 } = req.body;
+    if (!month || !year || !filename || !base64) {
+      return res.status(400).json({ error: 'Required: month, year, filename, base64' });
+    }
+    if (!/\.pdf$/i.test(filename)) {
+      return res.status(400).json({ error: 'Only PDF files are supported' });
+    }
+    const entry = protocolsHistoryService.addManualFile(Number(month), Number(year), { filename, base64 });
+    res.json({ protocol: entry });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/protocols/history/:id/manual/:fileId/download', (req, res) => {
+  try {
+    const { bytes, filename } = protocolsHistoryService.getManualFileBytes(req.params.id, req.params.fileId);
+    res.json({ filename, base64: bytes.toString('base64') });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.delete('/api/protocols/history/:id', (req, res) => {
+  try {
+    protocolsHistoryService.removeEntry(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+// :target is 'zamowienie', 'odbiorczy', or a manual file's id.
+app.delete('/api/protocols/history/:id/file/:target', (req, res) => {
+  try {
+    protocolsHistoryService.removeFile(req.params.id, req.params.target);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
   }
 });
 

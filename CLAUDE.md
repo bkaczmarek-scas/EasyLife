@@ -17,16 +17,42 @@ treściach dokumentów i commit messages jeśli o nie poprosi.
 
 ## Stan obecny
 
-- Backend: Express (`server.js`) + trzy serwisy w `src/services/`.
-- Bez kluczy API w `.env` aplikacja działa w trybie demo (deterministyczne dane godzinowe per
-  miesiąc/rok, patrz `tempoService.demoWorklogs`) — to pozwala testować cały flow UI od razu.
+- Backend: Express (`server.js`) + serwisy w `src/services/`.
+- Jira/Tempo są podłączone do prawdziwego API — `.env` ma skonfigurowane `JIRA_BASE_URL`,
+  `JIRA_EMAIL`, `JIRA_API_TOKEN`, `TEMPO_API_TOKEN`, więc `tempoService.getWorklogsGrouped`
+  odpytuje live Tempo/Jira, a nie dane demo. Tryb demo (`tempoService.demoWorklogs`) włącza się
+  automatycznie tylko gdy tych zmiennych brakuje — nadal przydatny do szybkiego testowania UI bez
+  konfiguracji. Worklogi bez przypisanego issue są grupowane jako `Unassigned`.
 - PDF-y generowane są w locie (`pdfService.js`, biblioteka `pdf-lib`), odtwarzają layout prawdziwych
-  wzorów Softcraft (patrz logo w `src/assets/logo.png`). Uwaga: polskie znaki diakrytyczne (ą, ć, ę...)
-  są usuwane przy renderowaniu tekstu w PDF, bo wbudowane fonty Helvetica (WinAnsi) ich nie obsługują.
-  Żeby to naprawić: osadzić font TTF z pełnym wsparciem polskich znaków (np. DejaVu Sans) przez
-  `pdfDoc.embedFont` z custom fontkit zamiast `StandardFonts.Helvetica`.
-- Frontend to pojedynczy plik `public/index.html` (vanilla JS, bez frameworka) — celowo prosty,
-  łatwy do rozbudowy.
+  wzorów Softcraft (patrz logo w `src/assets/logo.png`). Polskie znaki diakrytyczne (ą, ć, ę...) są
+  poprawnie renderowane — embedowany jest font DejaVu Sans przez `pdfDoc.registerFontkit` +
+  `pdfDoc.embedFont` zamiast `StandardFonts.Helvetica`.
+- Każde wygenerowane parę protokołów jest też zapisywana przez `protocolsHistoryService.js` —
+  metadane w `data/protocols.json`, same pliki PDF w `data/protocols/`. Klucz wpisu to `{rok}-{mc}`
+  (jeden komplet na okres rozliczeniowy). Jeśli wpis dla danego okresu już istnieje, `POST
+  /api/protocols/generate` domyślnie odpowiada `409 ALREADY_GENERATED` zamiast cicho nadpisywać —
+  frontend pokazuje wtedy dialog z opcją „Regenerate anyway” (`force: true` w body), co nadpisuje
+  i resetuje status eksportu. Zakładka „History” w `index.html` pozwala pobrać ponownie zapisane
+  pliki bez przeliczania ich na bieżąco ze stawek, a także ręcznie wgrać dowolny PDF (np. fakturę
+  zewnętrzną) dla danego okresu przez `POST /api/protocols/history/upload` — trafia do
+  `entry.manualFiles[]`, niezależnie od `entry.files` (wygenerowane protokoły); regeneracja
+  protokołów nie kasuje wgranych ręcznie plików.
+- Frontend to pojedynczy plik `public/index.html` (vanilla JS, bez frameworka) — zbudowany jako
+  wizard (Period → Worklogs → Protocols & Export) z górną nawigacją zakładek (Invoicing, Hours &
+  vacations, Rates, Income, History) zamiast sidebara; design w stylu Minimalism & Swiss Style.
+  Hours & vacations pokazuje wykres 12 miesięcy zasilany prawdziwymi danymi z `/api/worklogs`
+  (nie statyczny placeholder).
+- Tryb ciemny jest gotowy: token CSS (`--surface-*`, `--text-*`, `--accent*`, `--bg-*`) mają
+  wartości dla jasnego i ciemnego motywu w `public/index.html` i `public/login.html`. Domyślnie
+  idzie za `prefers-color-scheme`; przełącznik w profile dropdown (`themeToggleBtn`) zapisuje
+  wybór w `localStorage['theme']`, co czyta też `login.html` (żeby nie mrugnęło złym motywem).
+  Wykresy Chart.js nie czytają zmiennych CSS same z siebie — kolory dociągane są w JS przez
+  `themeColors()` przy tworzeniu wykresu i odświeżane przez `refreshChartTheme()` po przełączeniu.
+- Zakładka Income ma eksport rocznego podsumowania do CSV (`exportYearlySummaryBtn`) — godziny,
+  stawka, brutto/netto, ZUS/podatek/księgowość i premie per miesiąc plus wiersz „Razem” i lista
+  premii. Budowany w całości po stronie klienta z danych już pobieranych przez
+  `calculateYearlyIncome`/`loadBonuses` (żadnej nowej logiki na backendzie); plik `;`-separowany
+  z przecinkiem dziesiętnym i BOM, pod polski Excel dla księgowej.
 
 ## Konwencje
 
@@ -38,15 +64,14 @@ treściach dokumentów i commit messages jeśli o nie poprosi.
 
 ## Priorytety dalszego rozwoju (w kolejności)
 
-1. Podłączyć prawdziwe API Tempo/Jira i przetestować z realnym kontem (`tempoService.js`,
-   `jiraService.js` już mają strukturę pod to — brakuje tylko testów na żywym API i obsługi
-   krawędziowych przypadków, np. worklogi bez przypisanego projektu).
-2. Naprawić polskie znaki w PDF (embed fontu DejaVu Sans zamiast stripowania diakrytyków).
-3. Eksport CSV/XLSX do Taxxxo — nowy endpoint `/api/export/taxxxo`.
-4. Wykres 6 miesięcy zasilony prawdziwymi danymi (obecnie statyczny w `index.html`).
-5. Panel administracji (wielu zleceniobiorców, umowy, stawki) — obecnie dane kontrahenta na sztywno
+1. Eksport CSV/XLSX do Taxxxo — nowy endpoint `/api/export/taxxxo`.
+2. Panel administracji (wielu zleceniobiorców, umowy, stawki) — obecnie dane kontrahenta na sztywno
    w `.env`.
-6. Asystent AI (zapytania NL o dane rozliczeniowe, wykrywanie anomalii) — wymaga `ANTHROPIC_API_KEY`.
+3. Asystent AI (zapytania NL o dane rozliczeniowe, wykrywanie anomalii) — wymaga `ANTHROPIC_API_KEY`.
+
+Zrobione: podłączenie prawdziwego API Tempo/Jira (działa live), historia/archiwum protokołów
+(`protocolsHistoryService.js` + zakładka History), wykres 12 miesięcy z prawdziwymi danymi,
+roczne podsumowanie CSV w zakładce Income, tryb ciemny (CSS tokeny + przełącznik + wykresy).
 
 ## Jak testować
 
