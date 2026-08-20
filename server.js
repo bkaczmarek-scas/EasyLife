@@ -153,7 +153,7 @@ app.post('/api/protocols/generate', async (req, res) => {
       return res.status(400).json({ error: 'Required: month, year, projects, totalHours' });
     }
 
-    const existing = protocolsHistoryService.getById(protocolsHistoryService.periodId(month, year));
+    const existing = await protocolsHistoryService.getById(protocolsHistoryService.periodId(month, year));
     if (existing && !force) {
       const when = existing.generatedAt ? new Date(existing.generatedAt).toLocaleDateString() : null;
       return res.status(409).json({
@@ -166,7 +166,7 @@ app.post('/api/protocols/generate', async (req, res) => {
     }
 
     const { data, files } = await pdfService.generateProtocols(month, year, { projects, totalHours });
-    const historyEntry = protocolsHistoryService.recordGenerated(month, year, data, files);
+    const historyEntry = await protocolsHistoryService.recordGenerated(month, year, data, files);
     res.json({
       historyId: historyEntry.id,
       zamowienie: {
@@ -184,18 +184,18 @@ app.post('/api/protocols/generate', async (req, res) => {
   }
 });
 
-app.get('/api/protocols/history', (req, res) => {
+app.get('/api/protocols/history', async (req, res) => {
   try {
-    res.json({ history: protocolsHistoryService.getAll() });
+    res.json({ history: await protocolsHistoryService.getAll() });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.get('/api/protocols/history/:id/download/:kind', (req, res) => {
+app.get('/api/protocols/history/:id/download/:kind', async (req, res) => {
   try {
-    const { bytes, filename } = protocolsHistoryService.getFileBytes(req.params.id, req.params.kind);
+    const { bytes, filename } = await protocolsHistoryService.getFileBytes(req.params.id, req.params.kind);
     res.json({ filename, base64: bytes.toString('base64') });
   } catch (err) {
     console.error(err);
@@ -203,9 +203,9 @@ app.get('/api/protocols/history/:id/download/:kind', (req, res) => {
   }
 });
 
-app.post('/api/protocols/history/:id/mark-exported', (req, res) => {
+app.post('/api/protocols/history/:id/mark-exported', async (req, res) => {
   try {
-    const entry = protocolsHistoryService.markExported(req.params.id);
+    const entry = await protocolsHistoryService.markExported(req.params.id);
     res.json({ protocol: entry });
   } catch (err) {
     console.error(err);
@@ -213,7 +213,7 @@ app.post('/api/protocols/history/:id/mark-exported', (req, res) => {
   }
 });
 
-app.post('/api/protocols/history/upload', (req, res) => {
+app.post('/api/protocols/history/upload', async (req, res) => {
   try {
     const { month, year, filename, base64 } = req.body;
     if (!month || !year || !filename || !base64) {
@@ -222,7 +222,7 @@ app.post('/api/protocols/history/upload', (req, res) => {
     if (!/\.pdf$/i.test(filename)) {
       return res.status(400).json({ error: 'Only PDF files are supported' });
     }
-    const entry = protocolsHistoryService.addManualFile(Number(month), Number(year), { filename, base64 });
+    const entry = await protocolsHistoryService.addManualFile(Number(month), Number(year), { filename, base64 });
     res.json({ protocol: entry });
   } catch (err) {
     console.error(err);
@@ -230,9 +230,9 @@ app.post('/api/protocols/history/upload', (req, res) => {
   }
 });
 
-app.get('/api/protocols/history/:id/manual/:fileId/download', (req, res) => {
+app.get('/api/protocols/history/:id/manual/:fileId/download', async (req, res) => {
   try {
-    const { bytes, filename } = protocolsHistoryService.getManualFileBytes(req.params.id, req.params.fileId);
+    const { bytes, filename } = await protocolsHistoryService.getManualFileBytes(req.params.id, req.params.fileId);
     res.json({ filename, base64: bytes.toString('base64') });
   } catch (err) {
     console.error(err);
@@ -240,9 +240,9 @@ app.get('/api/protocols/history/:id/manual/:fileId/download', (req, res) => {
   }
 });
 
-app.delete('/api/protocols/history/:id', (req, res) => {
+app.delete('/api/protocols/history/:id', async (req, res) => {
   try {
-    protocolsHistoryService.removeEntry(req.params.id);
+    await protocolsHistoryService.removeEntry(req.params.id);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -251,9 +251,9 @@ app.delete('/api/protocols/history/:id', (req, res) => {
 });
 
 // :target is 'zamowienie', 'odbiorczy', or a manual file's id.
-app.delete('/api/protocols/history/:id/file/:target', (req, res) => {
+app.delete('/api/protocols/history/:id/file/:target', async (req, res) => {
   try {
-    protocolsHistoryService.removeFile(req.params.id, req.params.target);
+    await protocolsHistoryService.removeFile(req.params.id, req.params.target);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -261,22 +261,22 @@ app.delete('/api/protocols/history/:id/file/:target', (req, res) => {
   }
 });
 
-app.get('/api/bonuses', (req, res) => {
+app.get('/api/bonuses', async (req, res) => {
   try {
-    res.json({ bonuses: bonusesService.getAll() });
+    res.json({ bonuses: await bonusesService.getAll() });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/bonuses', (req, res) => {
+app.post('/api/bonuses', async (req, res) => {
   try {
     const { name, date, amount } = req.body;
     if (!name || !date || amount == null) {
       return res.status(400).json({ error: 'Required: name, date, amount' });
     }
-    const entry = bonusesService.add({ name, date, amount: Number(amount) });
+    const entry = await bonusesService.add({ name, date, amount: Number(amount) });
     res.json({ bonus: entry });
   } catch (err) {
     console.error(err);
@@ -284,13 +284,13 @@ app.post('/api/bonuses', (req, res) => {
   }
 });
 
-app.put('/api/bonuses/:id', (req, res) => {
+app.put('/api/bonuses/:id', async (req, res) => {
   try {
     const { name, date, amount } = req.body;
     if (!name || !date || amount == null) {
       return res.status(400).json({ error: 'Required: name, date, amount' });
     }
-    const entry = bonusesService.update(req.params.id, { name, date, amount: Number(amount) });
+    const entry = await bonusesService.update(req.params.id, { name, date, amount: Number(amount) });
     res.json({ bonus: entry });
   } catch (err) {
     console.error(err);
@@ -298,9 +298,9 @@ app.put('/api/bonuses/:id', (req, res) => {
   }
 });
 
-app.delete('/api/bonuses/:id', (req, res) => {
+app.delete('/api/bonuses/:id', async (req, res) => {
   try {
-    bonusesService.remove(req.params.id);
+    await bonusesService.remove(req.params.id);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -308,22 +308,22 @@ app.delete('/api/bonuses/:id', (req, res) => {
   }
 });
 
-app.get('/api/rates', (req, res) => {
+app.get('/api/rates', async (req, res) => {
   try {
-    res.json({ history: ratesService.getAll() });
+    res.json({ history: await ratesService.getAll() });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/rates', (req, res) => {
+app.post('/api/rates', async (req, res) => {
   try {
     const { from, rate } = req.body;
     if (!from || rate == null) {
       return res.status(400).json({ error: 'Required: from, rate' });
     }
-    const entry = ratesService.add({ from, rate: Number(rate) });
+    const entry = await ratesService.add({ from, rate: Number(rate) });
     res.json({ rate: entry });
   } catch (err) {
     console.error(err);
@@ -331,13 +331,13 @@ app.post('/api/rates', (req, res) => {
   }
 });
 
-app.put('/api/rates/:id', (req, res) => {
+app.put('/api/rates/:id', async (req, res) => {
   try {
     const { from, rate } = req.body;
     if (!from || rate == null) {
       return res.status(400).json({ error: 'Required: from, rate' });
     }
-    const entry = ratesService.update(req.params.id, { from, rate: Number(rate) });
+    const entry = await ratesService.update(req.params.id, { from, rate: Number(rate) });
     res.json({ rate: entry });
   } catch (err) {
     console.error(err);
@@ -345,9 +345,9 @@ app.put('/api/rates/:id', (req, res) => {
   }
 });
 
-app.delete('/api/rates/:id', (req, res) => {
+app.delete('/api/rates/:id', async (req, res) => {
   try {
-    ratesService.remove(req.params.id);
+    await ratesService.remove(req.params.id);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -355,19 +355,19 @@ app.delete('/api/rates/:id', (req, res) => {
   }
 });
 
-app.get('/api/costs', (req, res) => {
+app.get('/api/costs', async (req, res) => {
   try {
-    res.json({ costs: costsService.getAll() });
+    res.json({ costs: await costsService.getAll() });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.put('/api/costs/:month', (req, res) => {
+app.put('/api/costs/:month', async (req, res) => {
   try {
     const { zus, tax, accounting } = req.body;
-    const entry = costsService.upsert(req.params.month, { zus, tax, accounting });
+    const entry = await costsService.upsert(req.params.month, { zus, tax, accounting });
     res.json({ cost: entry });
   } catch (err) {
     console.error(err);
@@ -375,20 +375,20 @@ app.put('/api/costs/:month', (req, res) => {
   }
 });
 
-app.get('/api/vehicles', (req, res) => {
+app.get('/api/vehicles', async (req, res) => {
   try {
-    res.json({ vehicles: vehiclesService.getVehicles() });
+    res.json({ vehicles: await vehiclesService.getVehicles() });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/vehicles', (req, res) => {
+app.post('/api/vehicles', async (req, res) => {
   try {
     const { name, type, year, engine, fuelType, power, plate, vin, mileage, nextServiceDate, insuranceExpiryDate } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = vehiclesService.addVehicle({ name, type, year, engine, fuelType, power, plate, vin, mileage, nextServiceDate, insuranceExpiryDate });
+    const entry = await vehiclesService.addVehicle({ name, type, year, engine, fuelType, power, plate, vin, mileage, nextServiceDate, insuranceExpiryDate });
     res.json({ vehicle: entry });
   } catch (err) {
     console.error(err);
@@ -396,11 +396,11 @@ app.post('/api/vehicles', (req, res) => {
   }
 });
 
-app.put('/api/vehicles/:id', (req, res) => {
+app.put('/api/vehicles/:id', async (req, res) => {
   try {
     const { name, type, year, engine, fuelType, power, plate, vin, mileage, nextServiceDate, insuranceExpiryDate } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = vehiclesService.updateVehicle(req.params.id, { name, type, year, engine, fuelType, power, plate, vin, mileage, nextServiceDate, insuranceExpiryDate });
+    const entry = await vehiclesService.updateVehicle(req.params.id, { name, type, year, engine, fuelType, power, plate, vin, mileage, nextServiceDate, insuranceExpiryDate });
     res.json({ vehicle: entry });
   } catch (err) {
     console.error(err);
@@ -408,11 +408,11 @@ app.put('/api/vehicles/:id', (req, res) => {
   }
 });
 
-app.put('/api/vehicles/:id/mileage', (req, res) => {
+app.put('/api/vehicles/:id/mileage', async (req, res) => {
   try {
     const { mileage } = req.body;
     if (mileage == null || mileage === '') return res.status(400).json({ error: 'Required: mileage' });
-    const entry = vehiclesService.updateMileage(req.params.id, mileage);
+    const entry = await vehiclesService.updateMileage(req.params.id, mileage);
     res.json({ vehicle: entry });
   } catch (err) {
     console.error(err);
@@ -420,9 +420,9 @@ app.put('/api/vehicles/:id/mileage', (req, res) => {
   }
 });
 
-app.delete('/api/vehicles/:id', (req, res) => {
+app.delete('/api/vehicles/:id', async (req, res) => {
   try {
-    vehiclesService.removeVehicle(req.params.id);
+    await vehiclesService.removeVehicle(req.params.id);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -430,20 +430,20 @@ app.delete('/api/vehicles/:id', (req, res) => {
   }
 });
 
-app.get('/api/service-log', (req, res) => {
+app.get('/api/service-log', async (req, res) => {
   try {
-    res.json({ entries: vehiclesService.getServiceLog(req.query.vehicleId) });
+    res.json({ entries: await vehiclesService.getServiceLog(req.query.vehicleId) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/service-log', (req, res) => {
+app.post('/api/service-log', async (req, res) => {
   try {
     const { vehicleId, date, workshop, description, cost, mileage } = req.body;
     if (!vehicleId || !date) return res.status(400).json({ error: 'Required: vehicleId, date' });
-    const entry = vehiclesService.addServiceEntry({ vehicleId, date, workshop, description, cost, mileage });
+    const entry = await vehiclesService.addServiceEntry({ vehicleId, date, workshop, description, cost, mileage });
     res.json({ entry });
   } catch (err) {
     console.error(err);
@@ -451,9 +451,9 @@ app.post('/api/service-log', (req, res) => {
   }
 });
 
-app.delete('/api/service-log/:id', (req, res) => {
+app.delete('/api/service-log/:id', async (req, res) => {
   try {
-    vehiclesService.removeServiceEntry(req.params.id);
+    await vehiclesService.removeServiceEntry(req.params.id);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -461,20 +461,20 @@ app.delete('/api/service-log/:id', (req, res) => {
   }
 });
 
-app.get('/api/properties', (req, res) => {
+app.get('/api/properties', async (req, res) => {
   try {
-    res.json({ properties: propertiesService.getAll() });
+    res.json({ properties: await propertiesService.getAll() });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/properties', (req, res) => {
+app.post('/api/properties', async (req, res) => {
   try {
     const { name, type, address, tenant, maintenanceNote, maintenanceDate } = req.body;
     if (!name || !address) return res.status(400).json({ error: 'Required: name, address' });
-    const entry = propertiesService.add({ name, type, address, tenant, maintenanceNote, maintenanceDate });
+    const entry = await propertiesService.add({ name, type, address, tenant, maintenanceNote, maintenanceDate });
     res.json({ property: entry });
   } catch (err) {
     console.error(err);
@@ -482,11 +482,11 @@ app.post('/api/properties', (req, res) => {
   }
 });
 
-app.put('/api/properties/:id', (req, res) => {
+app.put('/api/properties/:id', async (req, res) => {
   try {
     const { name, type, address, tenant, maintenanceNote, maintenanceDate } = req.body;
     if (!name || !address) return res.status(400).json({ error: 'Required: name, address' });
-    const entry = propertiesService.update(req.params.id, { name, type, address, tenant, maintenanceNote, maintenanceDate });
+    const entry = await propertiesService.update(req.params.id, { name, type, address, tenant, maintenanceNote, maintenanceDate });
     res.json({ property: entry });
   } catch (err) {
     console.error(err);
@@ -494,9 +494,9 @@ app.put('/api/properties/:id', (req, res) => {
   }
 });
 
-app.delete('/api/properties/:id', (req, res) => {
+app.delete('/api/properties/:id', async (req, res) => {
   try {
-    propertiesService.remove(req.params.id);
+    await propertiesService.remove(req.params.id);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -504,11 +504,11 @@ app.delete('/api/properties/:id', (req, res) => {
   }
 });
 
-app.post('/api/properties/:id/comments', (req, res) => {
+app.post('/api/properties/:id/comments', async (req, res) => {
   try {
     const { text } = req.body;
     if (!text || !text.trim()) return res.status(400).json({ error: 'Required: text' });
-    const property = propertiesService.addComment(req.params.id, text.trim());
+    const property = await propertiesService.addComment(req.params.id, text.trim());
     res.json({ property });
   } catch (err) {
     console.error(err);
@@ -516,9 +516,9 @@ app.post('/api/properties/:id/comments', (req, res) => {
   }
 });
 
-app.delete('/api/properties/:id/comments/:commentId', (req, res) => {
+app.delete('/api/properties/:id/comments/:commentId', async (req, res) => {
   try {
-    const property = propertiesService.removeComment(req.params.id, req.params.commentId);
+    const property = await propertiesService.removeComment(req.params.id, req.params.commentId);
     res.json({ property });
   } catch (err) {
     console.error(err);
@@ -526,9 +526,9 @@ app.delete('/api/properties/:id/comments/:commentId', (req, res) => {
   }
 });
 
-app.put('/api/properties/:id/comments/:commentId/resolve', (req, res) => {
+app.put('/api/properties/:id/comments/:commentId/resolve', async (req, res) => {
   try {
-    const property = propertiesService.toggleCommentResolved(req.params.id, req.params.commentId);
+    const property = await propertiesService.toggleCommentResolved(req.params.id, req.params.commentId);
     res.json({ property });
   } catch (err) {
     console.error(err);
@@ -536,20 +536,20 @@ app.put('/api/properties/:id/comments/:commentId/resolve', (req, res) => {
   }
 });
 
-app.get('/api/tax-payments', (req, res) => {
+app.get('/api/tax-payments', async (req, res) => {
   try {
-    res.json({ payments: taxPaymentsService.getAll() });
+    res.json({ payments: await taxPaymentsService.getAll() });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/tax-payments', (req, res) => {
+app.post('/api/tax-payments', async (req, res) => {
   try {
     const { period, amount, sienkiewicza, szczesliwa, sienkiewiczaNote, szczesliwaNote, transferDate } = req.body;
     if (!period) return res.status(400).json({ error: 'Required: period' });
-    const entry = taxPaymentsService.add({ period, amount, sienkiewicza, szczesliwa, sienkiewiczaNote, szczesliwaNote, transferDate });
+    const entry = await taxPaymentsService.add({ period, amount, sienkiewicza, szczesliwa, sienkiewiczaNote, szczesliwaNote, transferDate });
     res.json({ payment: entry });
   } catch (err) {
     console.error(err);
@@ -557,11 +557,11 @@ app.post('/api/tax-payments', (req, res) => {
   }
 });
 
-app.put('/api/tax-payments/:id', (req, res) => {
+app.put('/api/tax-payments/:id', async (req, res) => {
   try {
     const { period, amount, sienkiewicza, szczesliwa, sienkiewiczaNote, szczesliwaNote, transferDate } = req.body;
     if (!period) return res.status(400).json({ error: 'Required: period' });
-    const entry = taxPaymentsService.update(req.params.id, { period, amount, sienkiewicza, szczesliwa, sienkiewiczaNote, szczesliwaNote, transferDate });
+    const entry = await taxPaymentsService.update(req.params.id, { period, amount, sienkiewicza, szczesliwa, sienkiewiczaNote, szczesliwaNote, transferDate });
     res.json({ payment: entry });
   } catch (err) {
     console.error(err);
@@ -569,9 +569,9 @@ app.put('/api/tax-payments/:id', (req, res) => {
   }
 });
 
-app.delete('/api/tax-payments/:id', (req, res) => {
+app.delete('/api/tax-payments/:id', async (req, res) => {
   try {
-    taxPaymentsService.remove(req.params.id);
+    await taxPaymentsService.remove(req.params.id);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -579,20 +579,20 @@ app.delete('/api/tax-payments/:id', (req, res) => {
   }
 });
 
-app.get('/api/property-expenses', (req, res) => {
+app.get('/api/property-expenses', async (req, res) => {
   try {
-    res.json({ expenses: propertyExpensesService.getAll(req.query.propertyId) });
+    res.json({ expenses: await propertyExpensesService.getAll(req.query.propertyId) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/property-expenses', (req, res) => {
+app.post('/api/property-expenses', async (req, res) => {
   try {
     const { propertyId, date, description, amount } = req.body;
     if (!propertyId || !date) return res.status(400).json({ error: 'Required: propertyId, date' });
-    const entry = propertyExpensesService.add({ propertyId, date, description, amount });
+    const entry = await propertyExpensesService.add({ propertyId, date, description, amount });
     res.json({ expense: entry });
   } catch (err) {
     console.error(err);
@@ -600,11 +600,11 @@ app.post('/api/property-expenses', (req, res) => {
   }
 });
 
-app.put('/api/property-expenses/:id', (req, res) => {
+app.put('/api/property-expenses/:id', async (req, res) => {
   try {
     const { date, description, amount } = req.body;
     if (!date) return res.status(400).json({ error: 'Required: date' });
-    const entry = propertyExpensesService.update(req.params.id, { date, description, amount });
+    const entry = await propertyExpensesService.update(req.params.id, { date, description, amount });
     res.json({ expense: entry });
   } catch (err) {
     console.error(err);
@@ -612,9 +612,9 @@ app.put('/api/property-expenses/:id', (req, res) => {
   }
 });
 
-app.delete('/api/property-expenses/:id', (req, res) => {
+app.delete('/api/property-expenses/:id', async (req, res) => {
   try {
-    propertyExpensesService.remove(req.params.id);
+    await propertyExpensesService.remove(req.params.id);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -622,20 +622,20 @@ app.delete('/api/property-expenses/:id', (req, res) => {
   }
 });
 
-app.get('/api/subscriptions', (req, res) => {
+app.get('/api/subscriptions', async (req, res) => {
   try {
-    res.json({ subscriptions: subscriptionsService.getAll() });
+    res.json({ subscriptions: await subscriptionsService.getAll() });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/subscriptions', (req, res) => {
+app.post('/api/subscriptions', async (req, res) => {
   try {
     const { name, category, cost, billingCycle, nextRenewalDate, autoRenew, lastUsedDate } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = subscriptionsService.add({ name, category, cost, billingCycle, nextRenewalDate, autoRenew, lastUsedDate });
+    const entry = await subscriptionsService.add({ name, category, cost, billingCycle, nextRenewalDate, autoRenew, lastUsedDate });
     res.json({ subscription: entry });
   } catch (err) {
     console.error(err);
@@ -643,11 +643,11 @@ app.post('/api/subscriptions', (req, res) => {
   }
 });
 
-app.put('/api/subscriptions/:id', (req, res) => {
+app.put('/api/subscriptions/:id', async (req, res) => {
   try {
     const { name, category, cost, billingCycle, nextRenewalDate, autoRenew, lastUsedDate } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = subscriptionsService.update(req.params.id, { name, category, cost, billingCycle, nextRenewalDate, autoRenew, lastUsedDate });
+    const entry = await subscriptionsService.update(req.params.id, { name, category, cost, billingCycle, nextRenewalDate, autoRenew, lastUsedDate });
     res.json({ subscription: entry });
   } catch (err) {
     console.error(err);
@@ -655,9 +655,9 @@ app.put('/api/subscriptions/:id', (req, res) => {
   }
 });
 
-app.delete('/api/subscriptions/:id', (req, res) => {
+app.delete('/api/subscriptions/:id', async (req, res) => {
   try {
-    subscriptionsService.remove(req.params.id);
+    await subscriptionsService.remove(req.params.id);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -665,20 +665,20 @@ app.delete('/api/subscriptions/:id', (req, res) => {
   }
 });
 
-app.get('/api/chores', (req, res) => {
+app.get('/api/chores', async (req, res) => {
   try {
-    res.json({ chores: choresService.getAll() });
+    res.json({ chores: await choresService.getAll() });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/chores', (req, res) => {
+app.post('/api/chores', async (req, res) => {
   try {
     const { name, frequency, notes, priority, propertyId, vehicleId } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = choresService.add({ name, frequency, notes, priority, propertyId, vehicleId });
+    const entry = await choresService.add({ name, frequency, notes, priority, propertyId, vehicleId });
     res.json({ chore: entry });
   } catch (err) {
     console.error(err);
@@ -686,11 +686,11 @@ app.post('/api/chores', (req, res) => {
   }
 });
 
-app.put('/api/chores/:id', (req, res) => {
+app.put('/api/chores/:id', async (req, res) => {
   try {
     const { name, frequency, notes, priority, propertyId, vehicleId } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = choresService.update(req.params.id, { name, frequency, notes, priority, propertyId, vehicleId });
+    const entry = await choresService.update(req.params.id, { name, frequency, notes, priority, propertyId, vehicleId });
     res.json({ chore: entry });
   } catch (err) {
     console.error(err);
@@ -698,9 +698,9 @@ app.put('/api/chores/:id', (req, res) => {
   }
 });
 
-app.delete('/api/chores/:id', (req, res) => {
+app.delete('/api/chores/:id', async (req, res) => {
   try {
-    choresService.remove(req.params.id);
+    await choresService.remove(req.params.id);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -708,9 +708,9 @@ app.delete('/api/chores/:id', (req, res) => {
   }
 });
 
-app.post('/api/chores/:id/toggle', (req, res) => {
+app.post('/api/chores/:id/toggle', async (req, res) => {
   try {
-    const entry = choresService.toggleComplete(req.params.id);
+    const entry = await choresService.toggleComplete(req.params.id);
     res.json({ chore: entry });
   } catch (err) {
     console.error(err);
@@ -724,7 +724,7 @@ app.post('/api/export/ifirma', async (req, res) => {
       return res.status(501).json({ error: 'iFirma integration not configured - see .claude/skills/ifirma-integration/SKILL.md' });
     }
     const { historyId } = req.body;
-    const historyEntry = historyId && protocolsHistoryService.getById(historyId);
+    const historyEntry = historyId && await protocolsHistoryService.getById(historyId);
     if (!historyEntry) {
       return res.status(404).json({ error: 'Protocol history entry not found - generate protocols first' });
     }
