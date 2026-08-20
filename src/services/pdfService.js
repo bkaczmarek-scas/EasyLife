@@ -83,10 +83,13 @@ async function buildPdf(layout) {
     return lines;
   }
 
-  drawText(layout.title, marginX, y, fontBold, 13);
+  const brandPurple = rgb(0x48 / 255, 0x3d / 255, 0xff / 255);
+  drawText('SOFTCRAFT AS', marginX, y, fontBold, 9, brandPurple);
   const logoW = 100, logoH = logoW * (logoImg.height / logoImg.width);
-  page.drawImage(logoImg, { x: pageWidth - marginX - logoW, y: y - logoH + 10, width: logoW, height: logoH });
-  y -= 36;
+  page.drawImage(logoImg, { x: pageWidth - marginX - logoW, y: y - logoH + 20, width: logoW, height: logoH });
+  y -= 16;
+  drawText(layout.title, marginX, y, fontBold, 17);
+  y -= 30;
 
   const lineH = 12;
   const rowPad = 6;
@@ -202,7 +205,7 @@ async function buildZamowienie(data) {
     ],
     sections: [
       {
-        title: 'ZAKRES ZAMÓWIENIA',
+        title: 'Zakres Zamówienia',
         paragraphs: [
           { text: 'Zleceniodawca zleca Zleceniobiorcy wykonanie niżej wymienionych prac, projektów, usług, w tym programistycznych dla następujących klientów:' },
           { type: 'spacer', h: 8 },
@@ -210,9 +213,9 @@ async function buildZamowienie(data) {
         ]
       },
       {
-        title: 'WYNAGRODZENIE ZLECENIOBIORCY I DODATKOWE KOSZTY',
+        title: 'Wynagrodzenie Zleceniobiorcy i Dodatkowe Koszty',
         paragraphs: [
-          { text: `Wynagrodzenie Zleceniobiorcy wynosi ${data.kwota.toLocaleString('pl-PL')} zł netto (słownie: ${data.kwotaSlownie})` },
+          { text: `Wynagrodzenie Zleceniobiorcy wynosi ${data.kwota.toLocaleString('pl-PL')} zł (słownie: ${data.kwotaSlownie}).` },
           { type: 'spacer', h: 8 },
           { text: 'Powyższe wynagrodzenie Zleceniobiorcy zgodnie z § 6 ust. 1 Umowy zawiera wynagrodzenie ryczałtowe za przeniesienie: autorskich praw majątkowych, autorskich praw zależnych do programów komputerowych oraz autorskich praw majątkowych do pozostałych utworów, autorskich praw zależnych.' },
           { type: 'spacer', h: 8 },
@@ -235,7 +238,7 @@ async function buildOdbiorczy(data) {
     ],
     sections: [
       {
-        title: 'ZAKRES PRAC',
+        title: 'Zakres Prac',
         paragraphs: [
           { text: 'W trakcie okresu rozliczeniowego Zleceniobiorca wykonał następujące utwory, usługi :' },
           { type: 'spacer', h: 8 },
@@ -257,13 +260,13 @@ async function buildOdbiorczy(data) {
         ]
       },
       {
-        title: 'UWAGI',
+        title: 'Uwagi',
         paragraphs: [
           { text: 'Zleceniodawca oświadcza, że ww. utwory, usługi zostały wykonane zgodnie z Zamówieniem.' },
           { type: 'spacer', h: 8 },
           { text: 'Zleceniodawca oświadcza, że przyjmuje utwory, usługi.' },
           { type: 'spacer', h: 8 },
-          { text: `Zleceniodawca oświadcza, że za wykonanie zamówienia Zleceniobiorca może wystawić fakturę na kwotę ${data.kwota.toLocaleString('pl-PL')} zł (słownie : ${data.kwotaSlownie}) netto` },
+          { text: `Zleceniodawca oświadcza, że za wykonanie zamówienia Zleceniobiorca może wystawić fakturę na kwotę ${data.kwota.toLocaleString('pl-PL')} zł (słownie: ${data.kwotaSlownie}) netto.` },
           { type: 'spacer', h: 10 },
           { text: '*niepotrzebne usunąć lub skreślić' },
           { type: 'spacer', h: 4 },
