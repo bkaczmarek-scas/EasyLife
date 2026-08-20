@@ -1,7 +1,5 @@
 import { useMemo } from 'react'
-import { IconDownload } from '@tabler/icons-react'
 import { Card, StatTile } from '../../components/ui/Card'
-import { Button } from '../../components/ui/Button'
 import { YearSelector } from '../../components/ui/YearSelector'
 import { useYearWorklogs } from '../../api/resources/worklogs'
 import { cn } from '../../lib/cn'
@@ -37,11 +35,9 @@ export function useHoursData(year: number) {
 export function HoursContent({
   year,
   onYearChange,
-  onExport,
 }: {
   year: number
   onYearChange: (updater: (year: number) => number) => void
-  onExport: () => void
 }) {
   const { byMonth, isLoading, isRefreshing, daysOff } = useHoursData(year)
 
@@ -57,12 +53,7 @@ export function HoursContent({
       <Card className="mt-6 !p-0">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <p className="text-base font-semibold text-text-primary">Monthly Worked Hours ({year})</p>
-          <div className="flex items-center gap-3">
-            <YearSelector year={year} onChange={onYearChange} />
-            <Button variant="secondary" onClick={onExport}>
-              <IconDownload size={14} /> Export CSV
-            </Button>
-          </div>
+          <YearSelector year={year} onChange={onYearChange} />
         </div>
         <div className="h-80 p-5">
           <HoursChart capacity={capacity} logged={logged} />
