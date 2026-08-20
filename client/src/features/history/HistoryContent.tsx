@@ -26,7 +26,7 @@ function fileToBase64(file: File): Promise<string> {
   })
 }
 
-export function HistoryPage() {
+export function HistoryContent() {
   const { data: history, isLoading } = useProtocolsHistory()
   const downloadProtocolFile = useDownloadProtocolFile()
   const downloadManualFile = useDownloadManualFile()
@@ -66,11 +66,8 @@ export function HistoryPage() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-text-primary">Document History &amp; Protocols</h1>
-      <p className="mt-1 text-sm text-text-secondary">Upload and inspect billing protocol and invoice files.</p>
-
-      <Card className="mt-6">
+    <div className="mt-6">
+      <Card>
         <p className="mb-4 font-semibold text-text-primary">Upload New Protocol / Invoice</p>
         <div className="flex gap-3">
           <Select
