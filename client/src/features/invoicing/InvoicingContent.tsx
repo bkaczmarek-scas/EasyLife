@@ -40,7 +40,7 @@ function StepMarker({ n, state }: { n: number; state: 'done' | 'active' | 'pendi
   )
 }
 
-export function InvoicingPage() {
+export function InvoicingContent() {
   const now = new Date()
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear] = useState(now.getFullYear())
@@ -88,11 +88,8 @@ export function InvoicingPage() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-text-primary">Invoicing</h1>
-      <p className="mt-1 text-sm text-text-secondary">Fetch verified work hours to structure invoice generation.</p>
-
-      <Card className="mt-6 flex items-center gap-6 !flex-row overflow-x-auto">
+    <div className="mt-6">
+      <Card className="flex items-center gap-6 !flex-row overflow-x-auto">
         <div className="flex items-center gap-2">
           <StepMarker n={1} state={step > 1 ? 'done' : 'active'} />
           <span className={step === 1 ? 'font-semibold text-text-primary' : 'text-text-secondary'}>Choose Period</span>

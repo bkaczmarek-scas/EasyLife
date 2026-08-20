@@ -4,9 +4,6 @@ import {
   IconLayoutDashboard,
   IconReceipt2,
   IconClock,
-  IconPercentage,
-  IconWallet,
-  IconHistory,
   IconCar,
   IconHome,
   IconCalendar,
@@ -26,10 +23,7 @@ interface NavItemDef {
 
 const careerItems: NavItemDef[] = [
   { to: '/invoicing', label: 'Invoicing', icon: IconReceipt2 },
-  { to: '/hours', label: 'Hours & Vacations', icon: IconClock },
-  { to: '/rates', label: 'Rates', icon: IconPercentage },
-  { to: '/income', label: 'Income', icon: IconWallet },
-  { to: '/history', label: 'History', icon: IconHistory },
+  { to: '/work', label: 'Compensation', icon: IconClock },
 ]
 
 const homeItems: NavItemDef[] = [
