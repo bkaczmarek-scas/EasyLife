@@ -79,7 +79,7 @@ export function SubscriptionFormDialog({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="sub-cost">Cost (PLN)</Label>
+            <Label htmlFor="sub-cost">Cost (zł)</Label>
             <Input id="sub-cost" type="number" value={cost} onChange={(e) => setCost(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">

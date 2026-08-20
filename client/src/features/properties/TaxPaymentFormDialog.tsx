@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/Button'
 import { Input, Label } from '../../components/ui/Input'
 import { useAddTaxPayment, useUpdateTaxPayment, type TaxPayment } from '../../api/resources/taxPayments'
 import { useToast } from '../../components/ui/Toast'
+import { formatPLN } from '../../lib/money'
 
 export function TaxPaymentFormDialog({
   open,
@@ -70,7 +71,7 @@ export function TaxPaymentFormDialog({
           <Input id="tax-period" type="month" value={period} onChange={(e) => setPeriod(e.target.value)} required />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="tax-amount">Amount Transferred (PLN)</Label>
+          <Label htmlFor="tax-amount">Amount Transferred (zł)</Label>
           <Input id="tax-amount" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required />
         </div>
         <p className="text-xs text-text-muted">
@@ -78,17 +79,17 @@ export function TaxPaymentFormDialog({
         </p>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="tax-sienkiewicza">Sienkiewicza (PLN)</Label>
+            <Label htmlFor="tax-sienkiewicza">Sienkiewicza (zł)</Label>
             <Input id="tax-sienkiewicza" type="number" value={sienkiewicza} onChange={(e) => setSienkiewicza(e.target.value)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="tax-szczesliwa">Szczęśliwa (PLN)</Label>
+            <Label htmlFor="tax-szczesliwa">Szczęśliwa (zł)</Label>
             <Input id="tax-szczesliwa" type="number" value={szczesliwa} onChange={(e) => setSzczesliwa(e.target.value)} />
           </div>
         </div>
         {splitMismatch && (
           <p className="text-xs font-semibold text-warning-text">
-            Split total ({splitSum.toFixed(2)} PLN) doesn't match the transferred amount ({Number(amount).toFixed(2)} PLN) — that's fine if the split isn't fully confirmed yet.
+            Split total ({formatPLN(splitSum)}) doesn't match the transferred amount ({formatPLN(Number(amount))}) — that's fine if the split isn't fully confirmed yet.
           </p>
         )}
         <div className="flex flex-col gap-1.5">

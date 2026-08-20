@@ -4,6 +4,7 @@ import { useProperties } from '../../api/resources/properties'
 import { useSubscriptions } from '../../api/resources/subscriptions'
 import { useChores } from '../../api/resources/chores'
 import type { BadgeTone } from '../../components/ui/Badge'
+import { formatPLN } from '../../lib/money'
 
 export interface AttentionItem {
   id: string
@@ -113,7 +114,7 @@ export function useAttentionItems() {
             tone: 'info',
             source: s.name,
             title: 'Subscription Auto-Renewal Pending',
-            description: `Automatic charge of ${s.cost.toFixed(2)} PLN scheduled ${days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`}.`,
+            description: `Automatic charge of ${formatPLN(s.cost)} scheduled ${days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`}.`,
             dueLabel: days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} Days Left`,
             actionLabel: 'Manage Sub',
             actionTo: '/subscriptions',

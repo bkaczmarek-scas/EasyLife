@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import { IconChevronLeft, IconChevronRight, IconDownload } from '@tabler/icons-react'
 import { Tabs } from '../../components/ui/Tabs'
-import { Button } from '../../components/ui/Button'
 import { downloadCsv } from '../../lib/csv'
 import { HoursContent, useHoursData, WORKING_HOURS_BY_MONTH } from '../hours/HoursContent'
 import { formatPeriodLabel } from '../rates/RatesContent'
@@ -43,7 +41,7 @@ export function WorkCompensationPage() {
         ['Bonus', 'Date', 'Amount'],
         ...yearBonuses.map((b) => [b.name, b.date, b.amount]),
         [],
-        ['Effective from', 'Rate (PLN/h)'],
+        ['Effective from', 'Rate (zł/h)'],
         ...(rates ?? []).map((r) => [formatPeriodLabel(r.from), r.rate]),
       ]
       downloadCsv(`income-${year}.csv`, rows)
@@ -52,25 +50,9 @@ export function WorkCompensationPage() {
 
   return (
     <div>
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-text-primary">Compensation</h1>
-          <p className="mt-1 text-sm text-text-secondary">Track working hours, active contract rates, and detailed historical compensation.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setYear((y) => y - 1)} className="rounded-md p-1.5 hover:bg-canvas">
-              <IconChevronLeft size={16} />
-            </button>
-            <span className="text-sm font-semibold text-text-primary">Year {year}</span>
-            <button type="button" onClick={() => setYear((y) => y + 1)} className="rounded-md p-1.5 hover:bg-canvas">
-              <IconChevronRight size={16} />
-            </button>
-          </div>
-          <Button variant="secondary" onClick={handleExport}>
-            <IconDownload size={14} /> Export CSV
-          </Button>
-        </div>
+      <div>
+        <h1 className="text-2xl font-semibold text-text-primary">Compensation</h1>
+        <p className="mt-1 text-sm text-text-secondary">Track working hours, active contract rates, and detailed historical compensation.</p>
       </div>
 
       <div className="mt-6">
@@ -84,8 +66,8 @@ export function WorkCompensationPage() {
         />
       </div>
 
-      {tab === 'income' && <IncomeContent year={year} />}
-      {tab === 'hours' && <HoursContent year={year} />}
+      {tab === 'income' && <IncomeContent year={year} onYearChange={setYear} onExport={handleExport} />}
+      {tab === 'hours' && <HoursContent year={year} onYearChange={setYear} onExport={handleExport} />}
     </div>
   )
 }

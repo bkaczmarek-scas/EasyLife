@@ -62,7 +62,7 @@ export function BonusFormDialog({
             <Input id="bonus-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="bonus-amount">Amount (PLN)</Label>
+            <Label htmlFor="bonus-amount">Amount (zł)</Label>
             <Input id="bonus-amount" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required />
           </div>
         </div>

@@ -11,6 +11,7 @@ import { PropertyFormSheet } from './PropertyFormSheet'
 import { PropertyDetailSheet } from './PropertyDetailSheet'
 import { TaxLedger } from './TaxLedger'
 import { dateUrgency } from '../../lib/dateUrgency'
+import { formatPLN } from '../../lib/money'
 
 type PageTab = 'units' | 'tax'
 
@@ -39,7 +40,7 @@ function PropertyCard({
           <p className="mt-1 text-xs text-text-secondary">{property.address}</p>
           {property.tenant && (
             <p className="text-xs text-text-muted">
-              Tenant: {property.tenant.tenants.map((t) => t.name).join(', ') || '—'} · Rent: {property.tenant.rentAmount} PLN/mo
+              Tenant: {property.tenant.tenants.map((t) => t.name).join(', ') || '—'} · Rent: {formatPLN(property.tenant.rentAmount)}/mo
             </p>
           )}
         </div>

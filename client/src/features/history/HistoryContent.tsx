@@ -14,6 +14,7 @@ import {
   useDeleteHistoryEntry,
   type ProtocolHistoryEntry,
 } from '../../api/resources/protocolsHistory'
+import { formatPLN } from '../../lib/money'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
@@ -145,7 +146,7 @@ export function HistoryContent() {
                   </td>
                   <td className="py-3 text-text-secondary">{entry.orderNumber ?? '—'}</td>
                   <td className="py-3 text-text-secondary">{entry.totalHours ?? '—'}</td>
-                  <td className="py-3 text-text-secondary">{entry.amount != null ? `${entry.amount.toFixed(2)} PLN` : '—'}</td>
+                  <td className="py-3 text-text-secondary">{entry.amount != null ? formatPLN(entry.amount) : '—'}</td>
                   <td className="py-3">
                     <div className="flex flex-wrap items-center gap-2">
                       {entry.files.zamowienie && (
