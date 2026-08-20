@@ -14,16 +14,14 @@ const SEED_PROPERTIES = [
     maintenanceNote: 'Bathroom renovation planned', maintenanceDate: '2026-09-20'
   },
   {
-    id: 'seed-p2', name: 'Mieszkanie Jeżyce', type: 'rental', address: 'ul. Dąbrowskiego 45/3, Poznań',
-    tenant: { name: 'Anna Nowak', phone: '+48 601 234 567', leaseStart: '2025-10-01', leaseEnd: '2026-09-30', rentAmount: 2400, rentStatus: 'paid' },
+    id: 'seed-p2', name: 'Mieszkanie Przykładowe', type: 'rental', address: 'ul. Przykładowa 45/3, Poznań',
+    tenant: {
+      tenants: [{ name: 'Anna Nowak', phone: '+48 601 234 567', email: 'anna.nowak@example.com' }],
+      leaseStart: '2025-10-01', leaseEnd: '2026-09-30',
+      rentAmount: 2400, utilityAdvance: 900, taxDue: 0, deposit: 2400,
+      gateCode: '', notes: ''
+    },
     comments: []
-  },
-  {
-    id: 'seed-p3', name: 'Apartament Grunwald', type: 'rental', address: 'ul. Grunwaldzka 88/5, Poznań',
-    tenant: { name: 'Piotr Wiśniewski', phone: '+48 602 345 678', leaseStart: '2026-01-15', leaseEnd: '2026-12-31', rentAmount: 3100, rentStatus: 'pending' },
-    comments: [
-      { id: 'seed-c1', text: 'Tenant did not pay rent for August on time — paid on Sep 3rd instead.', createdAt: '2026-08-15T09:00:00.000Z' }
-    ]
   }
 ];
 
@@ -50,14 +48,21 @@ function getAll() {
 }
 
 function normalizeTenant(type, tenant) {
-  if (type !== 'rental' || !tenant || !tenant.name) return null;
+  if (type !== 'rental' || !tenant) return null;
+  const tenants = (tenant.tenants || [])
+    .filter(t => t && t.name)
+    .map(t => ({ name: t.name, phone: t.phone || '', email: t.email || '' }));
+  if (!tenants.length) return null;
   return {
-    name: tenant.name,
-    phone: tenant.phone || '',
+    tenants,
     leaseStart: tenant.leaseStart || null,
     leaseEnd: tenant.leaseEnd || null,
     rentAmount: Number(tenant.rentAmount) || 0,
-    rentStatus: tenant.rentStatus === 'paid' ? 'paid' : 'pending'
+    utilityAdvance: Number(tenant.utilityAdvance) || 0,
+    taxDue: Number(tenant.taxDue) || 0,
+    deposit: Number(tenant.deposit) || 0,
+    gateCode: tenant.gateCode || '',
+    notes: tenant.notes || ''
   };
 }
 
@@ -95,9 +100,20 @@ function addComment(id, text) {
   const list = readAll();
   const idx = list.findIndex(p => p.id === id);
   if (idx === -1) throw new Error(`Property not found: ${id}`);
-  const comment = { id: newId(), text, createdAt: new Date().toISOString() };
+  const comment = { id: newId(), text, resolved: false, createdAt: new Date().toISOString() };
   if (!list[idx].comments) list[idx].comments = [];
   list[idx].comments.push(comment);
+  writeAll(list);
+  return list[idx];
+}
+
+function toggleCommentResolved(id, commentId) {
+  const list = readAll();
+  const idx = list.findIndex(p => p.id === id);
+  if (idx === -1) throw new Error(`Property not found: ${id}`);
+  const comment = (list[idx].comments || []).find(c => c.id === commentId);
+  if (!comment) throw new Error(`Comment not found: ${commentId}`);
+  comment.resolved = !comment.resolved;
   writeAll(list);
   return list[idx];
 }
@@ -114,4 +130,4 @@ function removeComment(id, commentId) {
   return list[idx];
 }
 
-module.exports = { getAll, add, update, remove, addComment, removeComment };
+module.exports = { getAll, add, update, remove, addComment, removeComment, toggleCommentResolved };

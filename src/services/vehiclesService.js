@@ -8,14 +8,14 @@ const VEHICLES_FILE = path.join(DATA_DIR, 'vehicles.json');
 const SERVICE_LOG_FILE = path.join(DATA_DIR, 'serviceLog.json');
 
 const SEED_VEHICLES = [
-  { id: 'seed-v1', name: 'Škoda Octavia', plate: 'PO 12345', vin: 'TMBJJ7NE0N0123456', mileage: 68200, nextServiceDate: '2026-09-02', insuranceExpiryDate: '2027-01-10', mileageUpdatedAt: '2026-08-10T09:00:00.000Z' },
-  { id: 'seed-v2', name: 'VW Transporter', plate: 'PO 98765', vin: 'WV1ZZZ7HZKH123456', mileage: 142500, nextServiceDate: '2026-10-15', insuranceExpiryDate: '2026-09-03', mileageUpdatedAt: '2026-08-05T09:00:00.000Z' }
+  { id: 'seed-v1', name: 'Škoda Octavia', type: 'car', year: 2019, engine: '2.0', fuelType: 'diesel', power: 150, plate: 'PO 12345', vin: 'TMBJJ7NE0N0123456', mileage: 68200, nextServiceDate: '2026-09-02', insuranceExpiryDate: '2027-01-10', mileageUpdatedAt: '2026-08-10T09:00:00.000Z' },
+  { id: 'seed-v2', name: 'VW Transporter', type: 'car', year: 2017, engine: '2.0', fuelType: 'diesel', power: 140, plate: 'PO 98765', vin: 'WV1ZZZ7HZKH123456', mileage: 142500, nextServiceDate: '2026-10-15', insuranceExpiryDate: '2026-09-03', mileageUpdatedAt: '2026-08-05T09:00:00.000Z' }
 ];
 
 const SEED_SERVICE_LOG = [
-  { id: 'seed-s1', vehicleId: 'seed-v1', date: '2026-03-04', type: 'Oil change', description: 'Full synthetic oil + filter', cost: 420, mileage: 65000 },
-  { id: 'seed-s2', vehicleId: 'seed-v1', date: '2025-09-11', type: 'Repair', description: 'Front brake pads and discs', cost: 980, mileage: 58000 },
-  { id: 'seed-s3', vehicleId: 'seed-v2', date: '2026-01-20', type: 'Inspection', description: 'Annual technical inspection', cost: 150, mileage: 138000 }
+  { id: 'seed-s1', vehicleId: 'seed-v1', date: '2026-03-04', workshop: 'AutoSerwis Przykładowy', description: 'Full synthetic oil + filter', cost: 420, mileage: 65000 },
+  { id: 'seed-s2', vehicleId: 'seed-v1', date: '2025-09-11', workshop: 'AutoSerwis Przykładowy', description: 'Front brake pads and discs', cost: 980, mileage: 58000 },
+  { id: 'seed-s3', vehicleId: 'seed-v2', date: '2026-01-20', workshop: 'Stacja Kontroli Pojazdów', description: 'Annual technical inspection', cost: 150, mileage: 138000 }
 ];
 
 function ensureFile(file, seed) {
@@ -36,14 +36,23 @@ function newId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// Manually orderable via `order` (lower first) - falls back to name so vehicles added without
+// ever setting an order (e.g. straight through the API) still sort predictably.
 function getVehicles() {
-  return readAll(VEHICLES_FILE, SEED_VEHICLES).sort((a, b) => a.name.localeCompare(b.name));
+  return readAll(VEHICLES_FILE, SEED_VEHICLES).sort((a, b) => {
+    if (a.order != null && b.order != null) return a.order - b.order;
+    if (a.order != null) return -1;
+    if (b.order != null) return 1;
+    return a.name.localeCompare(b.name);
+  });
 }
 
-function addVehicle({ name, plate, vin, mileage, nextServiceDate, insuranceExpiryDate }) {
+function addVehicle({ name, type, year, engine, fuelType, power, plate, vin, mileage, nextServiceDate, insuranceExpiryDate }) {
   const list = readAll(VEHICLES_FILE, SEED_VEHICLES);
   const entry = {
-    id: newId(), name, plate, vin, mileage: Number(mileage) || 0,
+    id: newId(), name, type: type || 'car', year: year ? Number(year) : null,
+    engine: engine || null, fuelType: fuelType || null, power: power ? Number(power) : null,
+    plate, vin, mileage: Number(mileage) || 0,
     nextServiceDate: nextServiceDate || null, insuranceExpiryDate: insuranceExpiryDate || null,
     mileageUpdatedAt: new Date().toISOString()
   };
@@ -52,14 +61,16 @@ function addVehicle({ name, plate, vin, mileage, nextServiceDate, insuranceExpir
   return entry;
 }
 
-function updateVehicle(id, { name, plate, vin, mileage, nextServiceDate, insuranceExpiryDate }) {
+function updateVehicle(id, { name, type, year, engine, fuelType, power, plate, vin, mileage, nextServiceDate, insuranceExpiryDate }) {
   const list = readAll(VEHICLES_FILE, SEED_VEHICLES);
   const idx = list.findIndex(v => v.id === id);
   if (idx === -1) throw new Error(`Vehicle not found: ${id}`);
   const newMileage = Number(mileage) || 0;
   const mileageChanged = newMileage !== list[idx].mileage;
   list[idx] = {
-    ...list[idx], name, plate, vin, mileage: newMileage,
+    ...list[idx], name, type: type || 'car', year: year ? Number(year) : null,
+    engine: engine || null, fuelType: fuelType || null, power: power ? Number(power) : null,
+    plate, vin, mileage: newMileage,
     nextServiceDate: nextServiceDate || null, insuranceExpiryDate: insuranceExpiryDate || null,
     mileageUpdatedAt: mileageChanged ? new Date().toISOString() : list[idx].mileageUpdatedAt
   };
@@ -95,10 +106,10 @@ function getServiceLog(vehicleId) {
   return filtered.sort((a, b) => b.date.localeCompare(a.date));
 }
 
-function addServiceEntry({ vehicleId, date, type, description, cost, mileage }) {
+function addServiceEntry({ vehicleId, date, workshop, description, cost, mileage }) {
   const list = readAll(SERVICE_LOG_FILE, SEED_SERVICE_LOG);
   const entry = {
-    id: newId(), vehicleId, date, type, description: description || '', cost: Number(cost) || 0,
+    id: newId(), vehicleId, date, workshop: workshop || '', description: description || '', cost: Number(cost) || 0,
     mileage: mileage != null && mileage !== '' ? Number(mileage) : null
   };
   list.push(entry);

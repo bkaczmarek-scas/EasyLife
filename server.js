@@ -12,6 +12,16 @@ if (process.env.DEMO_MODE === 'true') {
   process.env.CONTRACTOR_NIP = '0000000000';
   process.env.CONTRACTOR_ORDER_INITIALS = 'XX';
   process.env.CONTRACTOR_AGREEMENT_DATE = '01.01.2025';
+  delete process.env.IFIRMA_USERNAME;
+  delete process.env.IFIRMA_INVOICE_KEY;
+  delete process.env.IFIRMA_BANK_ACCOUNT;
+  process.env.CLIENT_NAME = 'Przykladowa Sp. z o.o.';
+  process.env.CLIENT_NIP = '0000000000';
+  process.env.CLIENT_ADDRESS_STREET = 'ul. Przykladowa 1';
+  process.env.CLIENT_POSTAL_CODE = '00-000';
+  process.env.CLIENT_CITY = 'Warszawa';
+  process.env.CLIENT_COUNTRY = 'Polska';
+  delete process.env.CLIENT_COUNTRY_CODE;
 }
 
 const path = require('path');
@@ -29,6 +39,8 @@ const costsService = require('./src/services/costsService');
 const protocolsHistoryService = require('./src/services/protocolsHistoryService');
 const vehiclesService = require('./src/services/vehiclesService');
 const propertiesService = require('./src/services/propertiesService');
+const taxPaymentsService = require('./src/services/taxPaymentsService');
+const propertyExpensesService = require('./src/services/propertyExpensesService');
 const subscriptionsService = require('./src/services/subscriptionsService');
 const choresService = require('./src/services/choresService');
 const ifirmaService = require('./src/services/ifirmaService');
@@ -374,9 +386,9 @@ app.get('/api/vehicles', (req, res) => {
 
 app.post('/api/vehicles', (req, res) => {
   try {
-    const { name, plate, vin, mileage, nextServiceDate, insuranceExpiryDate } = req.body;
+    const { name, type, year, engine, fuelType, power, plate, vin, mileage, nextServiceDate, insuranceExpiryDate } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = vehiclesService.addVehicle({ name, plate, vin, mileage, nextServiceDate, insuranceExpiryDate });
+    const entry = vehiclesService.addVehicle({ name, type, year, engine, fuelType, power, plate, vin, mileage, nextServiceDate, insuranceExpiryDate });
     res.json({ vehicle: entry });
   } catch (err) {
     console.error(err);
@@ -386,9 +398,9 @@ app.post('/api/vehicles', (req, res) => {
 
 app.put('/api/vehicles/:id', (req, res) => {
   try {
-    const { name, plate, vin, mileage, nextServiceDate, insuranceExpiryDate } = req.body;
+    const { name, type, year, engine, fuelType, power, plate, vin, mileage, nextServiceDate, insuranceExpiryDate } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = vehiclesService.updateVehicle(req.params.id, { name, plate, vin, mileage, nextServiceDate, insuranceExpiryDate });
+    const entry = vehiclesService.updateVehicle(req.params.id, { name, type, year, engine, fuelType, power, plate, vin, mileage, nextServiceDate, insuranceExpiryDate });
     res.json({ vehicle: entry });
   } catch (err) {
     console.error(err);
@@ -429,9 +441,9 @@ app.get('/api/service-log', (req, res) => {
 
 app.post('/api/service-log', (req, res) => {
   try {
-    const { vehicleId, date, type, description, cost, mileage } = req.body;
-    if (!vehicleId || !date || !type) return res.status(400).json({ error: 'Required: vehicleId, date, type' });
-    const entry = vehiclesService.addServiceEntry({ vehicleId, date, type, description, cost, mileage });
+    const { vehicleId, date, workshop, description, cost, mileage } = req.body;
+    if (!vehicleId || !date) return res.status(400).json({ error: 'Required: vehicleId, date' });
+    const entry = vehiclesService.addServiceEntry({ vehicleId, date, workshop, description, cost, mileage });
     res.json({ entry });
   } catch (err) {
     console.error(err);
@@ -514,6 +526,102 @@ app.delete('/api/properties/:id/comments/:commentId', (req, res) => {
   }
 });
 
+app.put('/api/properties/:id/comments/:commentId/resolve', (req, res) => {
+  try {
+    const property = propertiesService.toggleCommentResolved(req.params.id, req.params.commentId);
+    res.json({ property });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.get('/api/tax-payments', (req, res) => {
+  try {
+    res.json({ payments: taxPaymentsService.getAll() });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/tax-payments', (req, res) => {
+  try {
+    const { period, amount, sienkiewicza, szczesliwa, sienkiewiczaNote, szczesliwaNote, transferDate } = req.body;
+    if (!period) return res.status(400).json({ error: 'Required: period' });
+    const entry = taxPaymentsService.add({ period, amount, sienkiewicza, szczesliwa, sienkiewiczaNote, szczesliwaNote, transferDate });
+    res.json({ payment: entry });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/tax-payments/:id', (req, res) => {
+  try {
+    const { period, amount, sienkiewicza, szczesliwa, sienkiewiczaNote, szczesliwaNote, transferDate } = req.body;
+    if (!period) return res.status(400).json({ error: 'Required: period' });
+    const entry = taxPaymentsService.update(req.params.id, { period, amount, sienkiewicza, szczesliwa, sienkiewiczaNote, szczesliwaNote, transferDate });
+    res.json({ payment: entry });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.delete('/api/tax-payments/:id', (req, res) => {
+  try {
+    taxPaymentsService.remove(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.get('/api/property-expenses', (req, res) => {
+  try {
+    res.json({ expenses: propertyExpensesService.getAll(req.query.propertyId) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/property-expenses', (req, res) => {
+  try {
+    const { propertyId, date, description, amount } = req.body;
+    if (!propertyId || !date) return res.status(400).json({ error: 'Required: propertyId, date' });
+    const entry = propertyExpensesService.add({ propertyId, date, description, amount });
+    res.json({ expense: entry });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/property-expenses/:id', (req, res) => {
+  try {
+    const { date, description, amount } = req.body;
+    if (!date) return res.status(400).json({ error: 'Required: date' });
+    const entry = propertyExpensesService.update(req.params.id, { date, description, amount });
+    res.json({ expense: entry });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.delete('/api/property-expenses/:id', (req, res) => {
+  try {
+    propertyExpensesService.remove(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: err.message });
+  }
+});
+
 app.get('/api/subscriptions', (req, res) => {
   try {
     res.json({ subscriptions: subscriptionsService.getAll() });
@@ -568,9 +676,9 @@ app.get('/api/chores', (req, res) => {
 
 app.post('/api/chores', (req, res) => {
   try {
-    const { name, frequency, notes, weatherDependent } = req.body;
+    const { name, frequency, notes, priority, propertyId, vehicleId } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = choresService.add({ name, frequency, notes, weatherDependent });
+    const entry = choresService.add({ name, frequency, notes, priority, propertyId, vehicleId });
     res.json({ chore: entry });
   } catch (err) {
     console.error(err);
@@ -580,9 +688,9 @@ app.post('/api/chores', (req, res) => {
 
 app.put('/api/chores/:id', (req, res) => {
   try {
-    const { name, frequency, notes, weatherDependent } = req.body;
+    const { name, frequency, notes, priority, propertyId, vehicleId } = req.body;
     if (!name) return res.status(400).json({ error: 'Required: name' });
-    const entry = choresService.update(req.params.id, { name, frequency, notes, weatherDependent });
+    const entry = choresService.update(req.params.id, { name, frequency, notes, priority, propertyId, vehicleId });
     res.json({ chore: entry });
   } catch (err) {
     console.error(err);
@@ -613,9 +721,20 @@ app.post('/api/chores/:id/toggle', (req, res) => {
 app.post('/api/export/ifirma', async (req, res) => {
   try {
     if (!ifirmaService.isConfigured()) {
-      return res.status(501).json({ error: 'iFirma integration not implemented yet - see .claude/skills/ifirma-integration/SKILL.md' });
+      return res.status(501).json({ error: 'iFirma integration not configured - see .claude/skills/ifirma-integration/SKILL.md' });
     }
-    const entry = await ifirmaService.createInvoice(req.body);
+    const { historyId } = req.body;
+    const historyEntry = historyId && protocolsHistoryService.getById(historyId);
+    if (!historyEntry) {
+      return res.status(404).json({ error: 'Protocol history entry not found - generate protocols first' });
+    }
+    const entry = await ifirmaService.createInvoice({
+      month: historyEntry.month,
+      year: historyEntry.year,
+      totalHours: historyEntry.totalHours,
+      kwota: historyEntry.amount,
+      orderNumber: historyEntry.orderNumber
+    });
     res.json({ entry });
   } catch (err) {
     console.error(err);

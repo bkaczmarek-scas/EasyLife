@@ -112,7 +112,7 @@
   .icon-btn.danger:hover{background:var(--bg-danger); color:var(--text-danger);}
 
   select{font-size:13px; font-family:inherit; padding:6px 10px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2);}
-  input[type="text"], input[type="date"], input[type="number"]{font-size:13px; font-family:inherit; padding:6px 10px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2); width:100%;}
+  input[type="text"], input[type="date"], input[type="number"], input[type="email"], input[type="month"]{font-size:13px; font-family:inherit; padding:6px 10px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2); width:100%;}
   input:focus{outline:none; border-color:var(--accent);}
   input[type="number"].income-input{width:78px; font-size:12px; padding:4px 6px;}
   .income-table th, .income-table td{white-space:nowrap; padding-right:16px;}
@@ -136,6 +136,8 @@
   th{text-align:left; font-weight:500; color:var(--text-secondary); padding:6px 0;}
   td{padding:8px 0; border-top:1px solid var(--border);}
   tr:first-of-type td{border-top:none;}
+  #taxMainTable th, #taxMainTable td{padding-right:14px;}
+  #taxMainTable th:last-child, #taxMainTable td:last-child{padding-right:0;}
 
   .row-toggle{width:18px; height:18px; padding:0; border:none; background:transparent; color:var(--text-muted);
     display:inline-flex; align-items:center; justify-content:center; cursor:pointer; border-radius:4px; margin-right:4px; vertical-align:middle;}
@@ -191,6 +193,11 @@
   .carousel::-webkit-scrollbar-thumb{background:var(--border); border-radius:var(--radius-pill);}
   .vehicle-card{flex:0 0 240px; scroll-snap-align:start; border:1px solid var(--border); border-radius:var(--radius-lg);
     background:var(--surface-2); padding:16px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:border-color 150ms;}
+  .vehicle-card-add{flex:0 0 240px; scroll-snap-align:start; border:1px solid transparent; border-radius:var(--radius-lg);
+    background:var(--accent-tint); color:var(--accent); padding:16px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:8px; cursor:pointer; font-weight:600; font-size:14px; transition:background 150ms; min-height:120px;}
+  .vehicle-card-add:hover{background:var(--accent-tint-hover);}
+  .vehicle-card-add i{font-size:24px;}
   .vehicle-card:hover{border-color:var(--accent);}
   .vehicle-card.selected{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
   .vehicle-card-icon{width:40px; height:40px; border-radius:var(--radius); background:var(--surface-1); color:var(--accent);
@@ -218,7 +225,7 @@
   .timeline-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
   .timeline-header{display:flex; justify-content:space-between; align-items:center; gap:8px;}
   .timeline-title{font-size:13px; font-weight:600;}
-  .timeline-desc{font-size:12px; color:var(--text-secondary); margin:0;}
+  .timeline-desc{font-size:12px; color:var(--text-secondary); margin:0; white-space:pre-line;}
   .timeline-date{font-size:11px; color:var(--text-muted);}
 
   .property-group-title{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin:0;}
@@ -228,22 +235,18 @@
   .property-card:hover{border-color:var(--accent);}
   .property-card-name{font-size:14px; font-weight:700; margin:0;}
   .property-card-address{font-size:12px; color:var(--text-secondary); margin:0;}
-  .property-card-footer{display:flex; justify-content:space-between; align-items:center; margin-top:4px;}
+  .property-card-footer{display:flex; flex-direction:column; gap:4px; margin-top:8px;}
+  .property-card-status, .property-card-tenant{font-size:12px; color:var(--text-primary); margin:0;}
+  .property-card-label{color:var(--text-muted);}
 
   .stats-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;}
 
-  .insights-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px; align-items:start;}
-  .insight-category{border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface-2); padding:16px; display:flex; flex-direction:column; gap:10px;}
-  .insight-category-header{display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--text-primary);}
-  .insight-category-header i{color:var(--accent); font-size:16px;}
-  .insight-list{display:flex; flex-direction:column; gap:4px;}
-  .insight-row{display:flex; align-items:flex-start; gap:10px; padding:8px; border-radius:var(--radius); cursor:pointer;}
+  .insights-grid{display:flex; flex-direction:column;}
+  .insight-row{display:flex; align-items:center; gap:10px; padding:9px 4px; cursor:pointer; border-bottom:1px solid var(--border);}
+  .insight-row:last-child{border-bottom:none;}
   .insight-row:hover{background:var(--surface-1);}
-  .insight-row-icon{width:28px; height:28px; border-radius:var(--radius); background:var(--surface-1); color:var(--accent);
-    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:14px;}
-  .insight-row-body{flex:1; min-width:0;}
-  .insight-row-message{font-size:13px; font-weight:600; margin:0; color:var(--text-primary); line-height:1.4;}
-  .insight-row-sub{font-size:11px; color:var(--text-muted);}
+  .insight-row-icon{color:var(--accent); font-size:15px; width:18px; text-align:center; flex-shrink:0;}
+  .insight-row-message{font-size:13px; font-weight:500; margin:0; color:var(--text-primary); line-height:1.4;}
   .view-toggle{display:inline-flex; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;}
   .view-toggle-btn{border:none; border-radius:0; padding:6px 9px; background:var(--surface-2); color:var(--text-secondary); display:flex; align-items:center; cursor:pointer;}
   .view-toggle-btn + .view-toggle-btn{border-left:1px solid var(--border);}
@@ -251,7 +254,7 @@
   .view-toggle-btn:hover:not(.active){background:var(--surface-1);}
 
   .chores-list{display:flex; flex-direction:column; gap:10px;}
-  .chore-row{display:flex; align-items:flex-start; gap:12px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface-2); padding:14px;}
+  .chore-row{display:flex; align-items:center; gap:12px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface-2); padding:14px;}
   .chore-checkbox{width:26px; height:26px; flex-shrink:0; margin-top:2px; border:2px solid var(--border); border-radius:50%;
     background:transparent; color:var(--accent-contrast); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; font-size:14px;}
   .chore-checkbox:hover{border-color:var(--accent);}
@@ -275,13 +278,20 @@
   .drawer-close{width:28px; height:28px; padding:0; border:none; background:transparent; border-radius:6px; color:var(--text-secondary); cursor:pointer;}
   .drawer-close:hover{background:var(--surface-1); color:var(--text-primary);}
   .drawer-body{flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:16px; margin:0 -4px; padding:0 4px;}
+  .drawer-tabs{display:flex; gap:4px; border-bottom:1px solid var(--border);}
+  .drawer-tab-btn{flex:1; border:none; background:transparent; padding:8px 4px; font-size:13px; font-weight:600;
+    color:var(--text-secondary); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px;}
+  .drawer-tab-btn.active{color:var(--accent); border-bottom-color:var(--accent);}
+  .drawer-tab-btn:hover:not(.active){color:var(--text-primary);}
+  .drawer-panel{display:flex; flex-direction:column; gap:16px;}
   .drawer-field{display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:8px 0; border-top:1px solid var(--border);}
   .drawer-field:first-of-type{border-top:none;}
   .drawer-field span:first-child{color:var(--text-secondary);}
   .drawer-field span:last-child{font-weight:600; text-align:right;}
-  .contact-actions{display:flex; gap:8px; margin-top:4px;}
-  .contact-actions a{flex:1; display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none;
-    font-size:13px; font-weight:600; color:var(--accent); background:var(--accent-tint); border-radius:var(--radius); padding:9px 8px;}
+  .drawer-field a{color:var(--accent); text-decoration:none;}
+  .drawer-field a:hover{text-decoration:underline;}
+  .drawer-section-title{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin:16px 0 0;}
+  .drawer-section-title:first-child{margin-top:0;}
 
   .drawer-comments{display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border); padding-top:16px;}
   .drawer-comments textarea{font-size:13px; font-family:inherit; padding:8px 10px; border:1px solid var(--border); border-radius:var(--radius);
@@ -293,7 +303,9 @@
   .comment-item-header{display:flex; justify-content:space-between; align-items:center; gap:8px;}
   .comment-date{font-size:11px; color:var(--text-muted);}
   .comment-text{font-size:12px; color:var(--text-primary); margin:0; white-space:pre-wrap; word-break:break-word;}
-  .contact-actions a:hover{background:var(--accent-tint-hover);}
+  .comment-item.resolved{opacity:0.6;}
+  .comment-item.resolved .comment-text{text-decoration:line-through;}
+  .comment-resolve.active{color:var(--text-success);}
 </style>
 </head>
 <body>
@@ -355,11 +367,6 @@
             <p>Nothing needs attention right now.</p>
           </div>
           <div class="insights-grid" id="insightsGrid"></div>
-        </div>
-
-        <div class="block">
-          <p class="block-title">Quick glance</p>
-          <div class="stats-grid" id="quickGlanceGrid"></div>
         </div>
 
       </section>
@@ -428,6 +435,40 @@
                   <button class="previewDocBtn" data-doc="odbiorczy" aria-label="Preview"><i class="ti ti-eye"></i></button>
                 </div>
                 <button id="exportBtn" class="btn-primary" style="margin-top:8px; width:100%;"><i class="ti ti-download"></i> Export documents</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wizard-step" data-step="4">
+          <div class="step-marker" id="stepMarker4"><span>4</span></div>
+          <div class="step-body">
+            <p class="step-title">Issue invoice in iFirma</p>
+            <div class="panel">
+              <div class="panel-header">
+                <p class="block-title">iFirma</p>
+              </div>
+
+              <div id="ifirmaNotConfigured" class="empty-state">
+                <i class="ti ti-plug-connected-x"></i>
+                <p>
+                  iFirma API access isn't configured yet (<code>IFIRMA_USERNAME</code> / <code>IFIRMA_INVOICE_KEY</code> are empty), so this step
+                  is a preview of what's coming. Note: iFirma's API has no separate sandbox — activation
+                  happens directly on a real iFirma account, so test invoices would go through production.
+                  Poland's Ministry of Finance runs its own free, independent KSeF test environment
+                  (<a href="https://api-test.ksef.mf.gov.pl/" target="_blank" rel="noopener">api-test.ksef.mf.gov.pl</a>)
+                  that can be used to validate e-invoice submissions without touching a real iFirma account.
+                </p>
+              </div>
+
+              <div id="ifirmaPanel" style="display:none;">
+                <p style="font-size:13px; color:var(--text-secondary); margin:0 0 12px;">
+                  Sends this period's protocol data to iFirma to issue a sales invoice.
+                </p>
+                <button id="ifirmaBtn" class="btn-primary" style="width:100%;" disabled>
+                  <i class="ti ti-send"></i> Issue invoice in iFirma
+                </button>
+                <div id="ifirmaResult" style="display:none; margin-top:12px;"></div>
               </div>
             </div>
           </div>
@@ -607,11 +648,6 @@
         <div class="block">
           <div class="panel-header">
             <p class="block-title">Vehicles</p>
-            <button type="button" id="addVehicleBtn" class="btn-light"><i class="ti ti-plus"></i> Add vehicle</button>
-          </div>
-          <div id="vehiclesEmpty" class="empty-state" style="display:none;">
-            <i class="ti ti-car"></i>
-            <p>No vehicles yet. Add one to start tracking service history.</p>
           </div>
           <div class="carousel" id="vehiclesCarousel"></div>
         </div>
@@ -621,7 +657,27 @@
           <p id="vehicleFormError" class="form-error"></p>
           <div class="field" style="grid-column:1 / -1;"><label for="vehicleVin">VIN</label><input type="text" id="vehicleVin" placeholder="17-character VIN" maxlength="17"></div>
           <div class="field"><label for="vehicleName">Name</label><input type="text" id="vehicleName" placeholder="e.g. Škoda Octavia"></div>
+          <div class="field"><label for="vehicleType">Type</label>
+            <select id="vehicleType">
+              <option value="car">Car</option>
+              <option value="motorcycle">Motorcycle</option>
+              <option value="trailer">Trailer</option>
+            </select>
+          </div>
           <div class="field"><label for="vehiclePlate">License plate</label><input type="text" id="vehiclePlate" placeholder="PO 12345"></div>
+          <div class="field"><label for="vehicleYear">Year</label><input type="number" id="vehicleYear" min="1900" max="2100" placeholder="e.g. 2019"></div>
+          <div class="field"><label for="vehicleEngine">Engine</label><input type="text" id="vehicleEngine" placeholder="e.g. 2.0 or 650cm3"></div>
+          <div class="field"><label for="vehicleFuelType">Fuel type</label>
+            <select id="vehicleFuelType">
+              <option value="">–</option>
+              <option value="benzyna">Petrol</option>
+              <option value="diesel">Diesel</option>
+              <option value="elektryczny">Electric</option>
+              <option value="hybryda">Hybrid</option>
+              <option value="lpg">LPG</option>
+            </select>
+          </div>
+          <div class="field"><label for="vehiclePower">Power (HP)</label><input type="number" id="vehiclePower" min="0"></div>
           <div class="field"><label for="vehicleMileage">Mileage (km)</label><input type="number" id="vehicleMileage" min="0"></div>
           <div class="field"><label for="vehicleNextService">Next service date</label><input type="date" id="vehicleNextService"></div>
           <div class="field"><label for="vehicleInsuranceExpiry">Insurance expiry date</label><input type="date" id="vehicleInsuranceExpiry"></div>
@@ -640,12 +696,7 @@
           <form id="serviceEntryForm" class="panel" style="display:none; grid-template-columns:1fr 1fr; gap:10px;" novalidate>
             <p id="serviceEntryFormError" class="form-error"></p>
             <div class="field"><label for="serviceDate">Date</label><input type="date" id="serviceDate"></div>
-            <div class="field">
-              <label for="serviceType">Type</label>
-              <select id="serviceType">
-                <option>Oil change</option><option>Inspection</option><option>Repair</option><option>Tires</option><option>Other</option>
-              </select>
-            </div>
+            <div class="field"><label for="serviceWorkshop">Workshop</label><input type="text" id="serviceWorkshop" placeholder="e.g. Juro-Trans Kowary"></div>
             <div class="field" style="grid-column:1 / -1;"><label for="serviceDescription">Description</label><input type="text" id="serviceDescription" placeholder="What was done"></div>
             <div class="field"><label for="serviceCost">Cost (zł)</label><input type="number" id="serviceCost" min="0" step="0.01"></div>
             <div class="field"><label for="serviceMileage">Mileage at service (km)</label><input type="number" id="serviceMileage" min="0"></div>
@@ -705,15 +756,20 @@
           <div class="field"><label for="propertyMaintenanceDate">Maintenance date (optional)</label><input type="date" id="propertyMaintenanceDate"></div>
 
           <div id="tenantFields" style="display:none; grid-column:1 / -1; grid-template-columns:1fr 1fr; gap:10px;">
-            <div class="field" style="grid-column:1 / -1;"><label for="tenantName">Tenant name</label><input type="text" id="tenantName" placeholder="Full name"></div>
-            <div class="field"><label for="tenantPhone">Phone</label><input type="text" id="tenantPhone" placeholder="+48 ..."></div>
-            <div class="field">
-              <label for="tenantRentStatus">Rent status</label>
-              <select id="tenantRentStatus"><option value="paid">Paid</option><option value="pending">Pending</option></select>
-            </div>
+            <div class="field"><label for="tenant1Name">Tenant 1 name</label><input type="text" id="tenant1Name" placeholder="Full name"></div>
+            <div class="field"><label for="tenant1Phone">Tenant 1 phone</label><input type="text" id="tenant1Phone" placeholder="+48 ..."></div>
+            <div class="field" style="grid-column:1 / -1;"><label for="tenant1Email">Tenant 1 email</label><input type="email" id="tenant1Email" placeholder="name@example.com"></div>
+            <div class="field"><label for="tenant2Name">Tenant 2 name (optional)</label><input type="text" id="tenant2Name" placeholder="Full name"></div>
+            <div class="field"><label for="tenant2Phone">Tenant 2 phone</label><input type="text" id="tenant2Phone" placeholder="+48 ..."></div>
+            <div class="field" style="grid-column:1 / -1;"><label for="tenant2Email">Tenant 2 email</label><input type="email" id="tenant2Email" placeholder="name@example.com"></div>
             <div class="field"><label for="tenantLeaseStart">Lease start</label><input type="date" id="tenantLeaseStart"></div>
             <div class="field"><label for="tenantLeaseEnd">Lease end</label><input type="date" id="tenantLeaseEnd"></div>
-            <div class="field"><label for="tenantRentAmount">Rent (zł/month)</label><input type="number" id="tenantRentAmount" min="0" step="0.01"></div>
+            <div class="field"><label for="tenantRentAmount">Rent - czynsz (zł/month)</label><input type="number" id="tenantRentAmount" min="0" step="0.01"></div>
+            <div class="field"><label for="tenantUtilityAdvance">Utility advance - zaliczki na media (zł)</label><input type="number" id="tenantUtilityAdvance" min="0" step="0.01"></div>
+            <div class="field"><label for="tenantTaxDue">Tax due - należny podatek (zł)</label><input type="number" id="tenantTaxDue" min="0" step="0.01"></div>
+            <div class="field"><label for="tenantDeposit">Deposit - kaucja (zł)</label><input type="number" id="tenantDeposit" min="0" step="0.01"></div>
+            <div class="field"><label for="tenantGateCode">Gate code</label><input type="text" id="tenantGateCode" placeholder="e.g. 1234"></div>
+            <div class="field" style="grid-column:1 / -1;"><label for="tenantNotes">Additional notes</label><input type="text" id="tenantNotes" placeholder="Optional notes"></div>
           </div>
 
           <div style="display:flex; gap:6px; align-items:end; grid-column:1 / -1;">
@@ -721,6 +777,50 @@
             <button type="button" id="cancelPropertyBtn">Cancel</button>
           </div>
         </form>
+
+        <div class="block">
+          <p class="block-title">Tax</p>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+            <div class="period-picker">
+              <button type="button" class="step-btn" id="taxYearPrev" aria-label="Previous year"><i class="ti ti-chevron-left"></i></button>
+              <i class="ti ti-calendar"></i>
+              <select id="taxYear" class="arrows-only" tabindex="-1"></select>
+              <button type="button" class="step-btn" id="taxYearNext" aria-label="Next year"><i class="ti ti-chevron-right"></i></button>
+            </div>
+            <button type="button" id="exportTaxPaymentsBtn" class="btn-light"><i class="ti ti-download"></i> Export (CSV)</button>
+          </div>
+
+          <div>
+            <div id="taxMainEmpty" class="empty-state" style="display:none;">
+              <i class="ti ti-receipt-tax"></i>
+              <p>No tax payments logged for this year.</p>
+            </div>
+            <table id="taxMainTable" style="display:none;">
+              <tr><th>Month</th><th>Sienkiewicza</th><th>Szczęśliwa</th><th>Total</th><th>Transfer date</th><th></th></tr>
+              <tbody id="taxMainTableBody"></tbody>
+              <tfoot id="taxMainTableFoot"></tfoot>
+            </table>
+            <button type="button" class="btn-light tax-add-btn" style="margin-top:10px;"><i class="ti ti-plus"></i> Add payment</button>
+          </div>
+
+          <form id="taxPaymentForm" class="panel" style="display:none; grid-template-columns:1fr 1fr; gap:10px;" novalidate>
+            <input type="hidden" id="taxPaymentEditId" value="">
+            <p id="taxPaymentFormError" class="form-error"></p>
+            <div class="field"><label for="taxPaymentPeriod">Month</label><input type="month" id="taxPaymentPeriod"></div>
+            <div class="field"></div>
+            <div class="field"><label for="taxPaymentSienkiewicza">Sienkiewicza (zł, optional)</label><input type="number" id="taxPaymentSienkiewicza" min="0" step="0.01" placeholder="leave blank if split unknown"></div>
+            <div class="field"><label for="taxPaymentSzczesliwa">Szczęśliwa (zł, optional)</label><input type="number" id="taxPaymentSzczesliwa" min="0" step="0.01" placeholder="leave blank if split unknown"></div>
+            <div class="field"><label for="taxPaymentSienkiewiczaNote">Sienkiewicza note (optional)</label><input type="text" id="taxPaymentSienkiewiczaNote" placeholder="e.g. vacant this month"></div>
+            <div class="field"><label for="taxPaymentSzczesliwaNote">Szczęśliwa note (optional)</label><input type="text" id="taxPaymentSzczesliwaNote" placeholder="e.g. vacant this month"></div>
+            <div class="field"><label for="taxPaymentAmount">Total (zł)</label><input type="number" id="taxPaymentAmount" min="0" step="0.01"></div>
+            <div class="field"><label for="taxPaymentTransferDate">Transfer date (optional)</label><input type="date" id="taxPaymentTransferDate"></div>
+            <div style="display:flex; gap:6px; align-items:end; grid-column:1 / -1;">
+              <button type="submit" id="saveTaxPaymentBtn" class="btn-light"><i class="ti ti-check"></i> Save</button>
+              <button type="button" id="cancelTaxPaymentBtn">Cancel</button>
+            </div>
+          </form>
+        </div>
 
       </section>
 
@@ -798,12 +898,15 @@
             <div class="field" style="grid-column:1 / -1;"><label for="choreName">Name</label><input type="text" id="choreName" placeholder="e.g. Replace HVAC filter"></div>
             <div class="field">
               <label for="choreFrequency">Frequency</label>
-              <select id="choreFrequency"><option value="daily">Daily</option><option value="weekly" selected>Weekly</option><option value="monthly">Monthly</option></select>
+              <select id="choreFrequency"><option value="daily">Daily</option><option value="weekly" selected>Weekly</option><option value="monthly">Monthly</option><option value="once">Once</option></select>
+            </div>
+            <div class="field">
+              <label for="chorePriority">Priority</label>
+              <select id="chorePriority"><option value="P1">P1</option><option value="P2" selected>P2</option><option value="P3">P3</option></select>
             </div>
             <div class="field"><label for="choreNotes">Notes (optional)</label><input type="text" id="choreNotes" placeholder="e.g. Filter size 16x20"></div>
-            <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-secondary); grid-column:1 / -1;">
-              <input type="checkbox" id="choreWeatherDependent" style="width:auto;"> Weather-dependent (suggest on Overview when weather is good)
-            </label>
+            <div class="field"><label for="choreProperty">Property (optional)</label><select id="choreProperty"><option value="">No property</option></select></div>
+            <div class="field"><label for="choreVehicle">Vehicle (optional)</label><select id="choreVehicle"><option value="">No vehicle</option></select></div>
             <div style="display:flex; gap:6px; align-items:end; grid-column:1 / -1;">
               <button type="submit" id="saveChoreBtn" class="btn-light"><i class="ti ti-check"></i> Save</button>
               <button type="button" id="cancelChoreBtn">Cancel</button>
@@ -929,20 +1032,47 @@
       </div>
       <button type="button" class="drawer-close" id="tenantDrawerClose" aria-label="Close"><i class="ti ti-x"></i></button>
     </div>
+    <div class="drawer-tabs">
+      <button type="button" class="drawer-tab-btn active" id="drawerTabOverviewBtn">Overview</button>
+      <button type="button" class="drawer-tab-btn" id="drawerTabExpensesBtn">Expenses</button>
+    </div>
     <div class="drawer-body">
-      <div id="tenantDrawerFields"></div>
-      <div class="contact-actions" id="tenantDrawerContacts"></div>
+      <div id="drawerPanelOverview" class="drawer-panel">
+        <div id="tenantDrawerFields"></div>
 
-      <div class="drawer-comments">
-        <p class="nav-group-title" style="margin:0;">Comments</p>
-        <form id="commentForm" novalidate>
-          <textarea id="commentText" rows="2" placeholder="e.g. Tenant did not pay for August on time"></textarea>
-          <button type="submit" id="addCommentBtn" class="btn-sm btn-light"><i class="ti ti-plus"></i> Add comment</button>
-        </form>
-        <div id="commentsEmpty" class="empty-state" style="display:none; padding:8px 0;">
-          <p>No comments yet.</p>
+        <div class="drawer-comments">
+          <p class="nav-group-title" style="margin:0;">Comments</p>
+          <form id="commentForm" novalidate>
+            <textarea id="commentText" rows="2" placeholder="e.g. Tenant did not pay for August on time"></textarea>
+            <button type="submit" id="addCommentBtn" class="btn-sm btn-light"><i class="ti ti-plus"></i> Add comment</button>
+          </form>
+          <div id="commentsEmpty" class="empty-state" style="display:none; padding:8px 0;">
+            <p>No comments yet.</p>
+          </div>
+          <div id="commentsList" class="comments-list"></div>
         </div>
-        <div id="commentsList" class="comments-list"></div>
+      </div>
+
+      <div id="drawerPanelExpenses" class="drawer-panel" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <p class="nav-group-title" style="margin:0;">Expenses</p>
+          <button type="button" id="addExpenseBtn" class="btn-sm btn-light"><i class="ti ti-plus"></i> Add expense</button>
+        </div>
+        <form id="expenseForm" style="display:none; flex-direction:column; gap:8px;" novalidate>
+          <input type="hidden" id="expenseEditId" value="">
+          <p id="expenseFormError" class="form-error"></p>
+          <div class="field"><label for="expenseDate">Date</label><input type="date" id="expenseDate"></div>
+          <div class="field"><label for="expenseDescription">Description</label><input type="text" id="expenseDescription" placeholder="e.g. Plumber repair"></div>
+          <div class="field"><label for="expenseAmount">Amount (zł)</label><input type="number" id="expenseAmount" min="0" step="0.01"></div>
+          <div style="display:flex; gap:6px;">
+            <button type="submit" id="saveExpenseBtn" class="btn-sm btn-light"><i class="ti ti-check"></i> Save</button>
+            <button type="button" id="cancelExpenseBtn" class="btn-sm">Cancel</button>
+          </div>
+        </form>
+        <div id="expensesEmpty" class="empty-state" style="display:none; padding:8px 0;">
+          <p>No expenses logged yet.</p>
+        </div>
+        <div id="expensesList" class="comments-list"></div>
       </div>
     </div>
     <div style="display:flex; gap:6px; margin-top:auto;">
@@ -1049,6 +1179,7 @@ function confirmDialog(message, { okLabel = 'Delete', title = 'Are you sure?' } 
   });
 }
 let PDF_CACHE = null;
+let IFIRMA_CONFIGURED = false;
 const PROTOCOLS_EMPTY_DEFAULT_TEXT = 'No documents yet. Fetch worklogs, then click "Generate" to preview the PDFs.';
 
 function currentPeriod() {
@@ -1086,6 +1217,7 @@ function switchSection(section, options = {}) {
   }
   if (section === 'properties') {
     loadProperties();
+    loadTaxPayments();
   }
   if (section === 'overview') {
     loadOverviewDashboard();
@@ -1124,9 +1256,17 @@ async function loadStatus() {
     wrap.innerHTML = `
       <div class="status-line">Connection status: <span class="badge ${connected ? 'success' : 'danger'}">${connected ? 'connected' : 'disconnected'}</span></div>
     `;
+    IFIRMA_CONFIGURED = Boolean(status.ifirmaConfigured);
+    renderIfirmaStep();
   } catch (e) {
     console.warn('Failed to fetch /api/status', e);
   }
+}
+
+function renderIfirmaStep() {
+  document.getElementById('ifirmaNotConfigured').style.display = IFIRMA_CONFIGURED ? 'none' : 'flex';
+  document.getElementById('ifirmaPanel').style.display = IFIRMA_CONFIGURED ? 'block' : 'none';
+  document.getElementById('ifirmaBtn').disabled = !IFIRMA_CONFIGURED || !PDF_CACHE;
 }
 
 function setStepDone(n, done) {
@@ -1141,6 +1281,9 @@ function resetDownstream() {
   PDF_CACHE = null;
   setStepDone(2, false);
   setStepDone(3, false);
+  setStepDone(4, false);
+  document.getElementById('ifirmaResult').style.display = 'none';
+  document.getElementById('ifirmaBtn').disabled = !IFIRMA_CONFIGURED || !PDF_CACHE;
 }
 
 function escapeHtml(str) {
@@ -1298,6 +1441,9 @@ async function generateProtocols(force) {
     document.getElementById('protocolsEmpty').style.display = 'none';
     document.getElementById('previewWrap').style.display = 'block';
     setStepDone(3, true);
+    document.getElementById('ifirmaResult').style.display = 'none';
+    setStepDone(4, false);
+    renderIfirmaStep();
   } catch (err) {
     alert(err.message);
   } finally {
@@ -1334,6 +1480,34 @@ document.getElementById('exportBtn').addEventListener('click', async () => {
     } catch (e) {
       console.warn('Failed to mark protocol as exported', e);
     }
+  }
+});
+
+document.getElementById('ifirmaBtn').addEventListener('click', async () => {
+  if (!PDF_CACHE) return;
+  const ifirmaBtn = document.getElementById('ifirmaBtn');
+  const resultBox = document.getElementById('ifirmaResult');
+  ifirmaBtn.disabled = true;
+  ifirmaBtn.innerHTML = '<i class="ti ti-refresh"></i> Issuing…';
+  resultBox.style.display = 'none';
+  try {
+    const { month, year } = currentPeriod();
+    const res = await fetch('/api/export/ifirma', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ historyId: PDF_CACHE.historyId, month, year })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to issue invoice in iFirma');
+    resultBox.innerHTML = `<span class="badge success"><i class="ti ti-check"></i> Invoice issued in iFirma</span>`;
+    resultBox.style.display = 'block';
+    setStepDone(4, true);
+  } catch (err) {
+    resultBox.innerHTML = `<span class="badge danger"><i class="ti ti-alert-triangle"></i> ${escapeHtml(err.message)}</span>`;
+    resultBox.style.display = 'block';
+  } finally {
+    ifirmaBtn.disabled = !IFIRMA_CONFIGURED || !PDF_CACHE;
+    ifirmaBtn.innerHTML = '<i class="ti ti-send"></i> Issue invoice in iFirma';
   }
 });
 
@@ -2377,9 +2551,21 @@ function nextServiceBadge(dateStr) {
   return `<span class="badge ${colorClass}">${formatDaysLeft(days, dateStr)}</span>`;
 }
 
+const VEHICLE_TYPE_ICONS = { car: 'ti-car', motorcycle: 'ti-motorbike', trailer: 'ti-caravan' };
+const FUEL_LABELS = { benzyna: 'Petrol', diesel: 'Diesel', elektryczny: 'Electric', hybryda: 'Hybrid', lpg: 'LPG' };
+
+function vehicleSpecLine(v) {
+  const parts = [];
+  if (v.year) parts.push(v.year);
+  if (v.engine) parts.push(v.engine + (FUEL_LABELS[v.fuelType] ? ' ' + FUEL_LABELS[v.fuelType].toLowerCase() : ''));
+  if (v.power) parts.push(`${v.power} HP`);
+  return parts.join(' · ');
+}
+
 function vehicleCardHtml(v) {
   const selected = v.id === SELECTED_VEHICLE_ID ? ' selected' : '';
   const updatedLabel = formatRelativeDate(v.mileageUpdatedAt);
+  const specLine = vehicleSpecLine(v);
   const mileageRow = v.id === MILEAGE_EDIT_ID
     ? `<div class="mileage-edit-row">
          <input type="number" min="0" class="mileage-edit-input" id="mileageEditInput" value="${v.mileage}">
@@ -2392,9 +2578,10 @@ function vehicleCardHtml(v) {
        </div>`;
   return `
     <div class="vehicle-card${selected}" data-id="${v.id}">
-      <div class="vehicle-card-icon"><i class="ti ti-car"></i></div>
+      <div class="vehicle-card-icon"><i class="ti ${VEHICLE_TYPE_ICONS[v.type] || 'ti-car'}"></i></div>
       <p class="vehicle-card-name">${escapeHtml(v.name)}</p>
       <div class="vehicle-card-meta">
+        ${specLine ? `<span>${escapeHtml(specLine)}</span>` : ''}
         ${v.vin ? `<span class="vin-link" data-id="${v.id}">VIN: ${escapeHtml(v.vin)}</span>` : `<span>VIN: –</span>`}
         <span>Plate: ${escapeHtml(v.plate || '–')}</span>
         ${mileageRow}
@@ -2412,8 +2599,8 @@ function vehicleCardHtml(v) {
 }
 
 function renderVehicles() {
-  document.getElementById('vehiclesEmpty').style.display = VEHICLES.length ? 'none' : 'flex';
-  document.getElementById('vehiclesCarousel').innerHTML = VEHICLES.map(vehicleCardHtml).join('');
+  document.getElementById('vehiclesCarousel').innerHTML = VEHICLES.map(vehicleCardHtml).join('') +
+    `<div class="vehicle-card-add" id="addVehicleCard" role="button" aria-label="Add vehicle"><i class="ti ti-plus"></i><span>Add vehicle</span></div>`;
 }
 
 function selectVehicle(id) {
@@ -2455,7 +2642,7 @@ function serviceItemHtml(entry) {
       <div class="timeline-dot"></div>
       <div class="timeline-body">
         <div class="timeline-header">
-          <span class="timeline-title">${escapeHtml(entry.type)}</span>
+          <span class="timeline-title">${entry.workshop ? escapeHtml(entry.workshop) : 'Service'}</span>
           <span style="display:flex; align-items:center; gap:8px;">
             <span style="font-weight:600; font-size:12px;">${entry.cost.toLocaleString()} zł</span>
             <button type="button" class="icon-btn danger service-delete" data-id="${entry.id}" aria-label="Delete"><i class="ti ti-trash"></i></button>
@@ -2497,11 +2684,11 @@ function resetVehicleForm() {
   document.getElementById('vehicleFormError').style.display = 'none';
 }
 
-document.getElementById('addVehicleBtn').addEventListener('click', () => {
+function openAddVehicleForm() {
   resetVehicleForm();
   document.getElementById('vehicleForm').style.display = 'grid';
   document.getElementById('vehicleVin').focus();
-});
+}
 
 document.getElementById('cancelVehicleBtn').addEventListener('click', () => {
   document.getElementById('vehicleForm').style.display = 'none';
@@ -2512,8 +2699,13 @@ function enterVehicleEditMode(v) {
   document.getElementById('vehicleFormError').style.display = 'none';
   document.getElementById('vehicleEditId').value = v.id;
   document.getElementById('vehicleName').value = v.name;
+  document.getElementById('vehicleType').value = v.type || 'car';
   document.getElementById('vehiclePlate').value = v.plate || '';
   document.getElementById('vehicleVin').value = v.vin || '';
+  document.getElementById('vehicleYear').value = v.year || '';
+  document.getElementById('vehicleEngine').value = v.engine || '';
+  document.getElementById('vehicleFuelType').value = v.fuelType || '';
+  document.getElementById('vehiclePower').value = v.power || '';
   document.getElementById('vehicleMileage').value = v.mileage || '';
   document.getElementById('vehicleNextService').value = v.nextServiceDate || '';
   document.getElementById('vehicleInsuranceExpiry').value = v.insuranceExpiryDate || '';
@@ -2529,6 +2721,11 @@ document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
   if (!name) return showVehicleFormError('Please enter a vehicle name.');
   const body = {
     name,
+    type: document.getElementById('vehicleType').value || 'car',
+    year: parseInt(document.getElementById('vehicleYear').value, 10) || null,
+    engine: document.getElementById('vehicleEngine').value.trim() || null,
+    fuelType: document.getElementById('vehicleFuelType').value || null,
+    power: parseInt(document.getElementById('vehiclePower').value, 10) || null,
     plate: document.getElementById('vehiclePlate').value.trim(),
     vin: document.getElementById('vehicleVin').value.trim(),
     mileage: parseFloat(document.getElementById('vehicleMileage').value) || 0,
@@ -2556,6 +2753,10 @@ document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
 });
 
 document.getElementById('vehiclesCarousel').addEventListener('click', (e) => {
+  if (e.target.closest('#addVehicleCard')) {
+    openAddVehicleForm();
+    return;
+  }
   const editBtn = e.target.closest('.vehicle-edit');
   const deleteBtn = e.target.closest('.vehicle-delete');
   const vinLink = e.target.closest('.vin-link');
@@ -2656,7 +2857,7 @@ document.getElementById('serviceEntryForm').addEventListener('submit', async (e)
   const body = {
     vehicleId: SELECTED_VEHICLE_ID,
     date,
-    type: document.getElementById('serviceType').value,
+    workshop: document.getElementById('serviceWorkshop').value.trim(),
     description: document.getElementById('serviceDescription').value.trim(),
     cost: parseFloat(document.getElementById('serviceCost').value) || 0,
     mileage: document.getElementById('serviceMileage').value !== '' ? parseFloat(document.getElementById('serviceMileage').value) : null
@@ -2726,19 +2927,20 @@ let PROPERTIES = [];
 let CURRENT_DRAWER_PROPERTY_ID = null;
 
 function propertyCardHtml(p) {
-  let badge = '<span class="badge neutral">Primary</span>';
-  if (p.type === 'rental') {
-    badge = p.tenant
-      ? `<span class="badge ${p.tenant.rentStatus === 'paid' ? 'success' : 'warning'}">${p.tenant.rentStatus === 'paid' ? 'Paid' : 'Pending'}</span>`
-      : '<span class="badge neutral">Vacant</span>';
+  let statusText = 'Primary';
+  if (p.type === 'rental') statusText = p.tenant ? 'Occupied' : 'Vacant';
+  let tenantLine = '';
+  if (p.type === 'rental' && p.tenant) {
+    const label = p.tenant.tenants.length > 1 ? 'Tenants' : 'Tenant';
+    tenantLine = `<p class="property-card-tenant"><span class="property-card-label">${label}:</span> ${escapeHtml(p.tenant.tenants.map(t => t.name).join(' & '))}</p>`;
   }
   return `
     <div class="property-card" data-id="${p.id}">
       <p class="property-card-name">${escapeHtml(p.name)}</p>
       <p class="property-card-address">${escapeHtml(p.address)}</p>
       <div class="property-card-footer">
-        ${badge}
-        ${p.type === 'rental' && p.tenant ? `<span style="font-size:12px; color:var(--text-secondary);">${escapeHtml(p.tenant.name)}</span>` : ''}
+        <p class="property-card-status"><span class="property-card-label">Status:</span> ${statusText}</p>
+        ${tenantLine}
       </div>
     </div>`;
 }
@@ -2772,8 +2974,8 @@ function openPropertyDrawer(id) {
   document.getElementById('tenantDrawerName').textContent = p.name;
   const statusEl = document.getElementById('tenantDrawerStatus');
   if (p.type === 'rental' && p.tenant) {
-    statusEl.className = `badge ${p.tenant.rentStatus === 'paid' ? 'success' : 'warning'}`;
-    statusEl.textContent = p.tenant.rentStatus === 'paid' ? 'Rent paid' : 'Rent pending';
+    statusEl.className = 'badge success';
+    statusEl.textContent = 'Occupied';
   } else if (p.type === 'rental') {
     statusEl.className = 'badge neutral';
     statusEl.textContent = 'Vacant';
@@ -2784,37 +2986,38 @@ function openPropertyDrawer(id) {
 
   let fields = `<div class="drawer-field"><span>Address</span><span>${escapeHtml(p.address)}</span></div>`;
   if (p.type === 'rental' && p.tenant) {
+    p.tenant.tenants.forEach((t, i) => {
+      const title = p.tenant.tenants.length > 1 ? `Tenant ${i + 1}` : 'Tenant';
+      fields += `<p class="drawer-section-title">${title}</p>`;
+      fields += `<div class="drawer-field"><span>Name</span><span>${escapeHtml(t.name)}</span></div>`;
+      if (t.phone) fields += `<div class="drawer-field"><span>Phone</span><span>${escapeHtml(t.phone)}</span></div>`;
+      if (t.email) fields += `<div class="drawer-field"><span>Email</span><span><a href="mailto:${escapeHtml(t.email)}">${escapeHtml(t.email)}</a></span></div>`;
+    });
+    fields += `<p class="drawer-section-title">Lease</p>`;
     fields += `
-      <div class="drawer-field"><span>Tenant</span><span>${escapeHtml(p.tenant.name)}</span></div>
-      <div class="drawer-field"><span>Phone</span><span>${escapeHtml(p.tenant.phone || '–')}</span></div>
       <div class="drawer-field"><span>Lease start</span><span>${p.tenant.leaseStart || '–'}</span></div>
       <div class="drawer-field"><span>Lease end</span><span>${p.tenant.leaseEnd || '–'}</span></div>
-      <div class="drawer-field"><span>Rent</span><span>${p.tenant.rentAmount.toLocaleString()} zł/mo</span></div>`;
+      <div class="drawer-field"><span>Rent</span><span>${p.tenant.rentAmount.toLocaleString()} zł/mo</span></div>
+      ${p.tenant.utilityAdvance ? `<div class="drawer-field"><span>Utility advance</span><span>${p.tenant.utilityAdvance.toLocaleString()} zł</span></div>` : ''}
+      ${p.tenant.taxDue ? `<div class="drawer-field"><span>Tax due</span><span>${p.tenant.taxDue.toLocaleString()} zł</span></div>` : ''}
+      ${p.tenant.deposit ? `<div class="drawer-field"><span>Deposit</span><span>${p.tenant.deposit.toLocaleString()} zł</span></div>` : ''}
+      ${p.tenant.gateCode ? `<div class="drawer-field"><span>Gate code</span><span>${escapeHtml(p.tenant.gateCode)}</span></div>` : ''}
+      ${p.tenant.notes ? `<div class="drawer-field"><span>Notes</span><span>${escapeHtml(p.tenant.notes)}</span></div>` : ''}`;
   }
   if (p.maintenanceNote) {
     fields += `<div class="drawer-field"><span>Maintenance</span><span>${escapeHtml(p.maintenanceNote)}${p.maintenanceDate ? ' — ' + p.maintenanceDate : ''}</span></div>`;
   }
   document.getElementById('tenantDrawerFields').innerHTML = fields;
 
-  const contactsEl = document.getElementById('tenantDrawerContacts');
-  if (p.type === 'rental' && p.tenant && p.tenant.phone) {
-    const telHref = p.tenant.phone.replace(/[^\d+]/g, '');
-    const waDigits = p.tenant.phone.replace(/\D/g, '');
-    contactsEl.innerHTML = `
-      <a href="tel:${telHref}"><i class="ti ti-phone"></i> Call</a>
-      <a href="sms:${telHref}"><i class="ti ti-message"></i> SMS</a>
-      <a href="https://wa.me/${waDigits}" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp"></i> WhatsApp</a>`;
-    contactsEl.style.display = 'flex';
-  } else {
-    contactsEl.innerHTML = '';
-    contactsEl.style.display = 'none';
-  }
-
   document.getElementById('tenantDrawerEditBtn').dataset.id = p.id;
   document.getElementById('tenantDrawerDeleteBtn').dataset.id = p.id;
   CURRENT_DRAWER_PROPERTY_ID = p.id;
   document.getElementById('commentText').value = '';
   renderComments(p);
+  switchDrawerTab('overview');
+  resetExpenseForm();
+  EXPENSES = [];
+  renderExpenses();
   document.getElementById('tenantDrawerOverlay').classList.add('open');
 }
 
@@ -2822,14 +3025,156 @@ function closePropertyDrawer() {
   document.getElementById('tenantDrawerOverlay').classList.remove('open');
 }
 
+function switchDrawerTab(tab) {
+  document.getElementById('drawerTabOverviewBtn').classList.toggle('active', tab === 'overview');
+  document.getElementById('drawerTabExpensesBtn').classList.toggle('active', tab === 'expenses');
+  document.getElementById('drawerPanelOverview').style.display = tab === 'overview' ? 'flex' : 'none';
+  document.getElementById('drawerPanelExpenses').style.display = tab === 'expenses' ? 'flex' : 'none';
+}
+document.getElementById('drawerTabOverviewBtn').addEventListener('click', () => switchDrawerTab('overview'));
+document.getElementById('drawerTabExpensesBtn').addEventListener('click', () => {
+  switchDrawerTab('expenses');
+  loadExpenses(CURRENT_DRAWER_PROPERTY_ID);
+});
+
+// --- Properties: per-property expenses (drawer "Expenses" tab) ---
+let EXPENSES = [];
+
+function expenseItemHtml(e) {
+  return `
+    <div class="comment-item">
+      <div class="comment-item-header">
+        <span class="comment-date">${e.date}</span>
+        <span style="display:flex; align-items:center; gap:8px;">
+          <span style="font-weight:600; font-size:12px;">${formatZl2(e.amount)}</span>
+          <button type="button" class="icon-btn expense-edit" data-id="${e.id}" aria-label="Edit"><i class="ti ti-pencil"></i></button>
+          <button type="button" class="icon-btn danger expense-delete" data-id="${e.id}" aria-label="Delete"><i class="ti ti-trash"></i></button>
+        </span>
+      </div>
+      <p class="comment-text">${escapeHtml(e.description || '–')}</p>
+    </div>`;
+}
+
+function renderExpenses() {
+  document.getElementById('expensesEmpty').style.display = EXPENSES.length ? 'none' : 'flex';
+  document.getElementById('expensesList').innerHTML = EXPENSES.map(expenseItemHtml).join('');
+}
+
+async function loadExpenses(propertyId) {
+  if (!propertyId) return;
+  try {
+    const res = await fetch(`/api/property-expenses?propertyId=${encodeURIComponent(propertyId)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error fetching expenses');
+    EXPENSES = data.expenses;
+  } catch (err) {
+    console.warn('Failed to load expenses', err);
+    EXPENSES = [];
+  }
+  renderExpenses();
+}
+
+function showExpenseFormError(msg) {
+  const el = document.getElementById('expenseFormError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function resetExpenseForm() {
+  document.getElementById('expenseForm').reset();
+  document.getElementById('expenseEditId').value = '';
+  document.getElementById('expenseFormError').style.display = 'none';
+  document.getElementById('expenseForm').style.display = 'none';
+}
+
+document.getElementById('addExpenseBtn').addEventListener('click', () => {
+  resetExpenseForm();
+  document.getElementById('expenseDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('expenseForm').style.display = 'flex';
+  document.getElementById('expenseDescription').focus();
+});
+
+document.getElementById('cancelExpenseBtn').addEventListener('click', () => {
+  resetExpenseForm();
+});
+
+function enterExpenseEditMode(e) {
+  document.getElementById('expenseFormError').style.display = 'none';
+  document.getElementById('expenseEditId').value = e.id;
+  document.getElementById('expenseDate').value = e.date;
+  document.getElementById('expenseDescription').value = e.description || '';
+  document.getElementById('expenseAmount').value = e.amount;
+  document.getElementById('expenseForm').style.display = 'flex';
+  document.getElementById('expenseDescription').focus();
+}
+
+document.getElementById('expenseForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  document.getElementById('expenseFormError').style.display = 'none';
+  const id = document.getElementById('expenseEditId').value;
+  const date = document.getElementById('expenseDate').value;
+  if (!date) return showExpenseFormError('Please choose a date.');
+  const body = {
+    propertyId: CURRENT_DRAWER_PROPERTY_ID,
+    date,
+    description: document.getElementById('expenseDescription').value.trim(),
+    amount: parseFloat(document.getElementById('expenseAmount').value) || 0
+  };
+  const btn = document.getElementById('saveExpenseBtn');
+  btn.disabled = true;
+  try {
+    const res = await fetch(id ? `/api/property-expenses/${id}` : '/api/property-expenses', {
+      method: id ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error saving expense');
+    resetExpenseForm();
+    loadExpenses(CURRENT_DRAWER_PROPERTY_ID);
+  } catch (err) {
+    showExpenseFormError(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('expensesList').addEventListener('click', (e) => {
+  const editBtn = e.target.closest('.expense-edit');
+  const deleteBtn = e.target.closest('.expense-delete');
+  if (editBtn) {
+    const ex = EXPENSES.find(x => x.id === editBtn.dataset.id);
+    if (ex) enterExpenseEditMode(ex);
+    return;
+  }
+  if (deleteBtn) {
+    const ex = EXPENSES.find(x => x.id === deleteBtn.dataset.id);
+    if (!ex) return;
+    confirmDialog(`Delete this expense (${formatZl2(ex.amount)})? This can't be undone.`, { title: 'Delete expense?' })
+      .then(confirmed => {
+        if (!confirmed) return;
+        return fetch(`/api/property-expenses/${ex.id}`, { method: 'DELETE' })
+          .then(res => res.json().then(data => ({ ok: res.ok, data })))
+          .then(({ ok, data }) => {
+            if (!ok) throw new Error(data.error || 'Error deleting expense');
+            loadExpenses(CURRENT_DRAWER_PROPERTY_ID);
+          });
+      })
+      .catch(err => alert(err.message));
+  }
+});
+
 function commentItemHtml(c) {
   const date = new Date(c.createdAt);
   const formatted = isNaN(date) ? '' : date.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   return `
-    <div class="comment-item">
+    <div class="comment-item${c.resolved ? ' resolved' : ''}">
       <div class="comment-item-header">
         <span class="comment-date">${formatted}</span>
-        <button type="button" class="icon-btn danger comment-delete" data-id="${c.id}" aria-label="Delete comment"><i class="ti ti-trash"></i></button>
+        <span style="display:flex; gap:4px;">
+          <button type="button" class="icon-btn comment-resolve${c.resolved ? ' active' : ''}" data-id="${c.id}" aria-label="${c.resolved ? 'Mark as unresolved' : 'Mark as resolved'}"><i class="ti ti-check"></i></button>
+          <button type="button" class="icon-btn danger comment-delete" data-id="${c.id}" aria-label="Delete comment"><i class="ti ti-trash"></i></button>
+        </span>
       </div>
       <p class="comment-text">${escapeHtml(c.text)}</p>
     </div>`;
@@ -2868,6 +3213,19 @@ document.getElementById('commentForm').addEventListener('submit', async (e) => {
 });
 
 document.getElementById('commentsList').addEventListener('click', (e) => {
+  const resolveBtn = e.target.closest('.comment-resolve');
+  if (resolveBtn && CURRENT_DRAWER_PROPERTY_ID) {
+    fetch(`/api/properties/${CURRENT_DRAWER_PROPERTY_ID}/comments/${resolveBtn.dataset.id}/resolve`, { method: 'PUT' })
+      .then(res => res.json().then(data => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        if (!ok) throw new Error(data.error || 'Error updating comment');
+        const idx = PROPERTIES.findIndex(x => x.id === CURRENT_DRAWER_PROPERTY_ID);
+        if (idx !== -1) PROPERTIES[idx] = data.property;
+        renderComments(data.property);
+      })
+      .catch(err => alert(err.message));
+    return;
+  }
   const deleteBtn = e.target.closest('.comment-delete');
   if (!deleteBtn || !CURRENT_DRAWER_PROPERTY_ID) return;
   confirmDialog("Delete this comment? This can't be undone.", { title: 'Delete comment?' })
@@ -2941,17 +3299,29 @@ function enterPropertyEditMode(id) {
   document.getElementById('propertyMaintenanceNote').value = p.maintenanceNote || '';
   document.getElementById('propertyMaintenanceDate').value = p.maintenanceDate || '';
   toggleTenantFields();
-  const tenantIds = ['tenantName', 'tenantPhone', 'tenantLeaseStart', 'tenantLeaseEnd', 'tenantRentAmount'];
+  const tenantIds = [
+    'tenant1Name', 'tenant1Phone', 'tenant1Email', 'tenant2Name', 'tenant2Phone', 'tenant2Email',
+    'tenantLeaseStart', 'tenantLeaseEnd', 'tenantRentAmount', 'tenantUtilityAdvance', 'tenantTaxDue',
+    'tenantDeposit', 'tenantGateCode', 'tenantNotes'
+  ];
   if (p.tenant) {
-    document.getElementById('tenantName').value = p.tenant.name || '';
-    document.getElementById('tenantPhone').value = p.tenant.phone || '';
-    document.getElementById('tenantRentStatus').value = p.tenant.rentStatus || 'pending';
+    const tenants = p.tenant.tenants || [];
+    document.getElementById('tenant1Name').value = tenants[0]?.name || '';
+    document.getElementById('tenant1Phone').value = tenants[0]?.phone || '';
+    document.getElementById('tenant1Email').value = tenants[0]?.email || '';
+    document.getElementById('tenant2Name').value = tenants[1]?.name || '';
+    document.getElementById('tenant2Phone').value = tenants[1]?.phone || '';
+    document.getElementById('tenant2Email').value = tenants[1]?.email || '';
     document.getElementById('tenantLeaseStart').value = p.tenant.leaseStart || '';
     document.getElementById('tenantLeaseEnd').value = p.tenant.leaseEnd || '';
     document.getElementById('tenantRentAmount').value = p.tenant.rentAmount || '';
+    document.getElementById('tenantUtilityAdvance').value = p.tenant.utilityAdvance || '';
+    document.getElementById('tenantTaxDue').value = p.tenant.taxDue || '';
+    document.getElementById('tenantDeposit').value = p.tenant.deposit || '';
+    document.getElementById('tenantGateCode').value = p.tenant.gateCode || '';
+    document.getElementById('tenantNotes').value = p.tenant.notes || '';
   } else {
     tenantIds.forEach(fid => { document.getElementById(fid).value = ''; });
-    document.getElementById('tenantRentStatus').value = 'pending';
   }
   document.getElementById('propertyForm').style.display = 'grid';
   document.getElementById('propertyName').focus();
@@ -2993,15 +3363,22 @@ document.getElementById('propertyForm').addEventListener('submit', async (e) => 
 
   let tenant = null;
   if (type === 'rental') {
-    const tenantName = document.getElementById('tenantName').value.trim();
-    if (tenantName) {
+    const tenant1Name = document.getElementById('tenant1Name').value.trim();
+    const tenant2Name = document.getElementById('tenant2Name').value.trim();
+    const tenants = [];
+    if (tenant1Name) tenants.push({ name: tenant1Name, phone: document.getElementById('tenant1Phone').value.trim(), email: document.getElementById('tenant1Email').value.trim() });
+    if (tenant2Name) tenants.push({ name: tenant2Name, phone: document.getElementById('tenant2Phone').value.trim(), email: document.getElementById('tenant2Email').value.trim() });
+    if (tenants.length) {
       tenant = {
-        name: tenantName,
-        phone: document.getElementById('tenantPhone').value.trim(),
-        rentStatus: document.getElementById('tenantRentStatus').value,
+        tenants,
         leaseStart: document.getElementById('tenantLeaseStart').value || null,
         leaseEnd: document.getElementById('tenantLeaseEnd').value || null,
-        rentAmount: parseFloat(document.getElementById('tenantRentAmount').value) || 0
+        rentAmount: parseFloat(document.getElementById('tenantRentAmount').value) || 0,
+        utilityAdvance: parseFloat(document.getElementById('tenantUtilityAdvance').value) || 0,
+        taxDue: parseFloat(document.getElementById('tenantTaxDue').value) || 0,
+        deposit: parseFloat(document.getElementById('tenantDeposit').value) || 0,
+        gateCode: document.getElementById('tenantGateCode').value.trim(),
+        notes: document.getElementById('tenantNotes').value.trim()
       };
     }
   }
@@ -3026,34 +3403,268 @@ document.getElementById('propertyForm').addEventListener('submit', async (e) => 
   }
 });
 
+// --- Properties: tax payments log. Matrix layout (one column per property) instead of a
+// free-text description - "amount" is always the real, confirmed transferred total; sienkiewicza/
+// szczesliwa are the per-property split and are nullable, since not every month's split is
+// confirmed (shown as "–" when unknown; the total still counts and still exports). ---
+let TAX_PAYMENTS = [];
+
+function formatPeriodPL(period) {
+  const [y, m] = period.split('-');
+  return `${m}.${y}`;
+}
+
+// A note (e.g. "vacant this month") shows as a native tooltip on the amount - dotted underline
+// hints there's something to hover, since a plain title attribute alone gives no visual cue.
+function taxCellHtml(v, note) {
+  const value = v === null || v === undefined ? '<span style="color:var(--text-muted);">–</span>' : formatZl2(v);
+  if (!note) return value;
+  return `<span title="${escapeHtml(note)}" style="border-bottom:1px dotted var(--text-muted); cursor:help;">${value}</span>`;
+}
+
+function taxPaymentRowHtml(t) {
+  return `
+    <tr data-id="${t.id}">
+      <td>${formatPeriodPL(t.period)}</td>
+      <td style="text-align:right; white-space:nowrap;">${taxCellHtml(t.sienkiewicza, t.sienkiewiczaNote)}</td>
+      <td style="text-align:right; white-space:nowrap;">${taxCellHtml(t.szczesliwa, t.szczesliwaNote)}</td>
+      <td style="text-align:right; white-space:nowrap; font-weight:600;">${formatZl2(t.amount)}</td>
+      <td style="white-space:nowrap;">${t.transferDate || '–'}</td>
+      <td style="text-align:right; white-space:nowrap;">
+        <button type="button" class="icon-btn tax-payment-edit" data-id="${t.id}" aria-label="Edit"><i class="ti ti-pencil"></i></button>
+        <button type="button" class="icon-btn danger tax-payment-delete" data-id="${t.id}" aria-label="Delete"><i class="ti ti-trash"></i></button>
+      </td>
+    </tr>`;
+}
+
+// Keeps the year dropdown's options in sync with whatever years actually have data (plus the
+// current year, so a fresh year is always selectable even before its first payment is logged).
+function updateTaxYearOptions() {
+  const years = new Set(TAX_PAYMENTS.map(t => t.period.slice(0, 4)));
+  years.add(String(new Date().getFullYear()));
+  const sorted = [...years].sort();
+  const sel = document.getElementById('taxYear');
+  const keep = sel.value || String(new Date().getFullYear());
+  sel.innerHTML = sorted.map(y => `<option value="${y}">${y}</option>`).join('');
+  sel.value = sorted.includes(keep) ? keep : sorted[sorted.length - 1];
+}
+
+function renderTaxPayments() {
+  updateTaxYearOptions();
+  const year = document.getElementById('taxYear').value;
+  const filtered = TAX_PAYMENTS.filter(t => t.period.startsWith(year));
+  document.getElementById('taxMainEmpty').style.display = filtered.length ? 'none' : 'flex';
+  document.getElementById('taxMainTable').style.display = filtered.length ? 'table' : 'none';
+  document.getElementById('taxMainTableBody').innerHTML = filtered.map(taxPaymentRowHtml).join('');
+
+  const sum = (key) => filtered.reduce((s, t) => s + (t[key] || 0), 0);
+  const anySienkiewicza = filtered.some(t => t.sienkiewicza !== null);
+  const anySzczesliwa = filtered.some(t => t.szczesliwa !== null);
+  document.getElementById('taxMainTableFoot').innerHTML = filtered.length ? `
+    <tr>
+      <td style="font-weight:700;">Total ${escapeHtml(year)}</td>
+      <td style="text-align:right; white-space:nowrap; font-weight:700;">${anySienkiewicza ? formatZl2(sum('sienkiewicza')) : '–'}</td>
+      <td style="text-align:right; white-space:nowrap; font-weight:700;">${anySzczesliwa ? formatZl2(sum('szczesliwa')) : '–'}</td>
+      <td style="text-align:right; white-space:nowrap; font-weight:700;">${formatZl2(sum('amount'))}</td>
+      <td></td><td></td>
+    </tr>` : '';
+}
+
+async function loadTaxPayments() {
+  try {
+    const res = await fetch('/api/tax-payments');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error fetching tax payments');
+    TAX_PAYMENTS = data.payments;
+  } catch (err) {
+    console.warn('Failed to load tax payments', err);
+    TAX_PAYMENTS = [];
+  }
+  renderTaxPayments();
+}
+
+document.getElementById('taxYear').addEventListener('change', renderTaxPayments);
+document.getElementById('taxYearPrev').addEventListener('click', () => {
+  const sel = document.getElementById('taxYear');
+  sel.selectedIndex = Math.max(0, sel.selectedIndex - 1);
+  renderTaxPayments();
+});
+document.getElementById('taxYearNext').addEventListener('click', () => {
+  const sel = document.getElementById('taxYear');
+  sel.selectedIndex = Math.min(sel.options.length - 1, sel.selectedIndex + 1);
+  renderTaxPayments();
+});
+
+document.getElementById('exportTaxPaymentsBtn').addEventListener('click', () => {
+  const year = document.getElementById('taxYear').value;
+  const filtered = TAX_PAYMENTS.filter(t => t.period.startsWith(year)).sort((a, b) => a.period.localeCompare(b.period));
+  const lines = [];
+  lines.push(['Miesiąc', 'Sienkiewicza (zł)', 'Szczęśliwa (zł)', 'Razem (zł)', 'Data przelewu'].join(';'));
+  filtered.forEach(t => {
+    lines.push([
+      formatPeriodPL(t.period),
+      t.sienkiewicza === null ? '' : csvNum(t.sienkiewicza),
+      t.szczesliwa === null ? '' : csvNum(t.szczesliwa),
+      csvNum(t.amount),
+      t.transferDate || ''
+    ].join(';'));
+  });
+  const sum = (key) => filtered.reduce((s, t) => s + (t[key] || 0), 0);
+  lines.push(['Razem', csvNum(sum('sienkiewicza')), csvNum(sum('szczesliwa')), csvNum(sum('amount')), ''].join(';'));
+  const csv = '﻿' + lines.join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `podatek-najem-${year}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+});
+
+function showTaxPaymentFormError(msg) {
+  const el = document.getElementById('taxPaymentFormError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function resetTaxPaymentForm() {
+  document.getElementById('taxPaymentForm').reset();
+  document.getElementById('taxPaymentEditId').value = '';
+  document.getElementById('taxPaymentFormError').style.display = 'none';
+}
+
+// If both per-property fields are filled, keep Total in sync automatically - one less thing to
+// keep consistent by hand. Total stays freely editable when the split isn't known.
+function autofillTaxTotal() {
+  const s = document.getElementById('taxPaymentSienkiewicza').value;
+  const z = document.getElementById('taxPaymentSzczesliwa').value;
+  if (s !== '' && z !== '') {
+    document.getElementById('taxPaymentAmount').value = (parseFloat(s) + parseFloat(z)).toFixed(2);
+  }
+}
+document.getElementById('taxPaymentSienkiewicza').addEventListener('input', autofillTaxTotal);
+document.getElementById('taxPaymentSzczesliwa').addEventListener('input', autofillTaxTotal);
+
+document.querySelector('.tax-add-btn').addEventListener('click', () => {
+  resetTaxPaymentForm();
+  document.getElementById('taxPaymentForm').style.display = 'grid';
+  document.getElementById('taxPaymentForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('taxPaymentPeriod').focus();
+});
+
+document.getElementById('cancelTaxPaymentBtn').addEventListener('click', () => {
+  document.getElementById('taxPaymentForm').style.display = 'none';
+  resetTaxPaymentForm();
+});
+
+function enterTaxPaymentEditMode(t) {
+  document.getElementById('taxPaymentFormError').style.display = 'none';
+  document.getElementById('taxPaymentEditId').value = t.id;
+  document.getElementById('taxPaymentPeriod').value = t.period;
+  document.getElementById('taxPaymentSienkiewicza').value = t.sienkiewicza === null ? '' : t.sienkiewicza;
+  document.getElementById('taxPaymentSzczesliwa').value = t.szczesliwa === null ? '' : t.szczesliwa;
+  document.getElementById('taxPaymentSienkiewiczaNote').value = t.sienkiewiczaNote || '';
+  document.getElementById('taxPaymentSzczesliwaNote').value = t.szczesliwaNote || '';
+  document.getElementById('taxPaymentAmount').value = t.amount;
+  document.getElementById('taxPaymentTransferDate').value = t.transferDate || '';
+  document.getElementById('taxPaymentForm').style.display = 'grid';
+  document.getElementById('taxPaymentForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('taxPaymentPeriod').focus();
+}
+
+document.getElementById('taxPaymentForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  document.getElementById('taxPaymentFormError').style.display = 'none';
+  const id = document.getElementById('taxPaymentEditId').value;
+  const period = document.getElementById('taxPaymentPeriod').value;
+  if (!period) return showTaxPaymentFormError('Please choose a month.');
+  const sVal = document.getElementById('taxPaymentSienkiewicza').value;
+  const zVal = document.getElementById('taxPaymentSzczesliwa').value;
+  const body = {
+    period,
+    amount: parseFloat(document.getElementById('taxPaymentAmount').value) || 0,
+    sienkiewicza: sVal === '' ? null : parseFloat(sVal),
+    szczesliwa: zVal === '' ? null : parseFloat(zVal),
+    sienkiewiczaNote: document.getElementById('taxPaymentSienkiewiczaNote').value.trim(),
+    szczesliwaNote: document.getElementById('taxPaymentSzczesliwaNote').value.trim(),
+    transferDate: document.getElementById('taxPaymentTransferDate').value || null
+  };
+  const btn = document.getElementById('saveTaxPaymentBtn');
+  btn.disabled = true;
+  try {
+    const res = await fetch(id ? `/api/tax-payments/${id}` : '/api/tax-payments', {
+      method: id ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error saving tax payment');
+    document.getElementById('taxPaymentForm').style.display = 'none';
+    resetTaxPaymentForm();
+    loadTaxPayments();
+  } catch (err) {
+    showTaxPaymentFormError(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('taxMainTableBody').addEventListener('click', (e) => {
+  const editBtn = e.target.closest('.tax-payment-edit');
+  const deleteBtn = e.target.closest('.tax-payment-delete');
+  if (editBtn) {
+    const t = TAX_PAYMENTS.find(x => x.id === editBtn.dataset.id);
+    if (t) enterTaxPaymentEditMode(t);
+    return;
+  }
+  if (deleteBtn) {
+    const t = TAX_PAYMENTS.find(x => x.id === deleteBtn.dataset.id);
+    if (!t) return;
+    confirmDialog(`Delete the tax payment for ${formatPeriodPL(t.period)}? This can't be undone.`, { title: 'Delete payment?' })
+      .then(confirmed => {
+        if (!confirmed) return;
+        return fetch(`/api/tax-payments/${t.id}`, { method: 'DELETE' })
+          .then(res => res.json().then(data => ({ ok: res.ok, data })))
+          .then(({ ok, data }) => {
+            if (!ok) throw new Error(data.error || 'Error deleting tax payment');
+            loadTaxPayments();
+          });
+      })
+      .catch(err => alert(err.message));
+  }
+});
+
 // --- Overview dashboard ---
 
-// No real weather API here - a deterministic mock that still varies day to day, so the
-// weather-dependent chore suggestion below has something to react to for the demo.
-function getFakeForecast() {
-  const CONDITIONS = [
-    { key: 'sunny', label: 'sunny', icon: 'ti-sun', good: true },
-    { key: 'partly-cloudy', label: 'partly cloudy', icon: 'ti-cloud-sun', good: true },
-    { key: 'cloudy', label: 'cloudy', icon: 'ti-cloud', good: false },
-    { key: 'rainy', label: 'rainy', icon: 'ti-cloud-rain', good: false }
-  ];
-  const dayIndex = Math.floor(Date.now() / 86400000);
-  const condition = CONDITIONS[dayIndex % CONDITIONS.length];
-  const temp = 15 + (dayIndex % 15);
-  return { ...condition, temp };
+// Turns a day count into the leading "In X days: " / "Overdue by X days: " clause used to open
+// every to-do line - keeps the deadline front and center instead of buried in a side badge.
+const ATTENTION_WINDOW_DAYS = 30;
+function todoPrefix(days) {
+  if (days < 0) {
+    const d = Math.abs(days);
+    return `Overdue by ${d} day${d === 1 ? '' : 's'}: `;
+  }
+  if (days === 0) return 'Today: ';
+  if (days === 1) return 'Tomorrow: ';
+  return `In ${days} days: `;
 }
 
 function garageInsights() {
   const items = [];
   VEHICLES.forEach(v => {
     if (v.nextServiceDate) {
-      items.push({ icon: 'ti-engine', message: `${v.name} service due`, dateStr: v.nextServiceDate, section: 'garage', vehicleId: v.id });
+      const days = daysUntil(v.nextServiceDate);
+      if (days !== null && days <= ATTENTION_WINDOW_DAYS) {
+        items.push({ icon: 'ti-engine', message: `${todoPrefix(days)}${v.name}'s service is due`, sortKey: days, section: 'garage', vehicleId: v.id });
+      }
     }
     if (v.insuranceExpiryDate) {
-      items.push({ icon: 'ti-shield-check', message: `${v.name} insurance expires`, dateStr: v.insuranceExpiryDate, section: 'garage', vehicleId: v.id });
+      const days = daysUntil(v.insuranceExpiryDate);
+      if (days !== null && days <= ATTENTION_WINDOW_DAYS) {
+        items.push({ icon: 'ti-shield-check', message: `${todoPrefix(days)}${v.name}'s insurance policy expires`, sortKey: days, section: 'garage', vehicleId: v.id });
+      }
     }
   });
-  items.sort((a, b) => (daysUntil(a.dateStr) ?? Infinity) - (daysUntil(b.dateStr) ?? Infinity));
   return items;
 }
 
@@ -3061,13 +3672,17 @@ function propertiesInsights() {
   const items = [];
   PROPERTIES.forEach(p => {
     if (p.type === 'rental' && p.tenant && p.tenant.leaseEnd) {
-      items.push({ icon: 'ti-calendar-event', message: `${p.name} lease ends`, dateStr: p.tenant.leaseEnd, section: 'properties', propertyId: p.id });
+      const days = daysUntil(p.tenant.leaseEnd);
+      if (days !== null && days <= ATTENTION_WINDOW_DAYS) {
+        items.push({ icon: 'ti-calendar-event', message: `${todoPrefix(days)}${p.name}'s lease ends`, sortKey: days, section: 'properties', propertyId: p.id });
+      }
     }
-    if (p.maintenanceNote) {
-      items.push({ icon: 'ti-hammer', message: `${p.name}: ${p.maintenanceNote}`, dateStr: p.maintenanceDate, section: 'properties', propertyId: p.id });
-    }
+    // Unresolved comments (e.g. a tenant paying late) stay on the to-do list until someone
+    // ticks them off in the property drawer - that's the whole point of the resolved toggle.
+    (p.comments || []).filter(c => !c.resolved).forEach(c => {
+      items.push({ icon: 'ti-message-2', message: `${p.name}: ${c.text}`, sortKey: -1, section: 'properties', propertyId: p.id });
+    });
   });
-  items.sort((a, b) => (daysUntil(a.dateStr) ?? Infinity) - (daysUntil(b.dateStr) ?? Infinity));
   return items;
 }
 
@@ -3082,55 +3697,75 @@ function subscriptionsInsights() {
       items.push({
         icon: 'ti-alert-triangle',
         message: `You haven't used ${s.name} in ${months} month${months === 1 ? '' : 's'} — maybe cancel to save ${formatZl2(s.cost)}${cycleLabel}`,
-        section: 'subscriptions', subscriptionId: s.id
+        sortKey: 0, section: 'subscriptions', subscriptionId: s.id
       });
     }
   });
   return items;
 }
 
+// P1 home tasks are the ones worth surfacing on the dashboard - P2/P3 stay in the Home Tasks
+// list only. "once" tasks drop off once completed; recurring ones reappear each new period.
 function choresInsights() {
-  const forecast = getFakeForecast();
-  if (!forecast.good) return [];
-  return CHORES.filter(c => c.weatherDependent && !c.doneThisPeriod).map(c => ({
-    icon: forecast.icon,
-    message: `Great weather for "${c.name}" today — ${forecast.temp}°C and ${forecast.label}. Perfect time to get it done!`,
-    section: 'chores', choreId: c.id
-  }));
+  return CHORES.filter(c => c.priority === 'P1' && !c.doneThisPeriod).map(c => {
+    const vehicle = c.vehicleId ? VEHICLES.find(v => v.id === c.vehicleId) : null;
+    const property = !vehicle && c.propertyId ? PROPERTIES.find(p => p.id === c.propertyId) : null;
+    return {
+      icon: 'ti-flag-3',
+      message: c.name,
+      tagLabel: vehicle ? vehicle.name : (property ? property.name : null),
+      sortKey: -1, section: 'chores', choreId: c.id
+    };
+  });
+}
+
+// Reminds to issue + send the invoice starting 2 days before month-end. "Done" is approximated
+// by the protocols for this period having been exported - there's no real signal yet for
+// "invoice issued in iFirma and sent to KSeF" (that step isn't tracked anywhere, see
+// .claude/skills/ifirma-integration/SKILL.md), so this is a best-effort proxy, not a hard fact.
+function invoicingInsights() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth() + 1;
+  const lastDay = new Date(year, month, 0).getDate();
+  const lastDayStr = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+  const days = daysUntil(lastDayStr);
+  if (days === null || days < 0 || days > 2) return [];
+
+  const periodId = `${year}-${String(month).padStart(2, '0')}`;
+  const historyEntry = HISTORY_CACHE.find(h => h.id === periodId);
+  if (historyEntry && historyEntry.exported) return [];
+
+  return [{
+    icon: 'ti-file-invoice',
+    message: `${todoPrefix(days)}Issue this month's invoice and send it to KSeF`,
+    sortKey: days, section: 'invoicing'
+  }];
 }
 
 const INSIGHT_CATEGORIES = [
   { key: 'garage', label: 'Garage', icon: 'ti-car', getItems: garageInsights },
   { key: 'properties', label: 'Properties', icon: 'ti-building-estate', getItems: propertiesInsights },
   { key: 'subscriptions', label: 'Subscriptions', icon: 'ti-credit-card', getItems: subscriptionsInsights },
-  { key: 'chores', label: 'Home Tasks', icon: 'ti-list-check', getItems: choresInsights }
+  { key: 'chores', label: 'Home Tasks', icon: 'ti-list-check', getItems: choresInsights },
+  { key: 'invoicing', label: 'Invoicing', icon: 'ti-file-invoice', getItems: invoicingInsights }
 ];
 
 function insightRowHtml(item) {
   return `
     <div class="insight-row" data-section="${item.section}" data-vehicle-id="${item.vehicleId || ''}" data-property-id="${item.propertyId || ''}">
-      <div class="insight-row-icon"><i class="ti ${item.icon}"></i></div>
-      <div class="insight-row-body">
-        <p class="insight-row-message">${escapeHtml(item.message)}</p>
-        ${item.dateStr ? `<span class="insight-row-sub">${item.dateStr}</span>` : ''}
-      </div>
-      ${item.dateStr ? nextServiceBadge(item.dateStr) : ''}
+      <i class="ti ${item.icon} insight-row-icon"></i>
+      <p class="insight-row-message">${escapeHtml(item.message)}</p>
+      ${item.tagLabel ? `<span class="badge neutral">${escapeHtml(item.tagLabel)}</span>` : ''}
     </div>`;
 }
 
 function renderInsights() {
-  const categoriesHtml = INSIGHT_CATEGORIES.map(cat => {
-    const items = cat.getItems();
-    if (!items.length) return '';
-    return `
-      <div class="insight-category">
-        <div class="insight-category-header"><i class="ti ${cat.icon}"></i> <span>${cat.label}</span></div>
-        <div class="insight-list">${items.map(insightRowHtml).join('')}</div>
-      </div>`;
-  }).filter(Boolean);
+  const items = INSIGHT_CATEGORIES.flatMap(cat => cat.getItems())
+    .sort((a, b) => (a.sortKey ?? Infinity) - (b.sortKey ?? Infinity));
 
-  document.getElementById('insightsEmpty').style.display = categoriesHtml.length ? 'none' : 'flex';
-  document.getElementById('insightsGrid').innerHTML = categoriesHtml.join('');
+  document.getElementById('insightsEmpty').style.display = items.length ? 'none' : 'flex';
+  document.getElementById('insightsGrid').innerHTML = items.map(insightRowHtml).join('');
 }
 
 document.getElementById('insightsGrid').addEventListener('click', (e) => {
@@ -3145,61 +3780,9 @@ document.getElementById('insightsGrid').addEventListener('click', (e) => {
   }
 });
 
-async function renderQuickGlance() {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth() + 1;
-
-  const pendingProps = PROPERTIES.filter(p => p.type === 'rental' && p.tenant && p.tenant.rentStatus === 'pending');
-  const pendingTotal = pendingProps.reduce((sum, p) => sum + (p.tenant.rentAmount || 0), 0);
-
-  const dueVehicles = VEHICLES.filter(v => {
-    const d = daysUntil(v.nextServiceDate);
-    return d !== null && d <= 30;
-  });
-
-  let netThisMonth = null;
-  try {
-    const { rowsData } = await calculateYearlyIncome(year);
-    const row = rowsData.find(r => r.m === month);
-    netThisMonth = row ? row.net : null;
-  } catch (err) {
-    console.warn('Failed to compute income for overview', err);
-  }
-
-  const periodId = `${year}-${String(month).padStart(2, '0')}`;
-  const historyEntry = HISTORY_CACHE.find(h => h.id === periodId);
-  let protocolBadge;
-  if (!historyEntry) protocolBadge = '<span class="badge danger">Not generated</span>';
-  else if (!historyEntry.generatedAt) protocolBadge = '<span class="badge neutral">Manual upload</span>';
-  else protocolBadge = `<span class="badge ${historyEntry.exported ? 'success' : 'warning'}">${historyEntry.exported ? 'Exported' : 'Generated'}</span>`;
-
-  document.getElementById('quickGlanceGrid').innerHTML = `
-    <div class="stat-tile">
-      <div class="stat-label">Pending rent</div>
-      <div class="stat-value">${pendingProps.length}</div>
-      ${pendingProps.length ? `<span class="badge warning" style="margin-top:8px;">${pendingTotal.toLocaleString()} zł</span>` : ''}
-    </div>
-    <div class="stat-tile">
-      <div class="stat-label">Vehicles due for service</div>
-      <div class="stat-value">${dueVehicles.length}</div>
-      <span class="badge neutral" style="margin-top:8px;">within 30 days</span>
-    </div>
-    <div class="stat-tile">
-      <div class="stat-label">Net income — ${MONTH_NAMES[month - 1]}</div>
-      <div class="stat-value">${netThisMonth !== null ? formatZl2(netThisMonth) : '–'}</div>
-    </div>
-    <div class="stat-tile">
-      <div class="stat-label">Protocols — ${MONTH_NAMES[month - 1]}</div>
-      <div style="margin-top:8px;">${protocolBadge}</div>
-    </div>
-  `;
-}
-
 async function loadOverviewDashboard() {
   await Promise.all([loadVehicles(), loadProperties(), loadHistory(), loadSubscriptions(), loadChores()]);
   renderInsights();
-  renderQuickGlance();
 }
 
 // --- Subscriptions ---
@@ -3376,7 +3959,8 @@ document.getElementById('subscriptionsListBody').addEventListener('click', onSub
 
 // --- Chores ---
 let CHORES = [];
-const FREQUENCY_LABELS = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' };
+const FREQUENCY_LABELS = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', once: 'Once' };
+const PRIORITY_BADGE_CLASS = { P1: 'danger', P2: 'warning', P3: 'success' };
 
 function formatShortDate(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number);
@@ -3385,6 +3969,8 @@ function formatShortDate(dateStr) {
 
 function choreItemHtml(c) {
   const recent = (c.completions || []).slice().sort((a, b) => b.localeCompare(a)).slice(0, 5);
+  const property = c.propertyId ? PROPERTIES.find(p => p.id === c.propertyId) : null;
+  const vehicle = c.vehicleId ? VEHICLES.find(v => v.id === c.vehicleId) : null;
   return `
     <div class="chore-row" data-id="${c.id}">
       <button type="button" class="chore-checkbox ${c.doneThisPeriod ? 'checked' : ''}" data-id="${c.id}" aria-label="Toggle complete">
@@ -3393,8 +3979,10 @@ function choreItemHtml(c) {
       <div class="chore-body">
         <div class="chore-row-header">
           <p class="chore-name">${escapeHtml(c.name)}</p>
+          <span class="badge ${PRIORITY_BADGE_CLASS[c.priority] || 'warning'}">${escapeHtml(c.priority || 'P2')}</span>
           <span class="badge neutral">${FREQUENCY_LABELS[c.frequency] || c.frequency}</span>
-          ${c.weatherDependent ? '<span class="badge neutral"><i class="ti ti-sun"></i> Weather</span>' : ''}
+          ${property ? `<span class="badge neutral"><i class="ti ti-building-estate"></i> ${escapeHtml(property.name)}</span>` : ''}
+          ${vehicle ? `<span class="badge neutral"><i class="ti ti-car"></i> ${escapeHtml(vehicle.name)}</span>` : ''}
           ${c.streak > 0 ? `<span class="badge warning"><i class="ti ti-flame"></i> ${c.streak}</span>` : ''}
         </div>
         ${c.notes ? `<p class="chore-notes">${escapeHtml(c.notes)}</p>` : ''}
@@ -3422,7 +4010,26 @@ async function loadChores() {
     console.warn('Failed to load chores', err);
     CHORES = [];
   }
+  // Needed to resolve propertyId/vehicleId -> name on each chore row, even if the Properties/
+  // Garage tabs were never visited this session.
+  await Promise.all([loadProperties(), loadVehicles()]);
   renderChores();
+}
+
+function populateChorePropertyOptions() {
+  const sel = document.getElementById('choreProperty');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">No property</option>' +
+    PROPERTIES.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  sel.value = current;
+}
+
+function populateChoreVehicleOptions() {
+  const sel = document.getElementById('choreVehicle');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">No vehicle</option>' +
+    VEHICLES.map(v => `<option value="${v.id}">${escapeHtml(v.name)}</option>`).join('');
+  sel.value = current;
 }
 
 function showChoreFormError(msg) {
@@ -3439,6 +4046,8 @@ function resetChoreForm() {
 
 document.getElementById('addChoreBtn').addEventListener('click', () => {
   resetChoreForm();
+  populateChorePropertyOptions();
+  populateChoreVehicleOptions();
   document.getElementById('choreForm').style.display = 'grid';
   document.getElementById('choreName').focus();
 });
@@ -3453,8 +4062,12 @@ function enterChoreEditMode(c) {
   document.getElementById('choreEditId').value = c.id;
   document.getElementById('choreName').value = c.name;
   document.getElementById('choreFrequency').value = c.frequency;
+  document.getElementById('chorePriority').value = c.priority || 'P2';
   document.getElementById('choreNotes').value = c.notes || '';
-  document.getElementById('choreWeatherDependent').checked = Boolean(c.weatherDependent);
+  populateChorePropertyOptions();
+  document.getElementById('choreProperty').value = c.propertyId || '';
+  populateChoreVehicleOptions();
+  document.getElementById('choreVehicle').value = c.vehicleId || '';
   document.getElementById('choreForm').style.display = 'grid';
   document.getElementById('choreName').focus();
 }
@@ -3468,8 +4081,10 @@ document.getElementById('choreForm').addEventListener('submit', async (e) => {
   const body = {
     name,
     frequency: document.getElementById('choreFrequency').value,
+    priority: document.getElementById('chorePriority').value,
     notes: document.getElementById('choreNotes').value.trim(),
-    weatherDependent: document.getElementById('choreWeatherDependent').checked
+    propertyId: document.getElementById('choreProperty').value || null,
+    vehicleId: document.getElementById('choreVehicle').value || null
   };
   const btn = document.getElementById('saveChoreBtn');
   btn.disabled = true;

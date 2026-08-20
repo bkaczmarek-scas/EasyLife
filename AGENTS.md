@@ -9,21 +9,11 @@ Trzy główne przepływy:
 2. **Dokumenty** — wygenerowanie dwóch dokumentów PDF na bazie prawdziwych wzorów Softcraft:
    protokół zamówienia i protokół zdawczo-odbiorczy, z automatyczną kalkulacją kwoty i zapisem
    słownym po polsku.
-3. **iFirma** — krok 4 wizarda Invoicing wystawia fakturę sprzedaży krajowej przez prawdziwe API
-   iFirma (`src/services/ifirmaService.js`, `POST /api/export/ifirma`) — mechanizm autoryzacji
-   (HMAC-SHA1 per-scope kluczem `faktura`) i kształt żądania potwierdzone w dokumentacji, patrz
-   `.claude/skills/ifirma-integration/SKILL.md` po pełny kontekst. Wymaga realnych
-   `IFIRMA_USERNAME`/`IFIRMA_INVOICE_KEY`/`CLIENT_*` w `.env` (użytkownik musi sam aktywować API
-   na swoim koncie iFirma — brak sandboxa po ich stronie, patrz SKILL.md). Integracja z Taxxxo
-   została świadomie porzucona — zbyt kosztowna integracja API — cała logika/UI Taxxxo usunięte.
+3. **Taxxxo** — po zatwierdzeniu dokumentów, dane są gotowe do eksportu do zewnętrznego systemu
+   księgowego Taxxxo (na razie tylko link, eksport CSV/XLSX jeszcze nie zaimplementowany).
 
 Rozmowy z właścicielem projektu (Bartek) prowadzone są po polsku — trzymaj się polskiego w UI,
 treściach dokumentów i commit messages jeśli o nie poprosi.
-
-**Na tym repo równolegle działa też inny agent (ChatGPT Codex)**, pushujący bezpośrednio na
-`main` niezależnie od tej sesji — nie ma między nimi żadnej integracji/komunikacji w czasie
-rzeczywistym (to osobne produkty, brak wspólnego API). Zawsze `git fetch` + sprawdź
-`git log origin/main` przed pushem, żeby nie nadpisać czyichś zmian; nigdy force-push.
 
 ## Stan obecny
 
@@ -103,20 +93,14 @@ apka sama wchodzi w tryb demo worklogów (`tempoService.demoWorklogs`).
 
 ## Priorytety dalszego rozwoju (w kolejności)
 
-1. Realny test integracji iFirma — kod jest gotowy (`ifirmaService.js`, krok 4 wizarda), ale nigdy
-   nie był wywołany z prawdziwymi `IFIRMA_USERNAME`/`IFIRMA_INVOICE_KEY`/`CLIENT_*`. Użytkownik
-   musi sam aktywować API na koncie iFirma (Ustawienia → API → klucz `faktura`) i ustawić dane
-   nabywcy (`CLIENT_*`) — potem pierwsza faktura z kroku 4 to realny test end-to-end. Po sukcesie:
-   dopisać zapisywanie zwróconego `Identyfikator` w `protocolsHistoryService` i osobny krok wysyłki
-   do KSeF — patrz skill po pełny kontekst.
+1. Eksport CSV/XLSX do Taxxxo — nowy endpoint `/api/export/taxxxo`.
 2. Panel administracji (wielu zleceniobiorców, umowy, stawki) — obecnie dane kontrahenta na sztywno
    w `.env`.
 3. Asystent AI (zapytania NL o dane rozliczeniowe, wykrywanie anomalii) — wymaga `ANTHROPIC_API_KEY`.
 
 Zrobione: podłączenie prawdziwego API Tempo/Jira (działa live), historia/archiwum protokołów
 (`protocolsHistoryService.js` + zakładka History), wykres 12 miesięcy z prawdziwymi danymi,
-roczne podsumowanie CSV w zakładce Income, tryb ciemny (CSS tokeny + przełącznik + wykresy),
-wystawianie faktury w iFirma (krok 4 Invoicing, kod gotowy, czeka na realne dane konta).
+roczne podsumowanie CSV w zakładce Income, tryb ciemny (CSS tokeny + przełącznik + wykresy).
 
 ## Jak testować
 
