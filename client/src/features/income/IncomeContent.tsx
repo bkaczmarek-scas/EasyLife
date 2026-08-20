@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { IconEdit, IconTrash, IconPlus } from '@tabler/icons-react'
+import { IconEdit, IconTrash, IconPlus, IconDownload } from '@tabler/icons-react'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Sheet } from '../../components/ui/Sheet'
+import { YearSelector } from '../../components/ui/YearSelector'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useToast } from '../../components/ui/Toast'
 import { useDeleteBonus, type Bonus } from '../../api/resources/bonuses'
@@ -11,7 +12,15 @@ import { useYearlyIncome } from './useYearlyIncome'
 import { BonusFormDialog } from './BonusFormDialog'
 import { RatesContent } from '../rates/RatesContent'
 
-export function IncomeContent({ year }: { year: number }) {
+export function IncomeContent({
+  year,
+  onYearChange,
+  onExport,
+}: {
+  year: number
+  onYearChange: (year: number) => void
+  onExport: () => void
+}) {
   const { months, yearBonuses, totalNet, totalBonuses, totalCombined, isLoading } = useYearlyIncome(year)
   const deleteBonus = useDeleteBonus()
   const toast = useToast()
@@ -53,27 +62,35 @@ export function IncomeContent({ year }: { year: number }) {
         </div>
       </Card>
 
-      <div className="mt-6 grid grid-cols-2 gap-6">
+      <div className="mt-6 grid grid-cols-[2fr_1fr] gap-6">
         <Card className="!p-0">
-          <p className="border-b border-border px-4 py-3 text-sm font-semibold text-text-primary">Monthly Salary Breakdown</p>
-          <table className="w-full text-left text-[13px]">
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <p className="text-base font-semibold text-text-primary">Monthly Salary Breakdown</p>
+            <div className="flex items-center gap-3">
+              <YearSelector year={year} onChange={onYearChange} />
+              <Button variant="secondary" onClick={onExport}>
+                <IconDownload size={14} /> Export CSV
+              </Button>
+            </div>
+          </div>
+          <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-border text-xs font-semibold uppercase text-text-muted">
-                <th className="px-4 py-2">Month</th>
-                <th className="py-2">Gross</th>
-                <th className="py-2">ZUS</th>
-                <th className="py-2">Tax</th>
-                <th className="py-2">Net</th>
+                <th className="px-5 py-3">Month</th>
+                <th className="px-3 py-3">Gross</th>
+                <th className="px-3 py-3">ZUS</th>
+                <th className="px-3 py-3">Tax</th>
+                <th className="px-5 py-3">Net</th>
               </tr>
             </thead>
             <tbody>
               {months.map((m) => (
                 <tr key={m.month} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 font-semibold text-text-primary">{m.label} {year}</td>
-                  <td className="py-3 text-text-secondary">{formatMoney(m.gross)}</td>
-                  <td className="py-3 text-text-secondary">{formatMoney(m.zus)}</td>
-                  <td className="py-3 text-text-secondary">{formatMoney(m.tax)}</td>
-                  <td className="py-3 font-semibold text-primary">{formatPLN(m.net)}</td>
+                  <td className="px-5 py-3.5 font-semibold text-text-primary">{m.label} {year}</td>
+                  <td className="px-3 py-3.5 text-text-secondary">{formatMoney(m.gross)}</td>
+                  <td className="px-3 py-3.5 text-text-secondary">{formatMoney(m.zus)}</td>
+                  <td className="px-3 py-3.5 text-text-secondary">{formatMoney(m.tax)}</td>
+                  <td className="px-5 py-3.5 font-semibold text-primary">{formatPLN(m.net)}</td>
                 </tr>
               ))}
             </tbody>
