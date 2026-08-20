@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js",
+    "start": "prisma migrate deploy && node server.js",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
