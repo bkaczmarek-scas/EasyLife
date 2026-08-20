@@ -8,6 +8,7 @@ import { useToast } from '../../components/ui/Toast'
 import { useSubscriptions, useDeleteSubscription, type Subscription } from '../../api/resources/subscriptions'
 import { SubscriptionFormDialog } from './SubscriptionFormDialog'
 import { dateUrgency } from '../../lib/dateUrgency'
+import { formatPLN } from '../../lib/money'
 
 function monthlyEquivalent(sub: Subscription) {
   return sub.billingCycle === 'yearly' ? sub.cost / 12 : sub.cost
@@ -83,9 +84,9 @@ export function SubscriptionsPage() {
       ) : (
         <>
           <div className="mt-6 grid grid-cols-3 gap-4">
-            <StatTile eyebrow="Monthly Estimated Spend" value={`${stats.monthly.toFixed(2)} PLN`} />
+            <StatTile eyebrow="Monthly Estimated Spend" value={formatPLN(stats.monthly)} />
             <StatTile eyebrow="Active Subscriptions" value={`${stats.count} Services`} />
-            <StatTile eyebrow="Projected Annual Cost" value={`${stats.annual.toFixed(0)} PLN`} />
+            <StatTile eyebrow="Projected Annual Cost" value={formatPLN(stats.annual, 0)} />
           </div>
 
           <div className="mt-6 grid grid-cols-4 gap-4">
@@ -104,7 +105,7 @@ export function SubscriptionsPage() {
                   <div>
                     <p className="font-semibold text-text-primary">{sub.name}</p>
                     <p className="text-lg font-bold text-text-primary">
-                      {sub.cost.toFixed(2)} PLN <span className="text-xs font-normal text-text-muted">/ {sub.billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
+                      {formatPLN(sub.cost)} <span className="text-xs font-normal text-text-muted">/ {sub.billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
                     </p>
                   </div>
                   <div className="border-t border-border pt-2 text-xs">

@@ -12,6 +12,7 @@ import {
   type Property,
 } from '../../api/resources/properties'
 import { usePropertyExpenses, useAddPropertyExpense, useDeletePropertyExpense } from '../../api/resources/propertyExpenses'
+import { formatPLN } from '../../lib/money'
 
 type Tab = 'overview' | 'comments' | 'expenses'
 
@@ -108,11 +109,11 @@ export function PropertyDetailSheet({
                   <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Rent &amp; Deposit</p>
                   <dl className="grid grid-cols-2 gap-y-2 text-sm">
                     <dt className="text-text-secondary">Monthly Rent</dt>
-                    <dd className="text-right font-semibold text-text-primary">{property.tenant.rentAmount} PLN</dd>
+                    <dd className="text-right font-semibold text-text-primary">{formatPLN(property.tenant.rentAmount)}</dd>
                     <dt className="text-text-secondary">Utility Advance</dt>
-                    <dd className="text-right font-semibold text-text-primary">{property.tenant.utilityAdvance} PLN</dd>
+                    <dd className="text-right font-semibold text-text-primary">{formatPLN(property.tenant.utilityAdvance)}</dd>
                     <dt className="text-text-secondary">Deposit</dt>
-                    <dd className="text-right font-semibold text-text-primary">{property.tenant.deposit} PLN</dd>
+                    <dd className="text-right font-semibold text-text-primary">{formatPLN(property.tenant.deposit)}</dd>
                   </dl>
                 </div>
                 {property.tenant.gateCode && (
@@ -200,7 +201,7 @@ export function PropertyDetailSheet({
               <form onSubmit={handleAddExpense} className="flex flex-col gap-2 rounded-md border border-border p-3">
                 <Input type="date" value={expenseForm.date} onChange={(e) => setExpenseForm({ ...expenseForm, date: e.target.value })} required />
                 <Input placeholder="Description" value={expenseForm.description} onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })} />
-                <Input type="number" placeholder="Amount (PLN)" value={expenseForm.amount} onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })} />
+                <Input type="number" placeholder="Amount (zł)" value={expenseForm.amount} onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })} />
                 <Button type="submit" disabled={addExpense.isPending} className="self-end">
                   Save
                 </Button>
@@ -214,7 +215,7 @@ export function PropertyDetailSheet({
                     <p className="text-xs text-text-muted">{e.date}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-text-primary">{e.amount} PLN</span>
+                    <span className="text-sm font-semibold text-text-primary">{formatPLN(e.amount)}</span>
                     <button
                       type="button"
                       aria-label="Delete expense"

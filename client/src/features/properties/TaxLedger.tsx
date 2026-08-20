@@ -5,6 +5,7 @@ import { Card } from '../../components/ui/Card'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useToast } from '../../components/ui/Toast'
 import { useTaxPayments, useDeleteTaxPayment, type TaxPayment } from '../../api/resources/taxPayments'
+import { formatPLN } from '../../lib/money'
 import { TaxPaymentFormDialog } from './TaxPaymentFormDialog'
 
 export function TaxLedger() {
@@ -72,9 +73,9 @@ export function TaxLedger() {
             {yearPayments.map((p) => (
               <tr key={p.id} className="border-b border-border last:border-0">
                 <td className="px-4 py-3 font-semibold text-text-primary">{p.period}</td>
-                <td className="py-3 text-text-secondary">{p.sienkiewicza != null ? `${p.sienkiewicza} PLN` : '—'}</td>
-                <td className="py-3 text-text-secondary">{p.szczesliwa != null ? `${p.szczesliwa} PLN` : '—'}</td>
-                <td className="py-3 font-semibold text-text-primary">{p.amount} PLN</td>
+                <td className="py-3 text-text-secondary">{p.sienkiewicza != null ? formatPLN(p.sienkiewicza) : '—'}</td>
+                <td className="py-3 text-text-secondary">{p.szczesliwa != null ? formatPLN(p.szczesliwa) : '—'}</td>
+                <td className="py-3 font-semibold text-text-primary">{formatPLN(p.amount)}</td>
                 <td className="py-3 text-text-secondary">{p.transferDate ?? '—'}</td>
                 <td className="py-3 pr-4">
                   <div className="flex justify-end gap-1">
@@ -114,7 +115,7 @@ export function TaxLedger() {
               <tr className="border-t border-border bg-canvas font-semibold text-text-primary">
                 <td className="px-4 py-3">Total ({year})</td>
                 <td colSpan={2} />
-                <td className="py-3">{totalYtd} PLN</td>
+                <td className="py-3">{formatPLN(totalYtd)}</td>
                 <td colSpan={2} />
               </tr>
             </tfoot>

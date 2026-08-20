@@ -55,7 +55,7 @@ export function RateFormDialog({
           <Input id="rate-from" type="month" value={from} onChange={(e) => setFrom(e.target.value)} required />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="rate-amount">Hourly Rate (PLN)</Label>
+          <Label htmlFor="rate-amount">Hourly Rate (zł)</Label>
           <Input
             id="rate-amount"
             type="number"

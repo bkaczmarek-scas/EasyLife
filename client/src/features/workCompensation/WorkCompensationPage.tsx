@@ -43,7 +43,7 @@ export function WorkCompensationPage() {
         ['Bonus', 'Date', 'Amount'],
         ...yearBonuses.map((b) => [b.name, b.date, b.amount]),
         [],
-        ['Effective from', 'Rate (PLN/h)'],
+        ['Effective from', 'Rate (zł/h)'],
         ...(rates ?? []).map((r) => [formatPeriodLabel(r.from), r.rate]),
       ]
       downloadCsv(`income-${year}.csv`, rows)

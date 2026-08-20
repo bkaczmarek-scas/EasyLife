@@ -6,6 +6,7 @@ import { Input, Label } from '../../components/ui/Input'
 import { useServiceLog, useAddServiceEntry, useDeleteServiceEntry } from '../../api/resources/serviceLog'
 import { useUpdateMileage, type Vehicle } from '../../api/resources/vehicles'
 import { useToast } from '../../components/ui/Toast'
+import { formatPLN } from '../../lib/money'
 
 export function VehicleDetailSheet({
   vehicle,
@@ -115,7 +116,7 @@ export function VehicleDetailSheet({
                   <Input id="log-date" type="date" value={logForm.date} onChange={(e) => setLogForm({ ...logForm, date: e.target.value })} required />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <Label htmlFor="log-cost">Cost (PLN)</Label>
+                  <Label htmlFor="log-cost">Cost (zł)</Label>
                   <Input id="log-cost" type="number" value={logForm.cost} onChange={(e) => setLogForm({ ...logForm, cost: e.target.value })} />
                 </div>
               </div>
@@ -149,7 +150,7 @@ export function VehicleDetailSheet({
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-text-primary">{entry.cost} PLN</span>
+                  <span className="text-sm font-semibold text-text-primary">{formatPLN(entry.cost)}</span>
                   <button
                     type="button"
                     aria-label="Delete entry"

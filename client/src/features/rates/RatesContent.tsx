@@ -2,9 +2,11 @@ import { useMemo, useState } from 'react'
 import { IconEdit, IconTrash, IconPlus, IconPercentage } from '@tabler/icons-react'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
+import { Sheet } from '../../components/ui/Sheet'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useToast } from '../../components/ui/Toast'
 import { useRates, useDeleteRate, type Rate } from '../../api/resources/rates'
+import { formatPLN } from '../../lib/money'
 import { RateFormDialog } from './RateFormDialog'
 
 export function formatPeriodLabel(from: string) {
@@ -17,6 +19,7 @@ export function RatesContent() {
   const deleteRate = useDeleteRate()
   const toast = useToast()
 
+  const [detailsOpen, setDetailsOpen] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
   const [editingRate, setEditingRate] = useState<Rate | null>(null)
   const [deletingRate, setDeletingRate] = useState<Rate | null>(null)
@@ -41,8 +44,8 @@ export function RatesContent() {
 
   if (!rates || rates.length === 0) {
     return (
-      <div>
-        <Card className="mt-6 flex flex-col items-center gap-3 py-16 text-center">
+      <div className="flex-1">
+        <Card className="flex flex-col items-center gap-3 py-16 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
             <IconPercentage size={28} className="text-primary" />
           </div>
@@ -66,82 +69,87 @@ export function RatesContent() {
   }
 
   return (
-    <div className="mt-6">
-      <div className="flex items-start justify-between">
-        <p className="text-sm text-text-secondary">Configure rates progression and billing structures.</p>
-        <Button
-          onClick={() => {
-            setEditingRate(null)
-            setFormOpen(true)
-          }}
-        >
-          <IconPlus size={16} /> Add New Rate Option
-        </Button>
-      </div>
-
-      <Card className="mt-4 flex items-center justify-between">
+    <div className="flex flex-1 flex-col">
+      <Card
+        className="flex flex-1 cursor-pointer items-center justify-between hover:border-primary"
+        onClick={() => setDetailsOpen(true)}
+      >
         <div>
           <p className="text-xs font-semibold uppercase text-text-muted">Current Contract Value</p>
           <div className="mt-1 flex items-center gap-3">
-            <span className="text-3xl font-bold text-text-primary">{current.rate.toFixed(2)} PLN / hr</span>
+            <span className="text-2xl font-bold text-text-primary">{formatPLN(current.rate)} / hr</span>
             {change !== null && (
               <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-700">
                 {change >= 0 ? '+' : ''}
-                {change.toFixed(1)}% {change >= 0 ? 'increase' : 'decrease'}
+                {change.toFixed(1)}%
               </span>
             )}
           </div>
         </div>
         <p className="text-sm text-text-secondary">
-          Effective date: <span className="font-semibold text-text-primary">{formatPeriodLabel(current.from)}</span>
+          Since <span className="font-semibold text-text-primary">{formatPeriodLabel(current.from)}</span>
         </p>
       </Card>
 
-      <Card className="mt-6 !p-0">
-        <p className="border-b border-border px-4 py-3 text-sm font-semibold text-text-primary">Rate Progression History</p>
-        <table className="w-full text-left text-[13px]">
-          <thead>
-            <tr className="border-b border-border text-xs font-semibold uppercase text-text-muted">
-              <th className="px-4 py-2">Period</th>
-              <th className="py-2">Rate</th>
-              <th className="w-16 py-2 pr-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((rate, i) => (
-              <tr key={rate.id} className="border-b border-border last:border-0">
-                <td className="px-4 py-3 font-semibold text-text-primary">
-                  {i === 0 ? `Since ${formatPeriodLabel(rate.from)}` : formatPeriodLabel(rate.from)}
-                </td>
-                <td className="py-3 text-text-secondary">{rate.rate.toFixed(2)} PLN/h</td>
-                <td className="py-3 pr-4">
-                  <div className="flex justify-end gap-1">
-                    <button
-                      type="button"
-                      aria-label="Edit"
-                      onClick={() => {
-                        setEditingRate(rate)
-                        setFormOpen(true)
-                      }}
-                      className="rounded-md p-1.5 text-text-muted hover:bg-canvas hover:text-text-primary"
-                    >
-                      <IconEdit size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Delete"
-                      onClick={() => setDeletingRate(rate)}
-                      className="rounded-md p-1.5 text-text-muted hover:bg-danger-bg hover:text-danger-text"
-                    >
-                      <IconTrash size={16} />
-                    </button>
-                  </div>
-                </td>
+      <Sheet open={detailsOpen} onOpenChange={setDetailsOpen} title="Rates">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-sm text-text-secondary">Configure rates progression and billing structures.</p>
+          <Button
+            onClick={() => {
+              setEditingRate(null)
+              setFormOpen(true)
+            }}
+          >
+            <IconPlus size={16} /> Add New Rate Option
+          </Button>
+        </div>
+
+        <Card className="mt-4 !p-0">
+          <p className="border-b border-border px-4 py-3 text-sm font-semibold text-text-primary">Rate Progression History</p>
+          <table className="w-full text-left text-[13px]">
+            <thead>
+              <tr className="border-b border-border text-xs font-semibold uppercase text-text-muted">
+                <th className="px-4 py-2">Period</th>
+                <th className="py-2">Rate</th>
+                <th className="w-16 py-2 pr-4 text-right">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
+            </thead>
+            <tbody>
+              {sorted.map((rate, i) => (
+                <tr key={rate.id} className="border-b border-border last:border-0">
+                  <td className="px-4 py-3 font-semibold text-text-primary">
+                    {i === 0 ? `Since ${formatPeriodLabel(rate.from)}` : formatPeriodLabel(rate.from)}
+                  </td>
+                  <td className="py-3 text-text-secondary">{formatPLN(rate.rate)}/h</td>
+                  <td className="py-3 pr-4">
+                    <div className="flex justify-end gap-1">
+                      <button
+                        type="button"
+                        aria-label="Edit"
+                        onClick={() => {
+                          setEditingRate(rate)
+                          setFormOpen(true)
+                        }}
+                        className="rounded-md p-1.5 text-text-muted hover:bg-canvas hover:text-text-primary"
+                      >
+                        <IconEdit size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Delete"
+                        onClick={() => setDeletingRate(rate)}
+                        className="rounded-md p-1.5 text-text-muted hover:bg-danger-bg hover:text-danger-text"
+                      >
+                        <IconTrash size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      </Sheet>
 
       <RateFormDialog open={formOpen} onOpenChange={setFormOpen} rate={editingRate} />
       <ConfirmDialog
@@ -150,7 +158,7 @@ export function RatesContent() {
         title="Delete historical rate record?"
         description={
           deletingRate
-            ? `${deletingRate.rate.toFixed(2)} PLN/hr (from ${formatPeriodLabel(deletingRate.from)}) will be permanently removed.`
+            ? `${formatPLN(deletingRate.rate)}/hr (from ${formatPeriodLabel(deletingRate.from)}) will be permanently removed.`
             : undefined
         }
         confirmLabel="Delete Permanently"

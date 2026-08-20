@@ -183,7 +183,7 @@ export function PropertyFormSheet({
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="p-rent">Rent (PLN)</Label>
+                <Label htmlFor="p-rent">Rent (zł)</Label>
                 <Input id="p-rent" type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5">
