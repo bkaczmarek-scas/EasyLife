@@ -42,8 +42,9 @@ public/index.html              Frontend (one-pager)
 
 ## Co dalej (kolejne kroki rozwoju)
 
-- Integracja z iFirma (eksport faktur) — szkielet w `src/services/ifirmaService.js`, patrz
-  `.claude/skills/ifirma-integration/SKILL.md` po kontekst. Taxxxo porzucone (zbyt kosztowna
+- Integracja z iFirma (wystawianie faktur) — kod gotowy w `src/services/ifirmaService.js` (krok 4
+  wizarda Invoicing), czeka na realne `IFIRMA_USERNAME`/`IFIRMA_INVOICE_KEY`/`CLIENT_*` w `.env`
+  (patrz `.claude/skills/ifirma-integration/SKILL.md`). Taxxxo porzucone (zbyt kosztowna
   integracja API).
 - Asystent AI (zapytania naturalnym językiem o dane rozliczeniowe, wykrywanie anomalii) —
   podłączyć `ANTHROPIC_API_KEY` i dodać endpoint `/api/assistant`.

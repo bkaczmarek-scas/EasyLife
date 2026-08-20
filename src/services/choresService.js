@@ -7,11 +7,14 @@ const path = require('path');
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
 const DATA_FILE = path.join(DATA_DIR, 'chores.json');
 
+const VALID_FREQUENCIES = ['daily', 'weekly', 'monthly', 'once'];
+const VALID_PRIORITIES = ['P1', 'P2', 'P3'];
+
 const SEED_CHORES = [
-  { id: 'seed-ch1', name: 'Replace HVAC filter', frequency: 'monthly', notes: '', completions: [], weatherDependent: false },
-  { id: 'seed-ch2', name: 'Water plants', frequency: 'weekly', notes: '', completions: [], weatherDependent: false },
-  { id: 'seed-ch3', name: 'Take out recycling', frequency: 'weekly', notes: '', completions: [], weatherDependent: false },
-  { id: 'seed-ch4', name: 'Mow the lawn', frequency: 'weekly', notes: '', completions: [], weatherDependent: true }
+  { id: 'seed-ch1', name: 'Replace HVAC filter', frequency: 'monthly', notes: '', completions: [], priority: 'P2', propertyId: null, vehicleId: null },
+  { id: 'seed-ch2', name: 'Water plants', frequency: 'weekly', notes: '', completions: [], priority: 'P3', propertyId: null, vehicleId: null },
+  { id: 'seed-ch3', name: 'Take out recycling', frequency: 'weekly', notes: '', completions: [], priority: 'P3', propertyId: null, vehicleId: null },
+  { id: 'seed-ch4', name: 'Mow the lawn', frequency: 'weekly', notes: '', completions: [], priority: 'P2', propertyId: null, vehicleId: null }
 ];
 
 function ensureFile() {
@@ -47,12 +50,15 @@ function periodIndex(dateStr, frequency) {
   return days; // daily
 }
 
+// "once" tasks have no recurring period - done means "completed at all", no streak to track.
 function isDoneThisPeriod(completions, frequency) {
+  if (frequency === 'once') return completions.length > 0;
   const current = periodIndex(todayStr(), frequency);
   return completions.some(c => periodIndex(c, frequency) === current);
 }
 
 function computeStreak(completions, frequency) {
+  if (frequency === 'once') return 0;
   if (!completions.length) return 0;
   const periods = [...new Set(completions.map(c => periodIndex(c, frequency)))].sort((a, b) => b - a);
   const current = periodIndex(todayStr(), frequency);
@@ -80,24 +86,26 @@ function getAll() {
   return readAll().sort((a, b) => a.name.localeCompare(b.name)).map(decorate);
 }
 
-function add({ name, frequency, notes, weatherDependent }) {
+function add({ name, frequency, notes, priority, propertyId, vehicleId }) {
   const list = readAll();
   const entry = {
-    id: newId(), name, frequency: ['daily', 'weekly', 'monthly'].includes(frequency) ? frequency : 'weekly',
-    notes: notes || '', completions: [], weatherDependent: Boolean(weatherDependent)
+    id: newId(), name, frequency: VALID_FREQUENCIES.includes(frequency) ? frequency : 'weekly',
+    notes: notes || '', completions: [], priority: VALID_PRIORITIES.includes(priority) ? priority : 'P2',
+    propertyId: propertyId || null, vehicleId: vehicleId || null
   };
   list.push(entry);
   writeAll(list);
   return decorate(entry);
 }
 
-function update(id, { name, frequency, notes, weatherDependent }) {
+function update(id, { name, frequency, notes, priority, propertyId, vehicleId }) {
   const list = readAll();
   const idx = list.findIndex(c => c.id === id);
   if (idx === -1) throw new Error(`Chore not found: ${id}`);
   list[idx] = {
-    ...list[idx], name, frequency: ['daily', 'weekly', 'monthly'].includes(frequency) ? frequency : 'weekly',
-    notes: notes || '', weatherDependent: Boolean(weatherDependent)
+    ...list[idx], name, frequency: VALID_FREQUENCIES.includes(frequency) ? frequency : 'weekly',
+    notes: notes || '', priority: VALID_PRIORITIES.includes(priority) ? priority : 'P2',
+    propertyId: propertyId || null, vehicleId: vehicleId || null
   };
   writeAll(list);
   return decorate(list[idx]);
@@ -115,11 +123,16 @@ function toggleComplete(id) {
   const idx = list.findIndex(c => c.id === id);
   if (idx === -1) throw new Error(`Chore not found: ${id}`);
   const chore = list[idx];
-  const current = periodIndex(todayStr(), chore.frequency);
-  const hasThisPeriod = (chore.completions || []).some(c => periodIndex(c, chore.frequency) === current);
-  chore.completions = hasThisPeriod
-    ? chore.completions.filter(c => periodIndex(c, chore.frequency) !== current)
-    : [...(chore.completions || []), todayStr()];
+  if (chore.frequency === 'once') {
+    // No period to compare against - just flip between "never done" and "done today".
+    chore.completions = (chore.completions || []).length ? [] : [todayStr()];
+  } else {
+    const current = periodIndex(todayStr(), chore.frequency);
+    const hasThisPeriod = (chore.completions || []).some(c => periodIndex(c, chore.frequency) === current);
+    chore.completions = hasThisPeriod
+      ? chore.completions.filter(c => periodIndex(c, chore.frequency) !== current)
+      : [...(chore.completions || []), todayStr()];
+  }
   writeAll(list);
   return decorate(chore);
 }
