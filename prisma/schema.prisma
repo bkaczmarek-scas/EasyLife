@@ -124,16 +124,27 @@ model Vehicle {
 }
 
 model ServiceLogEntry {
-  id          String   @id
+  id          String            @id
   vehicleId   String
-  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicle     Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   date        String
-  workshop    String   @default("")
-  description String   @default("")
-  cost        Float    @default(0)
+  workshop    String            @default("")
+  description String            @default("")
+  cost        Float             @default(0)
   mileage     Int?
+  items       ServiceLogItem[]
 
   @@index([vehicleId])
+}
+
+model ServiceLogItem {
+  id                String          @id
+  serviceLogEntryId String
+  serviceLogEntry   ServiceLogEntry @relation(fields: [serviceLogEntryId], references: [id], onDelete: Cascade)
+  description       String
+  sortOrder         Int             @default(0)
+
+  @@index([serviceLogEntryId])
 }
 
 model Subscription {

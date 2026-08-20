@@ -67,17 +67,26 @@ async function main() {
 
   await prisma.serviceLogEntry.upsert({
     where: { id: 'seed-s1' },
-    create: { id: 'seed-s1', vehicleId: 'seed-v1', date: '2026-03-04', workshop: 'AutoSerwis Przykładowy', description: 'Full synthetic oil + filter', cost: 420, mileage: 65000 },
+    create: {
+      id: 'seed-s1', vehicleId: 'seed-v1', date: '2026-03-04', workshop: 'AutoSerwis Przykładowy', cost: 420, mileage: 65000,
+      items: { create: [{ id: 'seed-s1-i1', description: 'Full synthetic oil + filter', sortOrder: 0 }] }
+    },
     update: {}
   });
   await prisma.serviceLogEntry.upsert({
     where: { id: 'seed-s2' },
-    create: { id: 'seed-s2', vehicleId: 'seed-v1', date: '2025-09-11', workshop: 'AutoSerwis Przykładowy', description: 'Front brake pads and discs', cost: 980, mileage: 58000 },
+    create: {
+      id: 'seed-s2', vehicleId: 'seed-v1', date: '2025-09-11', workshop: 'AutoSerwis Przykładowy', cost: 980, mileage: 58000,
+      items: { create: [{ id: 'seed-s2-i1', description: 'Front brake pads and discs', sortOrder: 0 }] }
+    },
     update: {}
   });
   await prisma.serviceLogEntry.upsert({
     where: { id: 'seed-s3' },
-    create: { id: 'seed-s3', vehicleId: 'seed-v2', date: '2026-01-20', workshop: 'Stacja Kontroli Pojazdów', description: 'Annual technical inspection', cost: 150, mileage: 138000 },
+    create: {
+      id: 'seed-s3', vehicleId: 'seed-v2', date: '2026-01-20', workshop: 'Stacja Kontroli Pojazdów', cost: 150, mileage: 138000,
+      items: { create: [{ id: 'seed-s3-i1', description: 'Annual technical inspection', sortOrder: 0 }] }
+    },
     update: {}
   });
 
