@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  models: read
 
 jobs:
   sync-release:
@@ -15,6 +16,7 @@ jobs:
     steps:
       - name: Dodaj wpis do Release logu w Notion
         env:
+          GH_TOKEN: ${{ github.token }}
           NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           NOTION_RELEASE_LOG_DATABASE_ID: ${{ secrets.NOTION_RELEASE_LOG_DATABASE_ID }}
           DEPLOYMENT_SHA: ${{ github.event.deployment.sha || github.sha }}
@@ -29,9 +31,85 @@ jobs:
           commit_url="$SERVER_URL/$REPOSITORY/commit/$DEPLOYMENT_SHA"
           now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
+          commit="$(curl --fail-with-body --silent --show-error \
+            --url "https://api.github.com/repos/$REPOSITORY/commits/$DEPLOYMENT_SHA" \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "X-GitHub-Api-Version: 2022-11-28")"
+
+          pull_requests="$(curl --fail-with-body --silent --show-error \
+            --url "https://api.github.com/repos/$REPOSITORY/commits/$DEPLOYMENT_SHA/pulls" \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "X-GitHub-Api-Version: 2022-11-28")"
+
+          pr_number="$(jq -r 'map(select(.merged_at != null)) | first | .number // empty' <<< "$pull_requests")"
+          release_url="$commit_url"
+          pr_details='{}'
+          changed_files='[]'
+
+          if [ -n "$pr_number" ]; then
+            pr_details="$(curl --fail-with-body --silent --show-error \
+              --url "https://api.github.com/repos/$REPOSITORY/pulls/$pr_number" \
+              --header "Accept: application/vnd.github+json" \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              --header "X-GitHub-Api-Version: 2022-11-28")"
+            changed_files="$(curl --fail-with-body --silent --show-error \
+              --url "https://api.github.com/repos/$REPOSITORY/pulls/$pr_number/files?per_page=100" \
+              --header "Accept: application/vnd.github+json" \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              --header "X-GitHub-Api-Version: 2022-11-28")"
+            release_url="$(jq -r '.html_url' <<< "$pr_details")"
+          fi
+
+          change_context="$(jq -n \
+            --arg commit_message "$(jq -r '.commit.message' <<< "$commit")" \
+            --arg pr_title "$(jq -r '.title // ""' <<< "$pr_details")" \
+            --arg pr_description "$(jq -r '.body // ""' <<< "$pr_details")" \
+            --argjson files "$(jq '[.[] | {filename, status, additions, deletions}]' <<< "$changed_files")" \
+            '{commit_message: $commit_message, pull_request: {title: $pr_title, description: $pr_description}, changed_files: $files}')"
+
+          model_request="$(jq -n \
+            --arg context "$change_context" \
+            '{
+              model: "openai/gpt-4.1",
+              temperature: 0.1,
+              max_tokens: 450,
+              messages: [
+                {
+                  role: "system",
+                  content: "Tworzysz opis produkcyjnego wdrożenia aplikacji EasyLife dla odbiorcy nietechnicznego. Pisz po polsku, jasno i konkretnie. Opisz wyłącznie to, co faktycznie wynika z przekazanego kontekstu. Zacznij od jednego zdania podsumowania, a następnie podaj krótkie punkty zaczynające się od •. Skup się na tym, co użytkownik może teraz zrobić, co się zmieniło albo jaki problem rozwiązano. Łącz powiązane zmiany. Nie wymieniaj nazw plików, klas, endpointów, bibliotek, commitów, refaktoryzacji, testów ani CI, chyba że wdrożenie dotyczy wyłącznie prac utrzymaniowych — wtedy wyjaśnij ich praktyczny skutek. Nie używaj markdownowych nagłówków ani formatowania poza znakami •. Maksymalnie 900 znaków."
+                },
+                {
+                  role: "user",
+                  content: ("Przygotuj opis tego wdrożenia na podstawie danych z GitHub:\n" + $context)
+                }
+              ]
+            }')"
+
+          model_response="$(curl --silent --show-error \
+            --request POST \
+            --url "https://models.github.ai/inference/chat/completions" \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data "$model_request" || true)"
+
+          description="$(jq -r '.choices[0].message.content // empty' <<< "$model_response" 2>/dev/null || true)"
+          if [ -z "$description" ]; then
+            description="$(jq -r '.title // empty' <<< "$pr_details")"
+          fi
+          if [ -z "$description" ]; then
+            description="$(jq -r '.commit.message | split("\n")[0]' <<< "$commit")"
+          fi
+
+          # Notion limits a single rich-text value to 2000 characters.
+          description="${description:0:1900}"
+
           payload="$(jq -n \
             --arg title "$title" \
-            --arg commit_url "$commit_url" \
+            --arg description "$description" \
+            --arg release_url "$release_url" \
             --arg now "$now" \
             '{
               parent: {database_id: env.NOTION_RELEASE_LOG_DATABASE_ID},
@@ -40,8 +118,8 @@ jobs:
                 "Data wdrożenia": {date: {start: $now}},
                 "Środowisko": {select: {name: "Production"}},
                 "Status": {select: {name: "Wdrożone"}},
-                "Opis zmiany": {rich_text: [{text: {content: "Udane wdrożenie na Railway"}}]},
-                "Link do PR/release": {url: $commit_url},
+                "Opis zmiany": {rich_text: [{text: {content: $description}}]},
+                "Link do PR/release": {url: $release_url},
                 "Automatyczne": {checkbox: true}
               }
             }')"
