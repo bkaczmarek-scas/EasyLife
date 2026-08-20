@@ -69,9 +69,9 @@ export function RatesContent() {
   }
 
   return (
-    <div>
+    <div className="h-full">
       <Card
-        className="cursor-pointer hover:border-primary"
+        className="flex h-full cursor-pointer flex-col hover:border-primary"
         onClick={() => setDetailsOpen(true)}
       >
         <p className="text-xs font-semibold uppercase text-text-muted">Current Contract Value</p>
@@ -88,17 +88,7 @@ export function RatesContent() {
       </Card>
 
       <Sheet open={detailsOpen} onOpenChange={setDetailsOpen} title="Rates">
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-sm text-text-secondary">Configure rates progression and billing structures.</p>
-          <Button
-            onClick={() => {
-              setEditingRate(null)
-              setFormOpen(true)
-            }}
-          >
-            <IconPlus size={16} /> Add New Rate Option
-          </Button>
-        </div>
+        <p className="text-sm text-text-secondary">Configure rates progression and billing structures.</p>
 
         <Card className="mt-4 !p-0">
           <p className="border-b border-border px-4 py-3 text-sm font-semibold text-text-primary">Rate Progression History</p>
@@ -145,6 +135,16 @@ export function RatesContent() {
             </tbody>
           </table>
         </Card>
+
+        <Button
+          className="mt-4 px-3 py-1.5 text-xs"
+          onClick={() => {
+            setEditingRate(null)
+            setFormOpen(true)
+          }}
+        >
+          <IconPlus size={12} /> Add New Rate Option
+        </Button>
       </Sheet>
 
       <RateFormDialog open={formOpen} onOpenChange={setFormOpen} rate={editingRate} />

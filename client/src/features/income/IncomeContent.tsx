@@ -147,17 +147,7 @@ export function IncomeContent({
       </div>
 
       <Sheet open={detailsOpen} onOpenChange={setDetailsOpen} title="Bonuses & Additions">
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-sm text-text-secondary">Manage bonus and additional compensation records.</p>
-          <Button
-            onClick={() => {
-              setEditing(null)
-              setFormOpen(true)
-            }}
-          >
-            <IconPlus size={14} /> Add Record
-          </Button>
-        </div>
+        <p className="text-sm text-text-secondary">Manage bonus and additional compensation records.</p>
         <div className="mt-4 flex flex-col gap-2">
           {yearBonuses.map((b) => (
             <div key={b.id} className="flex items-center justify-between border-b border-border pb-2">
@@ -191,6 +181,15 @@ export function IncomeContent({
           ))}
           {yearBonuses.length === 0 && <p className="text-sm text-text-secondary">No bonuses added.</p>}
         </div>
+        <Button
+          className="mt-4 px-3 py-1.5 text-xs"
+          onClick={() => {
+            setEditing(null)
+            setFormOpen(true)
+          }}
+        >
+          <IconPlus size={12} /> Add Record
+        </Button>
       </Sheet>
 
       <BonusFormDialog open={formOpen} onOpenChange={setFormOpen} bonus={editing} />
