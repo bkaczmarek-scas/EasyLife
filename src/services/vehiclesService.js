@@ -65,18 +65,30 @@ async function removeVehicle(id) {
   await prisma.vehicle.delete({ where: { id } });
 }
 
-async function getServiceLog(vehicleId) {
-  const rows = await prisma.serviceLogEntry.findMany(vehicleId ? { where: { vehicleId } } : undefined);
-  return rows.sort((a, b) => b.date.localeCompare(a.date));
+function withItems(entry) {
+  const { items, ...rest } = entry;
+  return { ...rest, items: items.sort((a, b) => a.sortOrder - b.sortOrder).map((i) => i.description) };
 }
 
-async function addServiceEntry({ vehicleId, date, workshop, description, cost, mileage }) {
+async function getServiceLog(vehicleId) {
+  const rows = await prisma.serviceLogEntry.findMany({
+    where: vehicleId ? { vehicleId } : undefined,
+    include: { items: true }
+  });
+  return rows.sort((a, b) => b.date.localeCompare(a.date)).map(withItems);
+}
+
+async function addServiceEntry({ vehicleId, date, workshop, items, cost, mileage }) {
   const mileageValue = mileage != null && mileage !== '' ? Number(mileage) : null;
   const entry = await prisma.serviceLogEntry.create({
     data: {
-      id: newId(), vehicleId, date, workshop: workshop || '', description: description || '',
-      cost: Number(cost) || 0, mileage: mileageValue
-    }
+      id: newId(), vehicleId, date, workshop: workshop || '',
+      cost: Number(cost) || 0, mileage: mileageValue,
+      items: {
+        create: (items || []).map((description, i) => ({ id: newId(), description, sortOrder: i }))
+      }
+    },
+    include: { items: true }
   });
 
   // Keep the vehicle's headline mileage current. The number itself only ever moves forward, so
@@ -96,7 +108,7 @@ async function addServiceEntry({ vehicleId, date, workshop, description, cost, m
     }
   }
 
-  return entry;
+  return withItems(entry);
 }
 
 async function removeServiceEntry(id) {

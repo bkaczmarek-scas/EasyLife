@@ -7,7 +7,7 @@ export interface ServiceLogEntry {
   vehicleId: string
   date: string
   workshop: string
-  description: string
+  items: string[]
   cost: number
   mileage: number | null
 }
@@ -16,7 +16,7 @@ export interface ServiceLogInput {
   vehicleId: string
   date: string
   workshop?: string
-  description?: string
+  items?: string[]
   cost?: number
   mileage?: number | null
 }

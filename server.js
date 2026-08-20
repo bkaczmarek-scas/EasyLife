@@ -441,9 +441,9 @@ app.get('/api/service-log', async (req, res) => {
 
 app.post('/api/service-log', async (req, res) => {
   try {
-    const { vehicleId, date, workshop, description, cost, mileage } = req.body;
+    const { vehicleId, date, workshop, items, cost, mileage } = req.body;
     if (!vehicleId || !date) return res.status(400).json({ error: 'Required: vehicleId, date' });
-    const entry = await vehiclesService.addServiceEntry({ vehicleId, date, workshop, description, cost, mileage });
+    const entry = await vehiclesService.addServiceEntry({ vehicleId, date, workshop, items, cost, mileage });
     res.json({ entry });
   } catch (err) {
     console.error(err);
