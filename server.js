@@ -50,17 +50,17 @@ const app = express();
 // Fly.io etc. all forward plain HTTP internally) - without this express-session can't tell the
 // request was actually made over HTTPS and will refuse to set the cookie.
 app.set('trust proxy', 1);
-// Default CSP assumes external JS/CSS bundles and no inline script/style - this app is a single
-// inline-script HTML file by design (see CLAUDE.md), so the policy below allowlists exactly the
-// CDNs it actually loads (cdnjs for Tabler icons + Chart.js, Google Fonts) instead of disabling
-// CSP outright.
+// The React app (client/, built by Vite) loads its JS/CSS as external hashed files, not inline
+// - 'unsafe-inline' on styleSrc is still needed for Radix UI's inline-positioned popovers/selects
+// (style="" attributes, not <style> blocks). Google Fonts is the only external host still in use;
+// Tabler icons and Chart.js are npm-bundled into the client build now, not loaded from cdnjs.
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdnjs.cloudflare.com'],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://cdnjs.cloudflare.com', 'https://fonts.googleapis.com'],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdnjs.cloudflare.com'],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       imgSrc: ["'self'", 'data:'],
       connectSrc: ["'self'"]
     }
@@ -80,11 +80,6 @@ app.use(session({
     maxAge: 1000 * 60 * 60 * 24 * 7
   }
 }));
-
-app.get('/login', (req, res) => {
-  if (req.session.authenticated) return res.redirect('/');
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
 
 // Brute-force guard on login - bcrypt already makes password guessing slow, this stops an
 // attacker from just hammering the endpoint over the network.
@@ -119,10 +114,15 @@ app.post('/api/logout', (req, res) => {
 app.use((req, res, next) => {
   if (req.session.authenticated) return next();
   if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'Not authenticated' });
+  // The React app's own /login route needs its JS/CSS bundle (hashed files under /assets/) to
+  // load before a user can even see the login form - redirecting those to /login too would try
+  // to serve HTML as a script/stylesheet and break the page (or loop). Everything else non-/api
+  // still requires auth first, same as before.
+  if (req.path === '/login' || req.path.startsWith('/assets/')) return next();
   res.redirect('/login');
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'client', 'dist')));
 
 app.get('/api/status', (req, res) => {
   res.json({
@@ -742,13 +742,13 @@ app.post('/api/export/ifirma', async (req, res) => {
   }
 });
 
-// SPA fallback: client-side routing (switchSection) pushes URLs like /invoicing or /garage that
-// don't correspond to a real file. A direct load or refresh on one of those must still serve the
-// app shell - the section itself is picked from location.pathname by client JS on load. Must be
-// registered last, after every other route, or it would swallow all the GET /api/* handlers above.
+// SPA fallback: React Router pushes URLs like /invoicing or /garage that don't correspond to a
+// real file. A direct load or refresh on one of those must still serve the app shell - React
+// Router picks the route from location.pathname on load. Must be registered last, after every
+// other route, or it would swallow all the GET /api/* handlers above.
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found' });
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
 });
 
 const port = process.env.PORT || 3000;

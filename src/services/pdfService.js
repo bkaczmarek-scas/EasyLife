@@ -17,8 +17,8 @@ function pad2(n) {
 }
 
 // Buduje dane wejsciowe wspolne dla obu protokolow na podstawie miesiaca/roku i worklogow.
-function buildPeriodData(month, year, worklogs) {
-  const rate = ratesService.getRateForMonth(year, month);
+async function buildPeriodData(month, year, worklogs) {
+  const rate = await ratesService.getRateForMonth(year, month);
   const kwota = Math.round(worklogs.totalHours * rate);
   const lastDay = new Date(year, month, 0).getDate();
   return {
@@ -275,7 +275,7 @@ async function buildOdbiorczy(data) {
 }
 
 async function generateProtocols(month, year, worklogs) {
-  const data = buildPeriodData(month, year, worklogs);
+  const data = await buildPeriodData(month, year, worklogs);
   const [zamowienie, zdawczoOdbiorczy] = await Promise.all([buildZamowienie(data), buildOdbiorczy(data)]);
   return {
     data,

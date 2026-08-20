@@ -1,0 +1,35 @@
+/* Design tokens extracted from the "EasyLife 2.0 — redesign" Figma file's
+   Foundations / Design Tokens frame (node 2:8). Light theme only for now —
+   dark theme values are captured in comments for when that work resumes. */
+:root {
+  --canvas: #f8fafc;
+  --surface-0: #ffffff;
+  --border: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --primary: #0369a1;
+  --primary-contrast: #ffffff;
+
+  --danger-bg: #fef2f2;
+  --danger-border: #fee2e2;
+  --danger-text: #dc2626;
+
+  --warning-bg: #fffbeb;
+  --warning-border: #fef3c7;
+  --warning-text: #d97706;
+
+  --info-bg: #eff6ff;
+  --info-border: #dbeafe;
+  --info-text: #2563eb;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --font-sans: 'Plus Jakarta Sans', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+
+  /* Dark theme (not wired up yet — deferred per redesign scope):
+     --dark-canvas: #0f172a; --dark-card: #1e293b; --dark-border: #334155;
+     --dark-text: #f1f5f9; --dark-accent: #0ea5e9; */
+}
