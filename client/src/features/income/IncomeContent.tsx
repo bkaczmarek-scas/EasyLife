@@ -7,6 +7,7 @@ import { useToast } from '../../components/ui/Toast'
 import { useDeleteBonus, type Bonus } from '../../api/resources/bonuses'
 import { useYearlyIncome } from './useYearlyIncome'
 import { BonusFormDialog } from './BonusFormDialog'
+import { RatesContent } from '../rates/RatesContent'
 
 export function IncomeContent({ year }: { year: number }) {
   const { months, yearBonuses, totalNet, totalBonuses, totalCombined, isLoading } = useYearlyIncome(year)
@@ -76,55 +77,59 @@ export function IncomeContent({ year }: { year: number }) {
           </table>
         </Card>
 
-        <Card className="!p-0">
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <p className="text-sm font-semibold text-text-primary">Bonuses &amp; Additions</p>
-            <Button
-              onClick={() => {
-                setEditing(null)
-                setFormOpen(true)
-              }}
-            >
-              <IconPlus size={14} /> Add Record
-            </Button>
-          </div>
-          <div className="p-4">
-            <StatTile eyebrow="Total Bonus Yield" value={`${totalBonuses.toFixed(2)} PLN`} className="mb-3" />
-            <div className="flex flex-col gap-2">
-              {yearBonuses.map((b) => (
-                <div key={b.id} className="flex items-center justify-between border-b border-border pb-2">
-                  <div>
-                    <p className="text-sm font-semibold text-text-primary">{b.name}</p>
-                    <p className="text-xs text-text-muted">{b.date}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-text-primary">{b.amount.toFixed(2)} PLN</span>
-                    <button
-                      type="button"
-                      aria-label="Edit"
-                      onClick={() => {
-                        setEditing(b)
-                        setFormOpen(true)
-                      }}
-                      className="rounded-md p-1 text-text-muted hover:bg-canvas hover:text-text-primary"
-                    >
-                      <IconEdit size={14} />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Delete"
-                      onClick={() => setDeleting(b)}
-                      className="rounded-md p-1 text-text-muted hover:bg-danger-bg hover:text-danger-text"
-                    >
-                      <IconTrash size={14} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {yearBonuses.length === 0 && <p className="text-sm text-text-secondary">No bonuses added.</p>}
+        <div>
+          <Card className="!p-0">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <p className="text-sm font-semibold text-text-primary">Bonuses &amp; Additions</p>
+              <Button
+                onClick={() => {
+                  setEditing(null)
+                  setFormOpen(true)
+                }}
+              >
+                <IconPlus size={14} /> Add Record
+              </Button>
             </div>
-          </div>
-        </Card>
+            <div className="p-4">
+              <StatTile eyebrow="Total Bonus Yield" value={`${totalBonuses.toFixed(2)} PLN`} className="mb-3" />
+              <div className="flex flex-col gap-2">
+                {yearBonuses.map((b) => (
+                  <div key={b.id} className="flex items-center justify-between border-b border-border pb-2">
+                    <div>
+                      <p className="text-sm font-semibold text-text-primary">{b.name}</p>
+                      <p className="text-xs text-text-muted">{b.date}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-text-primary">{b.amount.toFixed(2)} PLN</span>
+                      <button
+                        type="button"
+                        aria-label="Edit"
+                        onClick={() => {
+                          setEditing(b)
+                          setFormOpen(true)
+                        }}
+                        className="rounded-md p-1 text-text-muted hover:bg-canvas hover:text-text-primary"
+                      >
+                        <IconEdit size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Delete"
+                        onClick={() => setDeleting(b)}
+                        className="rounded-md p-1 text-text-muted hover:bg-danger-bg hover:text-danger-text"
+                      >
+                        <IconTrash size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {yearBonuses.length === 0 && <p className="text-sm text-text-secondary">No bonuses added.</p>}
+              </div>
+            </div>
+          </Card>
+
+          <RatesContent />
+        </div>
       </div>
 
       <BonusFormDialog open={formOpen} onOpenChange={setFormOpen} bonus={editing} />
