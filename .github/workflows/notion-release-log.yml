@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  models: read
 
 jobs:
   sync-release:
@@ -13,25 +14,114 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success' }}
     steps:
-      - name: Dodaj wpis do Release logu w Notion
+      - name: Zbierz informacje o wdrożeniu
+        id: release-context
         env:
-          NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
-          NOTION_RELEASE_LOG_DATABASE_ID: ${{ secrets.NOTION_RELEASE_LOG_DATABASE_ID }}
+          GH_TOKEN: ${{ github.token }}
           DEPLOYMENT_SHA: ${{ github.event.deployment.sha || github.sha }}
           REPOSITORY: ${{ github.repository }}
           SERVER_URL: ${{ github.server_url }}
         run: |
+          short_sha="${DEPLOYMENT_SHA:0:7}"
+          commit_url="$SERVER_URL/$REPOSITORY/commit/$DEPLOYMENT_SHA"
+
+          commit="$(curl --fail-with-body --silent --show-error \
+            --url "https://api.github.com/repos/$REPOSITORY/commits/$DEPLOYMENT_SHA" \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "X-GitHub-Api-Version: 2022-11-28")"
+
+          pull_requests="$(curl --fail-with-body --silent --show-error \
+            --url "https://api.github.com/repos/$REPOSITORY/commits/$DEPLOYMENT_SHA/pulls" \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "X-GitHub-Api-Version: 2022-11-28")"
+
+          pr_number="$(jq -r 'map(select(.merged_at != null)) | first | .number // empty' <<< "$pull_requests")"
+          release_url="$commit_url"
+          pr_details='{}'
+          changed_files='[]'
+
+          if [ -n "$pr_number" ]; then
+            pr_details="$(curl --fail-with-body --silent --show-error \
+              --url "https://api.github.com/repos/$REPOSITORY/pulls/$pr_number" \
+              --header "Accept: application/vnd.github+json" \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              --header "X-GitHub-Api-Version: 2022-11-28")"
+            changed_files="$(curl --fail-with-body --silent --show-error \
+              --url "https://api.github.com/repos/$REPOSITORY/pulls/$pr_number/files?per_page=100" \
+              --header "Accept: application/vnd.github+json" \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              --header "X-GitHub-Api-Version: 2022-11-28")"
+            release_url="$(jq -r '.html_url' <<< "$pr_details")"
+          fi
+
+          change_context="$(jq -n \
+            --arg commit_message "$(jq -r '.commit.message' <<< "$commit")" \
+            --arg pr_title "$(jq -r '.title // ""' <<< "$pr_details")" \
+            --arg pr_description "$(jq -r '.body // ""' <<< "$pr_details")" \
+            --argjson files "$(jq '[.[] | {filename, status, additions, deletions}]' <<< "$changed_files")" \
+            '{commit_message: $commit_message, pull_request: {title: $pr_title, description: $pr_description}, changed_files: $files}')"
+
+          fallback_description="$(jq -r '
+            if (.body // "" | length) > 0 then .body
+            elif (.title // "" | length) > 0 then .title
+            else empty end
+          ' <<< "$pr_details")"
+          if [ -z "$fallback_description" ]; then
+            fallback_description="$(jq -r '.commit.message | split("\n")[0]' <<< "$commit")"
+          fi
+
+          printf '%s\n' "$change_context" > /tmp/release-context.json
+          printf '%s\n' "$fallback_description" > /tmp/release-fallback.txt
+          echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
+          echo "release_url=$release_url" >> "$GITHUB_OUTPUT"
+
+      - name: Napisz opis wdrożenia prostym językiem
+        id: release-summary
+        continue-on-error: true
+        uses: actions/ai-inference@v2
+        with:
+          model: openai/gpt-4.1
+          prompt-file: /tmp/release-context.json
+          temperature: 0.1
+          max-completion-tokens: 450
+          system-prompt: >-
+            Tworzysz opis produkcyjnego wdrożenia aplikacji EasyLife dla odbiorcy
+            nietechnicznego. Pisz po polsku, jasno i konkretnie. Opisz wyłącznie to,
+            co faktycznie wynika z przekazanego kontekstu. Zacznij od jednego zdania
+            podsumowania, a następnie podaj krótkie punkty zaczynające się od •.
+            Skup się na tym, co użytkownik może teraz zrobić, co się zmieniło albo
+            jaki problem rozwiązano. Łącz powiązane zmiany. Nie wymieniaj nazw
+            plików, klas, endpointów, bibliotek, commitów, refaktoryzacji, testów
+            ani CI, chyba że wdrożenie dotyczy wyłącznie prac utrzymaniowych — wtedy
+            wyjaśnij ich praktyczny skutek. Nie używaj markdownowych nagłówków ani
+            formatowania poza znakami •. Maksymalnie 900 znaków.
+
+      - name: Dodaj wpis do Release logu w Notion
+        env:
+          NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          NOTION_RELEASE_LOG_DATABASE_ID: ${{ secrets.NOTION_RELEASE_LOG_DATABASE_ID }}
+          RELEASE_DESCRIPTION: ${{ steps.release-summary.outputs.response }}
+          RELEASE_URL: ${{ steps.release-context.outputs.release_url }}
+          SHORT_SHA: ${{ steps.release-context.outputs.short_sha }}
+        run: |
           test -n "$NOTION_API_TOKEN"
           test -n "$NOTION_RELEASE_LOG_DATABASE_ID"
 
-          short_sha="${DEPLOYMENT_SHA:0:7}"
-          title="Railway • $short_sha"
-          commit_url="$SERVER_URL/$REPOSITORY/commit/$DEPLOYMENT_SHA"
+          title="Railway • $SHORT_SHA"
           now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          description="$RELEASE_DESCRIPTION"
+          if [ -z "$description" ]; then
+            description="$(cat /tmp/release-fallback.txt)"
+          fi
+          test -n "$description"
+          description="${description:0:1900}"
 
           payload="$(jq -n \
             --arg title "$title" \
-            --arg commit_url "$commit_url" \
+            --arg description "$description" \
+            --arg release_url "$RELEASE_URL" \
             --arg now "$now" \
             '{
               parent: {database_id: env.NOTION_RELEASE_LOG_DATABASE_ID},
@@ -40,8 +130,8 @@ jobs:
                 "Data wdrożenia": {date: {start: $now}},
                 "Środowisko": {select: {name: "Production"}},
                 "Status": {select: {name: "Wdrożone"}},
-                "Opis zmiany": {rich_text: [{text: {content: "Udane wdrożenie na Railway"}}]},
-                "Link do PR/release": {url: $commit_url},
+                "Opis zmiany": {rich_text: [{text: {content: $description}}]},
+                "Link do PR/release": {url: $release_url},
                 "Automatyczne": {checkbox: true}
               }
             }')"
