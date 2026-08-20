@@ -25,7 +25,7 @@ export function useYearlyIncome(year: number) {
   const { data: rates } = useRates()
   const { data: costs } = useCosts()
   const { data: bonuses } = useBonuses()
-  const { byMonth: worklogsByMonth, isLoading: worklogsLoading } = useYearWorklogs(year)
+  const { byMonth: worklogsByMonth, isLoading: worklogsLoading, isRefreshing } = useYearWorklogs(year)
 
   const isLoading = worklogsLoading || !rates || !costs || !bonuses
 
@@ -52,5 +52,5 @@ export function useYearlyIncome(year: number) {
   const totalNet = months.reduce((sum, m) => sum + m.net, 0)
   const totalBonuses = yearBonuses.reduce((sum, b) => sum + b.amount, 0)
 
-  return { months, yearBonuses, totalNet, totalBonuses, totalCombined: totalNet + totalBonuses, isLoading }
+  return { months, yearBonuses, totalNet, totalBonuses, totalCombined: totalNet + totalBonuses, isLoading, isRefreshing }
 }

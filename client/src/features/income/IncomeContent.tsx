@@ -9,6 +9,7 @@ import { useToast } from '../../components/ui/Toast'
 import { useDeleteBonus, type Bonus } from '../../api/resources/bonuses'
 import { useUpsertCost } from '../../api/resources/costs'
 import { formatMoney, formatPLN } from '../../lib/money'
+import { cn } from '../../lib/cn'
 import { useYearlyIncome } from './useYearlyIncome'
 import { BonusFormDialog } from './BonusFormDialog'
 import { RatesContent } from '../rates/RatesContent'
@@ -36,7 +37,7 @@ export function IncomeContent({
   year: number
   onYearChange: (updater: (year: number) => number) => void
 }) {
-  const { months, yearBonuses, totalNet, totalBonuses, totalCombined, isLoading } = useYearlyIncome(year)
+  const { months, yearBonuses, totalNet, totalBonuses, totalCombined, isLoading, isRefreshing } = useYearlyIncome(year)
   const deleteBonus = useDeleteBonus()
   const upsertCost = useUpsertCost()
   const toast = useToast()
@@ -74,6 +75,7 @@ export function IncomeContent({
 
   return (
     <>
+      <div className={cn('transition-opacity duration-300', isRefreshing && 'opacity-50')}>
       <div className="mt-6 grid grid-cols-3 gap-6">
         <Card>
           <p className="text-xs font-semibold uppercase text-text-muted">Total YTD Retribution (Salary + Bonuses)</p>
@@ -142,6 +144,7 @@ export function IncomeContent({
           </tbody>
         </table>
       </Card>
+      </div>
 
       <Sheet open={detailsOpen} onOpenChange={setDetailsOpen} title="Bonuses & Additions">
         <div className="flex items-start justify-between gap-3">
