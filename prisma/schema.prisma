@@ -1,0 +1,178 @@
+// Softcraft protokoly - schemat bazy danych (Postgres, hostowany na Neon - patrz CLAUDE.md).
+// Zastepuje pliki JSON w data/. Daty trzymane jako String (nie DateTime) tam, gdzie reszta
+// aplikacji porownuje je leksykalnie jako 'YYYY-MM-DD'/'YYYY-MM' (np. rates.from, protocols
+// period id) - zachowuje to dokladnie te sama semantyke, co przed migracja.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Rate {
+  id   String @id
+  from String
+  rate Int
+}
+
+model Bonus {
+  id     String @id
+  name   String
+  date   String
+  amount Float
+}
+
+// id = period key "YYYY-MM" (patrz protocolsHistoryService.periodId) - nie autogenerowane.
+model Protocol {
+  id                 String       @id
+  month              Int
+  year               Int
+  orderNumber        String?
+  totalHours         Float?
+  amount             Int?
+  generatedAt        String?
+  exported           Boolean      @default(false)
+  exportedAt         String?
+  zamowienieFilename String?
+  zamowienieBytes    Bytes?
+  odbiorczyFilename  String?
+  odbiorczyBytes     Bytes?
+  manualFiles        ManualFile[]
+}
+
+model ManualFile {
+  id         String   @id
+  protocolId String
+  protocol   Protocol @relation(fields: [protocolId], references: [id], onDelete: Cascade)
+  filename   String
+  bytes      Bytes
+  uploadedAt String
+
+  @@index([protocolId])
+}
+
+model Property {
+  id              String            @id
+  name            String
+  type            String            @default("primary")
+  address         String
+  maintenanceNote String            @default("")
+  maintenanceDate String?
+  tenancy         Tenancy?
+  comments        PropertyComment[]
+}
+
+// Najemcy zagniezdzeni w rekordzie property (patrz propertiesService) - jedna nieruchomosc ma
+// co najwyzej jednego "najemce" na raz, ktory moze byc kilkoma osobami (pole tenants).
+model Tenancy {
+  id             String   @id
+  propertyId     String   @unique
+  property       Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenants        Json
+  leaseStart     String?
+  leaseEnd       String?
+  rentAmount     Float    @default(0)
+  utilityAdvance Float    @default(0)
+  taxDue         Float    @default(0)
+  deposit        Float    @default(0)
+  gateCode       String   @default("")
+  notes          String   @default("")
+}
+
+model PropertyComment {
+  id         String   @id
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  text       String
+  resolved   Boolean  @default(false)
+  createdAt  String
+
+  @@index([propertyId])
+}
+
+// propertyId to luzne odwolanie (bez FK) - tak jak w oryginalnym JSON, usuniecie nieruchomosci
+// nie kasuje jej wydatkow.
+model PropertyExpense {
+  id          String @id
+  propertyId  String
+  date        String
+  description String @default("")
+  amount      Float  @default(0)
+
+  @@index([propertyId])
+}
+
+model Vehicle {
+  id                  String            @id
+  name                String
+  type                String            @default("car")
+  year                Int?
+  engine              String?
+  fuelType            String?
+  power               Int?
+  plate               String?
+  vin                 String?
+  mileage             Int               @default(0)
+  nextServiceDate     String?
+  insuranceExpiryDate String?
+  mileageUpdatedAt    String?
+  order               Int?
+  serviceLog          ServiceLogEntry[]
+}
+
+model ServiceLogEntry {
+  id          String   @id
+  vehicleId   String
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  date        String
+  workshop    String   @default("")
+  description String   @default("")
+  cost        Float    @default(0)
+  mileage     Int?
+
+  @@index([vehicleId])
+}
+
+model Subscription {
+  id              String   @id
+  name            String
+  category        String   @default("")
+  cost            Float    @default(0)
+  billingCycle    String   @default("monthly")
+  nextRenewalDate String?
+  autoRenew       Boolean  @default(false)
+  lastUsedDate    String?
+}
+
+model TaxPayment {
+  id               String  @id
+  period           String
+  amount           Float   @default(0)
+  sienkiewicza     Float?
+  szczesliwa       Float?
+  sienkiewiczaNote String  @default("")
+  szczesliwaNote   String  @default("")
+  transferDate     String?
+}
+
+// propertyId/vehicleId to luzne odwolania (bez FK), tak jak w oryginalnym JSON.
+model Chore {
+  id          String   @id
+  name        String
+  frequency   String   @default("weekly")
+  notes       String   @default("")
+  priority    String   @default("P2")
+  propertyId  String?
+  vehicleId   String?
+  completions String[] @default([])
+}
+
+model Cost {
+  month      String @id
+  zus        Float  @default(0)
+  tax        Float  @default(0)
+  accounting Float  @default(0)
+}

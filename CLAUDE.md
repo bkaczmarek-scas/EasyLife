@@ -28,6 +28,22 @@ rzeczywistym (to osobne produkty, brak wspólnego API). Zawsze `git fetch` + spr
 ## Stan obecny
 
 - Backend: Express (`server.js`) + serwisy w `src/services/`.
+- **Baza danych: Postgres (Neon, darmowy tier) przez Prisma** (`prisma/schema.prisma`,
+  `src/db/prisma.js`) — zastapila pliki JSON w `data/` dla wszystkich kolekcji (rates, bonuses,
+  protocols/historia, properties/tenancy/comments, propertyExpenses, vehicles/serviceLog,
+  subscriptions, taxPayments, chores, costs). Wszystkie serwisy sa async (Prisma), wiec kazdy
+  route w `server.js` uzywajacy ich jest `async` + `await`. Daty trzymane jako `String` (nie
+  `DateTime`) tam, gdzie reszta apki porownuje je leksykalnie jako `'YYYY-MM-DD'`/`'YYYY-MM'` (np.
+  `rates.from`, `protocols` id = okres) - identyczna semantyka jak przed migracja. Wygenerowane i
+  recznie wgrane PDF-y protokolow trzymane sa jako `bytea` bezposrednio w tabeli `Protocol`/
+  `ManualFile` (nie na dysku) - kontener na Railway ma efemeryczny filesystem, wiec pliki na dysku
+  i tak by nie przetrwaly redeployu. Pinned na Prisma 6.x (nie 7) - Prisma 7 wymaga
+  `prisma.config.ts` + driver adapter zamiast `datasource.url` w schema.prisma, co nie pasuje do
+  tego projektu (czysty CommonJS JS, bez TypeScript). Wymaga `DATABASE_URL` w `.env` (connection
+  string z panelu Neon); `npm install` odpala `postinstall: prisma generate`, wiec bez
+  `DATABASE_URL` w `.env` `npm install` sie wywali - normalne, ustaw zmienna najpierw. Jednorazowy
+  import istniejacych danych z `data/*.json` (+ PDF-y z `data/protocols/`): `npm run db:import`
+  (`scripts/importJsonToDb.js`, idempotentne - bezpiecznie odpalic ponownie).
 - Jira/Tempo są podłączone do prawdziwego API — `.env` ma skonfigurowane `JIRA_BASE_URL`,
   `JIRA_EMAIL`, `JIRA_API_TOKEN`, `TEMPO_API_TOKEN`, więc `tempoService.getWorklogsGrouped`
   odpytuje live Tempo/Jira, a nie dane demo. Tryb demo (`tempoService.demoWorklogs`) włącza się
@@ -38,8 +54,9 @@ rzeczywistym (to osobne produkty, brak wspólnego API). Zawsze `git fetch` + spr
   poprawnie renderowane — embedowany jest font DejaVu Sans przez `pdfDoc.registerFontkit` +
   `pdfDoc.embedFont` zamiast `StandardFonts.Helvetica`.
 - Każde wygenerowane parę protokołów jest też zapisywana przez `protocolsHistoryService.js` —
-  metadane w `data/protocols.json`, same pliki PDF w `data/protocols/`. Klucz wpisu to `{rok}-{mc}`
-  (jeden komplet na okres rozliczeniowy). Jeśli wpis dla danego okresu już istnieje, `POST
+  metadane i same pliki PDF (jako `bytea`) w tabeli `Protocol`/`ManualFile` w Postgresie (patrz
+  wyżej). Klucz wpisu to `{rok}-{mc}` (jeden komplet na okres rozliczeniowy). Jeśli wpis dla danego
+  okresu już istnieje, `POST
   /api/protocols/generate` domyślnie odpowiada `409 ALREADY_GENERATED` zamiast cicho nadpisywać —
   frontend pokazuje wtedy dialog z opcją „Regenerate anyway” (`force: true` w body), co nadpisuje
   i resetuje status eksportu. Zakładka „History” w `index.html` pozwala pobrać ponownie zapisane
@@ -82,8 +99,10 @@ rzeczywistym (to osobne produkty, brak wspólnego API). Zawsze `git fetch` + spr
   na `demo@example.com`, niezależnie od realnie skonfigurowanego `AUTH_EMAIL` — więc nawet
   pomyłkowe użycie prawdziwego loginu do demo-wdrożenia nie ujawnia niczyjej tożsamości.
   Ustawiać wyłącznie na środowisku demo, nigdy lokalnie/prod.
-- Dane demo w seedach (`ratesService.js`, `bonusesService.js` itd.) muszą być w pełni fikcyjne —
-  nie kopiować realnych stawek/kwot/premii jako "przykładowych" wartości.
+- Dane startowe w `prisma/seed.js` muszą być w pełni fikcyjne — nie kopiować realnych
+  stawek/kwot/premii jako "przykładowych" wartości. Świeża baza (nowe wdrożenie demo, fresh
+  local start) nie ma już nic wpisanego automatycznie samym uruchomieniem serwera (inaczej niż
+  stare `ensureFile()` na JSON) — trzeba jawnie odpalić `npm run db:seed`.
 - `tempoService.demoTotalHours` nigdy nie zwraca godzin dla bieżącego (niedokończonego) ani
   przyszłego miesiąca — spójne z resztą apki, która liczy tylko w pełni zakończone miesiące.
 - `NODE_ENV=production` włącza `secure: true` na cieście sesji (wymaga `app.set('trust proxy', 1)`,
@@ -103,17 +122,26 @@ apka sama wchodzi w tryb demo worklogów (`tempoService.demoWorklogs`).
 
 ## Priorytety dalszego rozwoju (w kolejności)
 
-1. Realny test integracji iFirma — kod jest gotowy (`ifirmaService.js`, krok 4 wizarda), ale nigdy
+1. Podłączenie Neona na Railway — lokalnie migracja i import z `data/*.json` już zrobione i
+   zweryfikowane (patrz „Zrobione”). Zostało: ustawić `DATABASE_URL` w panelu Railway (osobny Neon
+   projekt dla demo, żeby nie mieszać z prawdziwymi danymi, vs. ten sam — do ustalenia) i dodać
+   `npx prisma migrate deploy` do build stepu (Nixpacks) tak, żeby migracje schematu odpalały się
+   automatycznie przy deployu.
+2. Realny test integracji iFirma — kod jest gotowy (`ifirmaService.js`, krok 4 wizarda), ale nigdy
    nie był wywołany z prawdziwymi `IFIRMA_USERNAME`/`IFIRMA_INVOICE_KEY`/`CLIENT_*`. Użytkownik
    musi sam aktywować API na koncie iFirma (Ustawienia → API → klucz `faktura`) i ustawić dane
    nabywcy (`CLIENT_*`) — potem pierwsza faktura z kroku 4 to realny test end-to-end. Po sukcesie:
    dopisać zapisywanie zwróconego `Identyfikator` w `protocolsHistoryService` i osobny krok wysyłki
    do KSeF — patrz skill po pełny kontekst.
-2. Panel administracji (wielu zleceniobiorców, umowy, stawki) — obecnie dane kontrahenta na sztywno
+3. Panel administracji (wielu zleceniobiorców, umowy, stawki) — obecnie dane kontrahenta na sztywno
    w `.env`.
-3. Asystent AI (zapytania NL o dane rozliczeniowe, wykrywanie anomalii) — wymaga `ANTHROPIC_API_KEY`.
+4. Asystent AI (zapytania NL o dane rozliczeniowe, wykrywanie anomalii) — wymaga `ANTHROPIC_API_KEY`.
 
-Zrobione: podłączenie prawdziwego API Tempo/Jira (działa live), historia/archiwum protokołów
+Zrobione: migracja z plików JSON do Postgresa (Neon, darmowy tier) przez Prisma — schemat,
+przepisanie wszystkich serwisów na async, migracja i weryfikowany import dotychczasowych danych
+lokalnie (`npx prisma migrate dev` + `npm run db:import`, dane odczytane z powrotem poprawnie:
+zagnieżdżony tenant/comments, PDF-y protokołów jako bytea, itd.), podłączenie prawdziwego API
+Tempo/Jira (działa live), historia/archiwum protokołów
 (`protocolsHistoryService.js` + zakładka History), wykres 12 miesięcy z prawdziwymi danymi,
 roczne podsumowanie CSV w zakładce Income, tryb ciemny (CSS tokeny + przełącznik + wykresy),
 wystawianie faktury w iFirma (krok 4 Invoicing, kod gotowy, czeka na realne dane konta).
@@ -121,8 +149,12 @@ wystawianie faktury w iFirma (krok 4 Invoicing, kod gotowy, czeka na realne dane
 ## Jak testować
 
 ```bash
-npm install
 cp .env.example .env
+# uzupelnij DATABASE_URL (Neon) w .env PRZED npm install - postinstall odpala `prisma generate`
+npm install
+npx prisma migrate dev --name init   # tworzy tabele na swiezej bazie
+npm run db:import                    # jednorazowo: migruje dane z data/*.json (jesli istnieja)
+# albo, na zupelnie swiezej bazie bez data/: npm run db:seed
 npm run dev
 ```
 

@@ -1,9 +1,8 @@
-const fs = require('fs');
-const path = require('path');
-
-const DATA_DIR = path.join(__dirname, '..', '..', 'data');
-const DATA_FILE = path.join(DATA_DIR, 'protocols.json');
-const FILES_DIR = path.join(DATA_DIR, 'protocols');
+// Historia wygenerowanych protokolow. PDF-y (wygenerowane i recznie wgrane) trzymane sa jako
+// bytea w Postgres (kolumny zamowienieBytes/odbiorczyBytes na Protocol, tabela ManualFile) -
+// zastepuje to pliki na dysku z data/protocols/, ktore i tak nie przetrwalyby redeployu na
+// Railway (efemeryczny filesystem kontenera).
+const prisma = require('../db/prisma');
 
 function pad2(n) {
   return String(n).padStart(2, '0');
@@ -13,149 +12,110 @@ function periodId(month, year) {
   return `${year}-${pad2(month)}`;
 }
 
-function ensureFile() {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(FILES_DIR)) fs.mkdirSync(FILES_DIR, { recursive: true });
-  if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, JSON.stringify([], null, 2));
+function newId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function readAll() {
-  ensureFile();
-  return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-}
-
-function writeAll(list) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(list, null, 2));
-}
-
-function getAll() {
-  return readAll().sort((a, b) => b.id.localeCompare(a.id));
-}
-
-function getById(id) {
-  return readAll().find(p => p.id === id);
-}
-
-function blankEntry(month, year) {
+function toApiShape(protocol) {
+  const files = {};
+  if (protocol.zamowienieFilename) files.zamowienie = { filename: protocol.zamowienieFilename };
+  if (protocol.odbiorczyFilename) files.odbiorczy = { filename: protocol.odbiorczyFilename };
   return {
-    id: periodId(month, year),
-    month,
-    year,
-    orderNumber: null,
-    totalHours: null,
-    amount: null,
-    generatedAt: null,
-    exported: false,
-    exportedAt: null,
-    files: {},
-    manualFiles: []
+    id: protocol.id,
+    month: protocol.month,
+    year: protocol.year,
+    orderNumber: protocol.orderNumber,
+    totalHours: protocol.totalHours,
+    amount: protocol.amount,
+    generatedAt: protocol.generatedAt,
+    exported: protocol.exported,
+    exportedAt: protocol.exportedAt,
+    files,
+    manualFiles: (protocol.manualFiles || []).map(f => ({ id: f.id, filename: f.filename, uploadedAt: f.uploadedAt }))
   };
 }
 
-// Zapisuje PDF-y wygenerowanego okresu na dysku i zapisuje/aktualizuje metadane w protocols.json.
-// Ponowne wygenerowanie dla tego samego okresu nadpisuje pliki i resetuje status eksportu — dane
-// mogly sie zmienic (np. inna stawka), wiec stary status "wyeksportowano" bylby mylacy. Rozne
-// pliki wgrane recznie (manualFiles) sa zachowywane - regeneracja protokolow ich nie dotyczy.
+async function getAll() {
+  const rows = await prisma.protocol.findMany({ include: { manualFiles: true } });
+  return rows.sort((a, b) => b.id.localeCompare(a.id)).map(toApiShape);
+}
+
+async function getById(id) {
+  const protocol = await prisma.protocol.findUnique({ where: { id }, include: { manualFiles: true } });
+  return protocol ? toApiShape(protocol) : undefined;
+}
+
+// Zapisuje PDF-y wygenerowanego okresu i zapisuje/aktualizuje metadane. Ponowne wygenerowanie dla
+// tego samego okresu nadpisuje pliki i resetuje status eksportu - dane mogly sie zmienic (np. inna
+// stawka), wiec stary status "wyeksportowano" bylby mylacy. Recznie wgrane pliki (manualFiles) sa
+// zachowywane - relacja nie jest tu dotykana, wiec regeneracja protokolow ich nie kasuje.
 // Wywolujacy powinien wczesniej sprawdzic getById() i ostrzec uzytkownika, jesli wpis juz
 // istnieje - ta funkcja zawsze nadpisuje bez pytania (patrz endpoint /api/protocols/generate).
-function recordGenerated(month, year, data, files) {
-  ensureFile();
+async function recordGenerated(month, year, data, files) {
   const id = periodId(month, year);
-
-  const zamowieniePath = path.join(FILES_DIR, `${id}-zamowienie.pdf`);
-  const odbiorczyPath = path.join(FILES_DIR, `${id}-odbiorczy.pdf`);
-  fs.writeFileSync(zamowieniePath, Buffer.from(files.zamowienie.bytes));
-  fs.writeFileSync(odbiorczyPath, Buffer.from(files.odbiorczy.bytes));
-
-  const list = readAll();
-  const idx = list.findIndex(p => p.id === id);
-  const existingManualFiles = idx !== -1 ? (list[idx].manualFiles || []) : [];
-  const entry = {
-    id,
-    month,
-    year,
-    orderNumber: data.numerZamowienia,
-    totalHours: data.totalHours,
-    amount: data.kwota,
-    generatedAt: new Date().toISOString(),
-    exported: false,
-    exportedAt: null,
-    files: {
-      zamowienie: { filename: files.zamowienie.filename, path: zamowieniePath },
-      odbiorczy: { filename: files.odbiorczy.filename, path: odbiorczyPath }
-    },
-    manualFiles: existingManualFiles
+  const shared = {
+    month, year,
+    orderNumber: data.numerZamowienia, totalHours: data.totalHours, amount: data.kwota,
+    generatedAt: new Date().toISOString(), exported: false, exportedAt: null,
+    zamowienieFilename: files.zamowienie.filename, zamowienieBytes: Buffer.from(files.zamowienie.bytes),
+    odbiorczyFilename: files.odbiorczy.filename, odbiorczyBytes: Buffer.from(files.odbiorczy.bytes)
   };
-
-  if (idx === -1) list.push(entry);
-  else list[idx] = entry;
-  writeAll(list);
-  return entry;
+  const protocol = await prisma.protocol.upsert({
+    where: { id },
+    create: { id, ...shared },
+    update: shared,
+    include: { manualFiles: true }
+  });
+  return toApiShape(protocol);
 }
 
-function markExported(id) {
-  const list = readAll();
-  const idx = list.findIndex(p => p.id === id);
-  if (idx === -1) throw new Error(`Protocol history entry not found: ${id}`);
-  list[idx] = { ...list[idx], exported: true, exportedAt: new Date().toISOString() };
-  writeAll(list);
-  return list[idx];
+async function markExported(id) {
+  const existing = await prisma.protocol.findUnique({ where: { id } });
+  if (!existing) throw new Error(`Protocol history entry not found: ${id}`);
+  const protocol = await prisma.protocol.update({
+    where: { id },
+    data: { exported: true, exportedAt: new Date().toISOString() },
+    include: { manualFiles: true }
+  });
+  return toApiShape(protocol);
 }
 
-function getFileBytes(id, kind) {
-  const entry = getById(id);
-  if (!entry) throw new Error(`Protocol history entry not found: ${id}`);
-  const file = entry.files[kind];
-  if (!file) throw new Error(`Unknown document kind: ${kind}`);
-  return { bytes: fs.readFileSync(file.path), filename: file.filename };
+async function getFileBytes(id, kind) {
+  const protocol = await prisma.protocol.findUnique({ where: { id } });
+  if (!protocol) throw new Error(`Protocol history entry not found: ${id}`);
+  if (kind === 'zamowienie' && protocol.zamowienieBytes) {
+    return { bytes: protocol.zamowienieBytes, filename: protocol.zamowienieFilename };
+  }
+  if (kind === 'odbiorczy' && protocol.odbiorczyBytes) {
+    return { bytes: protocol.odbiorczyBytes, filename: protocol.odbiorczyFilename };
+  }
+  throw new Error(`Unknown document kind: ${kind}`);
 }
 
 // Reczne wgranie pliku (np. faktury zewnetrznej) dla danego okresu. Jesli wpis dla tego okresu
 // jeszcze nie istnieje (bo protokoly nie byly generowane w aplikacji), tworzy pusty wpis - historia
 // dziala wtedy jako archiwum dokumentow, nie tylko log generowania.
-function addManualFile(month, year, { filename, base64 }) {
-  ensureFile();
+async function addManualFile(month, year, { filename, base64 }) {
   const id = periodId(month, year);
-  const list = readAll();
-  let idx = list.findIndex(p => p.id === id);
-  if (idx === -1) {
-    list.push(blankEntry(month, year));
-    idx = list.length - 1;
-  }
-  if (!list[idx].manualFiles) list[idx].manualFiles = [];
-
-  const fileId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const filePath = path.join(FILES_DIR, `${id}-manual-${fileId}.pdf`);
-  fs.writeFileSync(filePath, Buffer.from(base64, 'base64'));
-  list[idx].manualFiles.push({ id: fileId, filename, path: filePath, uploadedAt: new Date().toISOString() });
-
-  writeAll(list);
-  return list[idx];
+  await prisma.protocol.upsert({ where: { id }, create: { id, month, year }, update: {} });
+  await prisma.manualFile.create({
+    data: { id: newId(), protocolId: id, filename, bytes: Buffer.from(base64, 'base64'), uploadedAt: new Date().toISOString() }
+  });
+  return getById(id);
 }
 
-function getManualFileBytes(id, fileId) {
-  const entry = getById(id);
-  if (!entry) throw new Error(`Protocol history entry not found: ${id}`);
-  const file = (entry.manualFiles || []).find(f => f.id === fileId);
-  if (!file) throw new Error(`Manual file not found: ${fileId}`);
-  return { bytes: fs.readFileSync(file.path), filename: file.filename };
+async function getManualFileBytes(id, fileId) {
+  const manualFile = await prisma.manualFile.findUnique({ where: { id: fileId } });
+  if (!manualFile || manualFile.protocolId !== id) throw new Error(`Manual file not found: ${fileId}`);
+  return { bytes: manualFile.bytes, filename: manualFile.filename };
 }
 
-function safeUnlink(filePath) {
-  try { fs.unlinkSync(filePath); } catch (e) { /* already gone - fine */ }
-}
-
-// Usuwa caly wpis: oba wygenerowane protokoly, wszystkie pliki wgrane recznie, oraz sam rekord.
-function removeEntry(id) {
-  const list = readAll();
-  const idx = list.findIndex(p => p.id === id);
-  if (idx === -1) throw new Error(`Protocol history entry not found: ${id}`);
-  const entry = list[idx];
-  if (entry.files.zamowienie) safeUnlink(entry.files.zamowienie.path);
-  if (entry.files.odbiorczy) safeUnlink(entry.files.odbiorczy.path);
-  (entry.manualFiles || []).forEach(f => safeUnlink(f.path));
-  list.splice(idx, 1);
-  writeAll(list);
+// Usuwa caly wpis: oba wygenerowane protokoly, wszystkie pliki wgrane recznie (kaskadowo), oraz
+// sam rekord.
+async function removeEntry(id) {
+  const existing = await prisma.protocol.findUnique({ where: { id } });
+  if (!existing) throw new Error(`Protocol history entry not found: ${id}`);
+  await prisma.protocol.delete({ where: { id } });
 }
 
 // Usuwa pojedynczy plik z wpisu: 'zamowienie'/'odbiorczy' albo id pliku recznie wgranego.
@@ -163,36 +123,32 @@ function removeEntry(id) {
 // wiersza samych myslnikow). Jesli usunieto jeden z dwoch wygenerowanych protokolow, metadane
 // generowania (numer zamowienia, kwota, status eksportu) sa czyszczone tylko gdy OBA znikna -
 // pojedynczy brakujacy dokument to nadal ten sam "komplet", po prostu niepelny.
-function removeFile(id, target) {
-  const list = readAll();
-  const idx = list.findIndex(p => p.id === id);
-  if (idx === -1) throw new Error(`Protocol history entry not found: ${id}`);
-  const entry = list[idx];
+async function removeFile(id, target) {
+  const protocol = await prisma.protocol.findUnique({ where: { id }, include: { manualFiles: true } });
+  if (!protocol) throw new Error(`Protocol history entry not found: ${id}`);
 
   if (target === 'zamowienie' || target === 'odbiorczy') {
-    const file = entry.files[target];
-    if (!file) throw new Error(`No ${target} file to delete`);
-    safeUnlink(file.path);
-    delete entry.files[target];
-    if (!entry.files.zamowienie && !entry.files.odbiorczy) {
-      entry.orderNumber = null;
-      entry.totalHours = null;
-      entry.amount = null;
-      entry.generatedAt = null;
-      entry.exported = false;
-      entry.exportedAt = null;
-    }
+    const hasFile = target === 'zamowienie' ? protocol.zamowienieBytes != null : protocol.odbiorczyBytes != null;
+    if (!hasFile) throw new Error(`No ${target} file to delete`);
+
+    const clearedFields = target === 'zamowienie'
+      ? { zamowienieFilename: null, zamowienieBytes: null }
+      : { odbiorczyFilename: null, odbiorczyBytes: null };
+    const otherHasFile = target === 'zamowienie' ? protocol.odbiorczyBytes != null : protocol.zamowienieBytes != null;
+    const resetMeta = !otherHasFile
+      ? { orderNumber: null, totalHours: null, amount: null, generatedAt: null, exported: false, exportedAt: null }
+      : {};
+
+    await prisma.protocol.update({ where: { id }, data: { ...clearedFields, ...resetMeta } });
   } else {
-    const manualIdx = (entry.manualFiles || []).findIndex(f => f.id === target);
-    if (manualIdx === -1) throw new Error(`Manual file not found: ${target}`);
-    safeUnlink(entry.manualFiles[manualIdx].path);
-    entry.manualFiles.splice(manualIdx, 1);
+    const manualFile = protocol.manualFiles.find(f => f.id === target);
+    if (!manualFile) throw new Error(`Manual file not found: ${target}`);
+    await prisma.manualFile.delete({ where: { id: target } });
   }
 
-  const hasAnyFiles = Boolean(entry.files.zamowienie) || Boolean(entry.files.odbiorczy) || (entry.manualFiles || []).length > 0;
-  if (!hasAnyFiles) list.splice(idx, 1);
-  else list[idx] = entry;
-  writeAll(list);
+  const updated = await prisma.protocol.findUnique({ where: { id }, include: { manualFiles: true } });
+  const hasAnyFiles = updated.zamowienieBytes != null || updated.odbiorczyBytes != null || updated.manualFiles.length > 0;
+  if (!hasAnyFiles) await prisma.protocol.delete({ where: { id } });
 }
 
 module.exports = {
