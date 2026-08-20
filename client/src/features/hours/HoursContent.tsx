@@ -39,7 +39,7 @@ export function HoursContent({
   onExport,
 }: {
   year: number
-  onYearChange: (year: number) => void
+  onYearChange: (updater: (year: number) => number) => void
   onExport: () => void
 }) {
   const { byMonth, isLoading, daysOff } = useHoursData(year)

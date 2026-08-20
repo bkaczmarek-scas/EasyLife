@@ -44,7 +44,7 @@ export function RatesContent() {
 
   if (!rates || rates.length === 0) {
     return (
-      <div className="flex-1">
+      <div>
         <Card className="flex flex-col items-center gap-3 py-16 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
             <IconPercentage size={28} className="text-primary" />
@@ -69,26 +69,22 @@ export function RatesContent() {
   }
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div>
       <Card
-        className="flex flex-1 cursor-pointer items-center justify-between hover:border-primary"
+        className="cursor-pointer hover:border-primary"
         onClick={() => setDetailsOpen(true)}
       >
-        <div>
-          <p className="text-xs font-semibold uppercase text-text-muted">Current Contract Value</p>
-          <div className="mt-1 flex items-center gap-3">
-            <span className="text-2xl font-bold text-text-primary">{formatPLN(current.rate)} / hr</span>
-            {change !== null && (
-              <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-700">
-                {change >= 0 ? '+' : ''}
-                {change.toFixed(1)}%
-              </span>
-            )}
-          </div>
+        <p className="text-xs font-semibold uppercase text-text-muted">Current Contract Value</p>
+        <p className="mt-1 text-2xl font-bold text-text-primary">{formatPLN(current.rate)} / hr</p>
+        <div className="mt-3 flex items-center gap-2 text-sm">
+          {change !== null && (
+            <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-700">
+              {change >= 0 ? '+' : ''}
+              {change.toFixed(1)}%
+            </span>
+          )}
+          <span className="text-text-secondary">Effective since {formatPeriodLabel(current.from)}</span>
         </div>
-        <p className="text-sm text-text-secondary">
-          Since <span className="font-semibold text-text-primary">{formatPeriodLabel(current.from)}</span>
-        </p>
       </Card>
 
       <Sheet open={detailsOpen} onOpenChange={setDetailsOpen} title="Rates">
