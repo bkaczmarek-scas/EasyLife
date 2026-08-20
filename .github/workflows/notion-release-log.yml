@@ -63,12 +63,23 @@ jobs:
             --argjson files "$(jq '[.[] | {filename, status, additions, deletions}]' <<< "$changed_files")" \
             '{commit_message: $commit_message, pull_request: {title: $pr_title, description: $pr_description}, changed_files: $files}')"
 
+          fallback_description="$(jq -r '
+            if (.body // "" | length) > 0 then .body
+            elif (.title // "" | length) > 0 then .title
+            else empty end
+          ' <<< "$pr_details")"
+          if [ -z "$fallback_description" ]; then
+            fallback_description="$(jq -r '.commit.message | split("\n")[0]' <<< "$commit")"
+          fi
+
           printf '%s\n' "$change_context" > /tmp/release-context.json
+          printf '%s\n' "$fallback_description" > /tmp/release-fallback.txt
           echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
           echo "release_url=$release_url" >> "$GITHUB_OUTPUT"
 
       - name: Napisz opis wdrożenia prostym językiem
         id: release-summary
+        continue-on-error: true
         uses: actions/ai-inference@v2
         with:
           model: openai/gpt-4.1
@@ -97,11 +108,15 @@ jobs:
         run: |
           test -n "$NOTION_API_TOKEN"
           test -n "$NOTION_RELEASE_LOG_DATABASE_ID"
-          test -n "$RELEASE_DESCRIPTION"
 
           title="Railway • $SHORT_SHA"
           now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          description="${RELEASE_DESCRIPTION:0:1900}"
+          description="$RELEASE_DESCRIPTION"
+          if [ -z "$description" ]; then
+            description="$(cat /tmp/release-fallback.txt)"
+          fi
+          test -n "$description"
+          description="${description:0:1900}"
 
           payload="$(jq -n \
             --arg title "$title" \
