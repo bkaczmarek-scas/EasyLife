@@ -1,13 +1,13 @@
 import { Line } from 'react-chartjs-2'
-import type { Chart, ChartDataset } from 'chart.js'
+import type { Chart } from 'chart.js'
 import '../../lib/chartSetup'
 import { chartColors } from '../../lib/chartSetup'
 
 const pointLabelPlugin = {
   id: 'mileagePointLabels',
-  afterDatasetsDraw(chart: Chart) {
+  afterDatasetsDraw(chart: Chart<'line'>) {
     const { ctx } = chart
-    chart.data.datasets.forEach((dataset: ChartDataset<'line'>, datasetIndex: number) => {
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
       const meta = chart.getDatasetMeta(datasetIndex)
       meta.data.forEach((point, index) => {
         const value = dataset.data[index]
