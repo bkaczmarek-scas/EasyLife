@@ -6,7 +6,6 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useToast } from '../../components/ui/Toast'
 import { useRates, useDeleteRate, type Rate } from '../../api/resources/rates'
 import { RateFormDialog } from './RateFormDialog'
-import { RateChart } from './RateChart'
 
 export function formatPeriodLabel(from: string) {
   const [year, month] = from.split('-')
@@ -98,60 +97,51 @@ export function RatesContent() {
         </p>
       </Card>
 
-      <div className="mt-6 grid grid-cols-2 gap-6">
-        <Card className="!p-0">
-          <p className="border-b border-border px-4 py-3 text-sm font-semibold text-text-primary">Rate Progression History</p>
-          <table className="w-full text-left text-[13px]">
-            <thead>
-              <tr className="border-b border-border text-xs font-semibold uppercase text-text-muted">
-                <th className="px-4 py-2">Period</th>
-                <th className="py-2">Rate</th>
-                <th className="w-16 py-2 pr-4 text-right">Actions</th>
+      <Card className="mt-6 !p-0">
+        <p className="border-b border-border px-4 py-3 text-sm font-semibold text-text-primary">Rate Progression History</p>
+        <table className="w-full text-left text-[13px]">
+          <thead>
+            <tr className="border-b border-border text-xs font-semibold uppercase text-text-muted">
+              <th className="px-4 py-2">Period</th>
+              <th className="py-2">Rate</th>
+              <th className="w-16 py-2 pr-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((rate, i) => (
+              <tr key={rate.id} className="border-b border-border last:border-0">
+                <td className="px-4 py-3 font-semibold text-text-primary">
+                  {i === 0 ? `Since ${formatPeriodLabel(rate.from)}` : formatPeriodLabel(rate.from)}
+                </td>
+                <td className="py-3 text-text-secondary">{rate.rate.toFixed(2)} PLN/h</td>
+                <td className="py-3 pr-4">
+                  <div className="flex justify-end gap-1">
+                    <button
+                      type="button"
+                      aria-label="Edit"
+                      onClick={() => {
+                        setEditingRate(rate)
+                        setFormOpen(true)
+                      }}
+                      className="rounded-md p-1.5 text-text-muted hover:bg-canvas hover:text-text-primary"
+                    >
+                      <IconEdit size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Delete"
+                      onClick={() => setDeletingRate(rate)}
+                      className="rounded-md p-1.5 text-text-muted hover:bg-danger-bg hover:text-danger-text"
+                    >
+                      <IconTrash size={16} />
+                    </button>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {sorted.map((rate, i) => (
-                <tr key={rate.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 font-semibold text-text-primary">
-                    {i === 0 ? `Since ${formatPeriodLabel(rate.from)}` : formatPeriodLabel(rate.from)}
-                  </td>
-                  <td className="py-3 text-text-secondary">{rate.rate.toFixed(2)} PLN/h</td>
-                  <td className="py-3 pr-4">
-                    <div className="flex justify-end gap-1">
-                      <button
-                        type="button"
-                        aria-label="Edit"
-                        onClick={() => {
-                          setEditingRate(rate)
-                          setFormOpen(true)
-                        }}
-                        className="rounded-md p-1.5 text-text-muted hover:bg-canvas hover:text-text-primary"
-                      >
-                        <IconEdit size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="Delete"
-                        onClick={() => setDeletingRate(rate)}
-                        className="rounded-md p-1.5 text-text-muted hover:bg-danger-bg hover:text-danger-text"
-                      >
-                        <IconTrash size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
-
-        <Card>
-          <p className="mb-3 text-sm font-semibold text-text-primary">Hourly Rate Progression Timeline</p>
-          <div className="h-64">
-            <RateChart rates={rates} />
-          </div>
-        </Card>
-      </div>
+            ))}
+          </tbody>
+        </table>
+      </Card>
 
       <RateFormDialog open={formOpen} onOpenChange={setFormOpen} rate={editingRate} />
       <ConfirmDialog

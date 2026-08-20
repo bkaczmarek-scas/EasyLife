@@ -4,7 +4,7 @@ import { Tabs } from '../../components/ui/Tabs'
 import { Button } from '../../components/ui/Button'
 import { downloadCsv } from '../../lib/csv'
 import { HoursContent, useHoursData, WORKING_HOURS_BY_MONTH } from '../hours/HoursContent'
-import { RatesContent, formatPeriodLabel } from '../rates/RatesContent'
+import { formatPeriodLabel } from '../rates/RatesContent'
 import { IncomeContent } from '../income/IncomeContent'
 import { useRates } from '../../api/resources/rates'
 import { useYearlyIncome } from '../income/useYearlyIncome'
@@ -84,12 +84,7 @@ export function WorkCompensationPage() {
         />
       </div>
 
-      {tab === 'income' && (
-        <>
-          <IncomeContent year={year} />
-          <RatesContent />
-        </>
-      )}
+      {tab === 'income' && <IncomeContent year={year} />}
       {tab === 'hours' && <HoursContent year={year} />}
     </div>
   )
