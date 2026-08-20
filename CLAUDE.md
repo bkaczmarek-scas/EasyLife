@@ -89,6 +89,17 @@ rzeczywistym (to osobne produkty, brak wspólnego API). Zawsze `git fetch` + spr
 - Wszystkie daty w formacie zgodnym z oryginalnymi wzorami PDF (np. `8/31/2026` bez zera wiodącego
   w miesiącu dla dat granicznych, `2026-08-01` dla daty zamówienia).
 
+### Branching / workflow git
+
+- Każde nowe zadanie (feature, fix, refaktor) dostaje **świeży branch od `main`** — nie dokładać
+  kolejnych, niepowiązanych zmian do istniejącego brancha, nawet jeśli jest "pod ręką". Nazwa
+  brancha powinna opisywać faktyczną treść zmiany (`feature/...`, `fix/...`), nie zadanie sprzed
+  kilku commitów wstecz.
+- Po zmergowaniu PR do `main` branch źródłowy jest usuwany (`gh pr merge --delete-branch`) —
+  zarówno zdalnie, jak i lokalnie. Repo nie powinno gromadzić w pełni zmergowanych branchy.
+- Przed otwarciem nowego brancha sprawdź `git branch -r` — jeśli branch z tym samym tematem już
+  istnieje (nawet jako draft PR), nie twórz duplikatu w ciemno; zapytaj, czy kontynuować istniejący.
+
 ## Bezpieczeństwo / wdrożenie demo
 
 - `DEMO_MODE=true` w env wymusza placeholder danych kontrahenta (`Jan Kowalski`, inicjały `XX`
