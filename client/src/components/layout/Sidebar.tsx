@@ -8,8 +8,6 @@ import {
   IconHome,
   IconCalendar,
   IconCircleCheck,
-  IconSun,
-  IconMoon,
   IconLogout,
 } from '@tabler/icons-react'
 import { cn } from '../../lib/cn'
@@ -80,25 +78,12 @@ export function Sidebar() {
 
       <div className="border-t border-border py-4">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-full bg-primary/10" />
-          <div>
-            <p className="text-sm font-semibold text-text-primary">{status?.email ?? '…'}</p>
-            <p className="flex items-center gap-1 text-xs text-text-muted">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-              Connected
-            </p>
-          </div>
+          <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10" />
+          <p className="min-w-0 flex-1 truncate text-sm font-semibold text-text-primary" title={status?.email ?? undefined}>
+            {status?.email ?? '…'}
+          </p>
         </div>
-        <div className="mt-3 flex items-center justify-between">
-          <div className="flex gap-1">
-            {/* Theme toggle is visual-only for now — dark mode is out of scope for this pass. */}
-            <button type="button" className="flex h-[26px] w-[26px] items-center justify-center rounded-md hover:bg-canvas" aria-label="Light theme">
-              <IconSun size={14} stroke={1.75} />
-            </button>
-            <button type="button" className="flex h-[26px] w-[26px] items-center justify-center rounded-md hover:bg-canvas" aria-label="Dark theme">
-              <IconMoon size={14} stroke={1.75} />
-            </button>
-          </div>
+        <div className="mt-3">
           <button
             type="button"
             className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary"
