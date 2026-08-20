@@ -1,4 +1,4 @@
-import { useMutation, useQueries } from '@tanstack/react-query'
+import { useMutation, useQueries, keepPreviousData } from '@tanstack/react-query'
 import { api } from '../client'
 import { queryKeys } from '../queryKeys'
 
@@ -20,14 +20,16 @@ export function useYearWorklogs(year: number) {
         queryKey: queryKeys.worklogs(month, year),
         queryFn: () => api.get<WorklogsResponse>(`/api/worklogs?month=${month}&year=${year}`),
         staleTime: 5 * 60 * 1000,
+        placeholderData: keepPreviousData,
       }
     }),
   })
 
   const isLoading = results.some((r) => r.isLoading)
+  const isRefreshing = results.some((r) => r.isPlaceholderData && r.isFetching)
   const byMonth = results.map((r, i) => ({ month: i + 1, totalHours: r.data?.totalHours ?? 0 }))
 
-  return { byMonth, isLoading }
+  return { byMonth, isLoading, isRefreshing }
 }
 
 // Explicit-trigger fetch for the Invoicing wizard's "Fetch worklogs" step (matches the existing
