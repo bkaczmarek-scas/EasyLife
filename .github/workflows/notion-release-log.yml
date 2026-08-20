@@ -14,22 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success' }}
     steps:
-      - name: Dodaj wpis do Release logu w Notion
+      - name: Zbierz informacje o wdrożeniu
+        id: release-context
         env:
           GH_TOKEN: ${{ github.token }}
-          NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
-          NOTION_RELEASE_LOG_DATABASE_ID: ${{ secrets.NOTION_RELEASE_LOG_DATABASE_ID }}
           DEPLOYMENT_SHA: ${{ github.event.deployment.sha || github.sha }}
           REPOSITORY: ${{ github.repository }}
           SERVER_URL: ${{ github.server_url }}
         run: |
-          test -n "$NOTION_API_TOKEN"
-          test -n "$NOTION_RELEASE_LOG_DATABASE_ID"
-
           short_sha="${DEPLOYMENT_SHA:0:7}"
-          title="Railway • $short_sha"
           commit_url="$SERVER_URL/$REPOSITORY/commit/$DEPLOYMENT_SHA"
-          now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
           commit="$(curl --fail-with-body --silent --show-error \
             --url "https://api.github.com/repos/$REPOSITORY/commits/$DEPLOYMENT_SHA" \
@@ -69,47 +63,50 @@ jobs:
             --argjson files "$(jq '[.[] | {filename, status, additions, deletions}]' <<< "$changed_files")" \
             '{commit_message: $commit_message, pull_request: {title: $pr_title, description: $pr_description}, changed_files: $files}')"
 
-          model_request="$(jq -n \
-            --arg context "$change_context" \
-            '{
-              model: "openai/gpt-4.1",
-              temperature: 0.1,
-              max_tokens: 450,
-              messages: [
-                {
-                  role: "system",
-                  content: "Tworzysz opis produkcyjnego wdrożenia aplikacji EasyLife dla odbiorcy nietechnicznego. Pisz po polsku, jasno i konkretnie. Opisz wyłącznie to, co faktycznie wynika z przekazanego kontekstu. Zacznij od jednego zdania podsumowania, a następnie podaj krótkie punkty zaczynające się od •. Skup się na tym, co użytkownik może teraz zrobić, co się zmieniło albo jaki problem rozwiązano. Łącz powiązane zmiany. Nie wymieniaj nazw plików, klas, endpointów, bibliotek, commitów, refaktoryzacji, testów ani CI, chyba że wdrożenie dotyczy wyłącznie prac utrzymaniowych — wtedy wyjaśnij ich praktyczny skutek. Nie używaj markdownowych nagłówków ani formatowania poza znakami •. Maksymalnie 900 znaków."
-                },
-                {
-                  role: "user",
-                  content: ("Przygotuj opis tego wdrożenia na podstawie danych z GitHub:\n" + $context)
-                }
-              ]
-            }')"
+          printf '%s\n' "$change_context" > /tmp/release-context.json
+          echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
+          echo "release_url=$release_url" >> "$GITHUB_OUTPUT"
 
-          model_response="$(curl --silent --show-error \
-            --request POST \
-            --url "https://models.github.ai/inference/chat/completions" \
-            --header "Accept: application/vnd.github+json" \
-            --header "Authorization: Bearer $GH_TOKEN" \
-            --header "Content-Type: application/json" \
-            --data "$model_request" || true)"
+      - name: Napisz opis wdrożenia prostym językiem
+        id: release-summary
+        uses: actions/ai-inference@v2
+        with:
+          model: openai/gpt-4.1
+          prompt-file: /tmp/release-context.json
+          temperature: 0.1
+          max-completion-tokens: 450
+          system-prompt: >-
+            Tworzysz opis produkcyjnego wdrożenia aplikacji EasyLife dla odbiorcy
+            nietechnicznego. Pisz po polsku, jasno i konkretnie. Opisz wyłącznie to,
+            co faktycznie wynika z przekazanego kontekstu. Zacznij od jednego zdania
+            podsumowania, a następnie podaj krótkie punkty zaczynające się od •.
+            Skup się na tym, co użytkownik może teraz zrobić, co się zmieniło albo
+            jaki problem rozwiązano. Łącz powiązane zmiany. Nie wymieniaj nazw
+            plików, klas, endpointów, bibliotek, commitów, refaktoryzacji, testów
+            ani CI, chyba że wdrożenie dotyczy wyłącznie prac utrzymaniowych — wtedy
+            wyjaśnij ich praktyczny skutek. Nie używaj markdownowych nagłówków ani
+            formatowania poza znakami •. Maksymalnie 900 znaków.
 
-          description="$(jq -r '.choices[0].message.content // empty' <<< "$model_response" 2>/dev/null || true)"
-          if [ -z "$description" ]; then
-            description="$(jq -r '.title // empty' <<< "$pr_details")"
-          fi
-          if [ -z "$description" ]; then
-            description="$(jq -r '.commit.message | split("\n")[0]' <<< "$commit")"
-          fi
+      - name: Dodaj wpis do Release logu w Notion
+        env:
+          NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          NOTION_RELEASE_LOG_DATABASE_ID: ${{ secrets.NOTION_RELEASE_LOG_DATABASE_ID }}
+          RELEASE_DESCRIPTION: ${{ steps.release-summary.outputs.response }}
+          RELEASE_URL: ${{ steps.release-context.outputs.release_url }}
+          SHORT_SHA: ${{ steps.release-context.outputs.short_sha }}
+        run: |
+          test -n "$NOTION_API_TOKEN"
+          test -n "$NOTION_RELEASE_LOG_DATABASE_ID"
+          test -n "$RELEASE_DESCRIPTION"
 
-          # Notion limits a single rich-text value to 2000 characters.
-          description="${description:0:1900}"
+          title="Railway • $SHORT_SHA"
+          now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          description="${RELEASE_DESCRIPTION:0:1900}"
 
           payload="$(jq -n \
             --arg title "$title" \
             --arg description "$description" \
-            --arg release_url "$release_url" \
+            --arg release_url "$RELEASE_URL" \
             --arg now "$now" \
             '{
               parent: {database_id: env.NOTION_RELEASE_LOG_DATABASE_ID},
